@@ -9,7 +9,7 @@ Models are constructed from vital rates estimated in an earlier study on habitat
 4. Pometia pinnata (Sapindaceae) a swamp specialist
 
 ## Tree life stages
-Each tree passes through two life stages: a seedling stage, where the unit of size is height (cm; log-transformed), and an adult stage, where the unit of size is DBH (cm; log-transformed.
+Each tree passes through two life stages: a seedling stage, where the unit of size is height (cm; log-transformed), and an adult stage, where the unit of size is DBH (cm; log-transformed).
 
 ## Vital rate and other models
 These are predictors from the top models for each vital rate, as reported in (earlier study citation here)
