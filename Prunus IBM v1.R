@@ -89,7 +89,9 @@ GT_z1z <- function(terrain, trees, sp, intraA)
       (dbh ^ (m.par["b", sp] + intraA.scaled * m.par["b.intraA", sp])) *
       exp(-dbh * (m.par["c", sp] + intraA.scaled * m.par["c.intraA", sp]))
   ) + rnorm(n = length(z), mean = 0, sd = m.par["sigma",sp]) # add the noise in (sigma)
-  z1 <- log(dbh + exp(loggrowth) - 1)
+  dbh1 <- dbh + (exp(loggrowth) - 1)
+  dbh1[which(dbh1 < 1)] <- 1
+  z1 <- log(dbh1)
   names(z1) <- NULL
   return(z1)
 }
@@ -208,7 +210,7 @@ T_z1h1 <- function(trees, seedlings, sp)
   # compute logdbh from logheight
   mu <- (m.par["tran.int",sp] + m.par["tran.h",sp] * h1)
   
-  # only initiate transitions if there is at least one seedling are larger than 1cm DBH
+  # only initiate transitions if there is at least one seedling larger than 1cm DBH
   if(sum(mu>0) > 0){
     tran.index <- which(mu > 0) # mu > 0 because log(1) = 0
     tran.loc <- ppoS[tran.index,c("x","y")]
