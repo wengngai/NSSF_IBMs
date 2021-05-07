@@ -1,0 +1,260 @@
+# How many seedlings recruit around a tree of species i and DBH x each year?
+
+To answer this question, we have three sets of data, which are used to construct three types of models
+
+|         Species           | Fruiting incidence model | Fruiting volume model | Seedling location model |
+|---------------------------|        :--------:        |        :------:       |        :-------:        |
+|_Prunus polystachya_       |            1             |           1           |            1            |
+|_Strombosia ceylanica_     |            1             |           1           |            1            |
+|_Campnosperma squamatum_   |            1             |           1           |                         | 
+|_Gironniera nervosa_       |            1             |                       |            1            |
+|_Rhodamnia cinerea_        |            1             |           1           |                         | 
+|_Gyntroches axillaris_     |            1             |           1           |                         | 
+|_Aporosa frutescens_       |            1             |           1           |                         | 
+|_Xanthophyllum flavescens_ |            1             |                       |                         |  
+|_Timonius wallichianus_    |            1             |           1           |                         | 
+|_Pometia pinnata_          |                          |                       |            1            |
+|_Elaeocarpus mastersii_    |                          |                       |            1            |
+|_Alstonia angustifolia_    |                          |                       |            1            |
+
+
+## (1) The best fruiting incidence model is
+```
+P_fruiting ~ DBH + Habitat mismatch + (DBH | species)
+```
+Larger trees have higher probabilities of fruiting, and trees found in their preferred plot/habitat type are more likely to fruit
+
+## (2) The best fruiting volume model is 
+```
+N_fruits ~ DBH + (DBH | species)
+```
+Larger trees produce more fruit.
+
+However, these two models alone are not enough to predict recruitment, since they only reveal the amount of fruit produced by trees, but do not capture germination and first year seedling mortality. To do that, we need germination and early mortality data. But we only have data of this for one species—Prunus polystachya (Emma’s UROPS, an ex situ experiment involving seed sowing)—and even for this, the data only covers the first 6 months post germination.
+
+Because of that, we needed another dataset. Seedling recruitment is highly dependent on seedling location with respect to the parent tree. We established a series of belt transects from isolated parent trees and recorded the locations of all seedlings within these transects which were presumably one year old or younger (< 40 cm height). Then, we modelled these using dispersal kernels.
+
+## (3) The best dispersal kernel is the 2DT model
+
+$$\frac{S}{\pi L (1 + \frac{D^2}{L})^{S+1}}$$
+
+For comparison, these were the other dispersal kernels compared against
+```{r, echo=FALSE}
+library(shiny)
+
+server <- function(input, output) {
+  # Plot 1: Lognormal (Greene et al 2004)
+  d1 <- reactive({seq(0.1, input$Dmax.1, len=500)})
+  Y1 <- reactive({
+    (1 / ( ((2*pi)^1.5) * input$sigma*(d1()^2)) ) * 
+      exp( -(log(d1()/input$mu))^2 / (2*input$sigma^2) )})
+  output$Plot1 <- renderPlot({
+    plot(Y1() ~ d1(), type="l",
+         lwd=3, col="darkred",
+         ylab="Probability",
+         xlab="Distance from source (m)",
+         #ylim=c(0,0.001),
+         cex.lab=1.5, las=1, ylog=T)
+  })
+  
+  # Plot 2: 2DT (Greene et al 2004)
+  d2 <- reactive({seq(0.1, input$Dmax.2, len=500)})
+  Y2 <- reactive({ input$S / 
+                       (pi * input$L * 
+                          (1 + (d2()^2/input$L))^(input$S+1)) })
+  output$Plot2 <- renderPlot({
+    plot(Y2() ~ d2(), type="l",
+         lwd=3, col="forestgreen",
+         ylab="Probability",
+         xlab="Distance from source (m)",
+         #ylim=c(0,0.001)
+         cex.lab=1.5, las=1, ylog=T)
+  })
+  
+  # Plot 3: Negative exponential
+  d3 <- reactive({seq(0.1, input$Dmax.3, len=500)})
+  Y3 <- reactive({(1 / (2*pi*input$alpha^2)) * exp(-d3()/input$alpha)})
+  output$Plot3 <- renderPlot({
+    plot(Y3() ~ d3(), type="l",
+         lwd=3, col="steelblue",
+         ylab="Probability",
+         xlab="Distance from source (m)",
+         cex.lab=1.5, las=1,
+         ylim=c(0,1))
+  })
+  
+}
+
+# Define UI for slider demo app ----
+ui <- fluidPage(
+    # First Row: Lognormal (Bullock et al 2006)
+    fluidRow(
+    # App title ----
+    titlePanel('Lognormal'),
+    # Sidebar layout with input definitions ----
+    sidebarLayout(
+      sidebarPanel(
+      # Input: Specification of parameters ----
+        sliderInput("mu", HTML("&mu;"),
+                  min = 1, max = 100,
+                  step = 1, value = 18,
+                  animate = animationOptions(interval = 50)),
+        sliderInput("sigma", HTML("&sigma;"),
+                min = 0, max = 10,
+                step = 0.1, value = 1,
+                animate = animationOptions(interval = 50)),
+        sliderInput("Dmax.1", "Maximum Distance from Tree",
+                  min = 10, max = 100,
+                  step = 1, value = 20)
+      ),
+
+    # Main panel for displaying outputs ----
+      mainPanel(
+        # Display equation ----
+        withMathJax(),
+        #titlePanel('$$\\alpha D^\\beta e^{-\\gamma D}$$'),
+        titlePanel('$$\\frac{1}{ (2\\pi)^\\frac{3}{2} \\sigma D^2} \\exp{( \\frac{-\\log(\\frac{D}{\\mu})^2}{2\\sigma^2})}$$'),
+        
+        # Output: Table summarizing the values entered ----
+        plotOutput("Plot1")
+      )
+    )),
+    
+    # Second row: 2DT
+    fluidRow(
+      titlePanel('2DT'),
+        # Sidebar layout with input definitions ----
+        sidebarLayout(
+          sidebarPanel(
+            # Input: Specification of parameters ----
+            sliderInput("L", "L",
+                        min = 1, max = 2000,
+                        step = 10, value = 100,
+                        animate = animationOptions(interval = 50)),
+            sliderInput("S", "S",
+                        min = 1, max = 10,
+                        step = 0.1, value = 1,
+                        animate = animationOptions(interval = 50)),
+            sliderInput("Dmax.2", "Maximum Distance from Tree",
+                        min = 10, max = 100,
+                        step = 1, value = 20)
+          ),
+          
+          # Main panel for displaying outputs ----
+          mainPanel(
+            # Display equation ----
+            withMathJax(),
+            titlePanel('$$\\frac{S}{\\pi L (1 + \\frac{D^2}{L})^{S+1}}$$'),
+            
+            # Output: Table summarizing the values entered ----
+            plotOutput("Plot2")
+          )
+        )),
+    # Third row: Negative exponential
+    fluidRow(
+      # App title ----
+      titlePanel('Negative exponential'),
+      # Sidebar layout with input definitions ----
+      sidebarLayout(
+        sidebarPanel(
+          # Input: Specification of parameters ----
+          sliderInput("alpha", "alpha",
+                      min = 0.1, max = 5,
+                      step = 0.1, value = 1.5,
+                      animate = animationOptions(interval = 50)),
+          sliderInput("Dmax.3", "Maximum Distance from Tree",
+                      min = 10, max = 100,
+                      step = 1, value = 20)
+        ),
+        
+        # Main panel for displaying outputs ----
+        mainPanel(
+          # Display equation ----
+          withMathJax(),
+          #titlePanel('$$me^{-\\frac{1}{2}\\log(\\frac{D}{Dopt/K})}$$'),
+          titlePanel('$$\\frac{1}{2\\pi\\alpha^2}\\exp{(\\frac{-D}{\\alpha})}$$'),
+          # Output: Table summarizing the values entered ----
+          plotOutput("Plot3") 
+        )
+      ))
+)
+
+shinyApp(ui = ui, server = server)
+```
+
+Where $x$ is the distance from the parent tree, and 
+```
+S ~ (1 | species / transect)
+L ~ (1 | species / transect)
+```
+
+However, the response variable in this (recruitment) dispersal kernel was (within-transect) probability, not recruitment number/density. To translate this to IBMs, we needed a way to scale recruitment volume by parent tree size.
+
+## (4) Scaling recruitment volume against parent tree size
+
+The dispersal kernel can be used in conjunction with transect data (area of transect, total number of seedlings per transect) to estimate the total number of seedlings in a 100m radius around each parent tree (assuming that the number of seedlings recruiting beyond that radius is very small).
+
+This estimated number of recruits can then be regressed against DBH of the parent tree. However, the parent tree DBH coverage and sample size were very poor, and this regression turned out very poor.
+
+Thus, a better solution here was to borrow the scaling factor from the fruiting volume model for the seedling location model, implicitly assuming that recruitment fraction is the same (for each species) between individuals of different sizes (a reasonable assumption).
+
+The scaling of fruit production with tree size (from **(2) Fruiting volume model**) is:
+$$\log(fruits) = \beta_{if} + \beta_{iD} DBH$$
+And the scaling of recruitment with tree size can be represented similarly
+$$\log(recruits) = \beta_{ir} + \beta_{iD} DBH$$
+If we assume that $\beta_{iD}$ in both equations is equal, the only unknown parameter left in Eqn 2 is $\beta_{ir}$. We can solve for this:
+$$\beta_{iD} DBH=\log(fruits)-\beta_{if}=\log(recruits)-\beta_{ir}$$
+Thus,
+$$\beta_{ir} DBH=\log(recruits)-\log(fruits)+\beta_{if}$$
+All the variables on the RHS of this last equation are known values:
+* $\log⁡(recruits)$ can be approximated by the number of seedlings in 100-m radii around the surveyed trees as estimated using the dispersal kernel
+* $\log⁡(fruits)$ can be predicted from the fruiting volume model for each tree corresponding to the size and species of the surveyed trees (in the dispersal kernel survey data)
+* $\beta_{if}$ is simply the random species intercept for species i in the **(2) fruiting volume model**
+
+Thus $\beta_{ir}$, which is an approximation of the (logged) germination + survival rate of the fruits of each species, can easily be calculated for each parent tree in the seedling location surveys, and then averaged across the species.
+
+This was done for the species _Prunus polystachya_, _Strombosia ceylanica_, _Gironniera nervosa_ and _Pometia pinnata_. Although note that _G. nervosa_ and _P. pinnata_ did not have **(2) fruiting volume models**, instead, average parameter values were assigned to _G. nervosa_, and _P. polystachya_’s parameter values were assigned to _P. pinnata_. 
+
+```{r}
+fruit.parm <- read.csv("fruiting parameters Apr21.csv", header=T, row.names=1)
+index <- c(4,5,7,10)
+t(fruit.parm["rec.int",])[index,]
+dbh <- 30:100
+logdbh <- log(dbh)
+plot(logdbh ~ dbh, ylim=c(0,500), type="n",
+     xlab = "DBH (cm)", ylab = "Total number of 1-year old seedlings recruited")
+require(viridis); cols <- viridis(4)
+for(i in 1:4){
+  lines(exp(fruit.parm["rec.int",index[i],] + fruit.parm["fruited.z",index[i],]*logdbh) ~ dbh,
+        col=cols[i], lwd=5)
+}
+legend('topleft', bty="n", legend=colnames(fruit.parm)[index], lwd=5, col=cols)
+```
+
+## Conclusion
+Thus, the procedure for the fruit production to seedling recruitment processes in the IBM would be:
+
+1. Use the **(1) fruiting incidence model** to predict if individual trees fruit or not each year
+
+2. For trees that do fruit, use the **(4) scaling recruitment volume against parent tree size** equation to estimate the total number of seedlings that will recruit around these trees ($n$)
+
+3. Then, use the **(3) seedling location model** (2DT dispersal kernel) to estimate a vector of $n$ distances from the parent tree ($d$)
+
+4. Finally, populate the landscape around the parent tree with $n$ seedlings located $d$ distances from the parent at random angles and assign these seedlings heights corresponding to mean year-old seedling heights (with SD included to create variation)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
