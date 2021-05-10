@@ -15,7 +15,6 @@ library(sp)
 (rec.parm <- t(read.csv("dispersal kernel parameters Apr21.csv", header=T, row.names=1)))
 
 # standardize some spp names
-names(grow.T.parm) <- c("Prunus.polystachya","Campnosperma.squamatum")
 colnames(surv.parm) <- gsub(" ", ".", colnames(surv.parm))
 colnames(grow.T.parm) <- gsub(" ", ".", colnames(grow.T.parm))
 
