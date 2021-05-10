@@ -94,7 +94,7 @@ GT_z1z <- function(terrain, trees, sp, intraA)
   names(z1) <- NULL
   return(z1)
 }
-#plot(GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intra.dist.calc(ppoT, "Prunus.polystachya")) ~ ppoT[,"logdbh"], cex=3)
+#plot(GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intra.dist.calc(ppoT)) ~ ppoT[,"logdbh"], cex=3)
 #abline(0,1, lty=2)
 
 ## FLOWERING function, logistic regression
@@ -273,12 +273,12 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
   z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
   
   # rbind coordinates of trees and seedlings
-  ppoALL <- as.matrix(rbind(ppoT[,1:2], ppoS[,1:2]))
+  ALL <- as.matrix(rbind(trees[,1:2], seedlings[,1:2]))
   # calc distance and find all within 400m2 radius of focal
-  dists <- spDists(ppoALL)
+  dists <- spDists(ALL)
   Ts.in.r <- ifelse(dists < sqrt(400/pi), 1, 0)
   diag(Ts.in.r) <- 0
-  raw.intraS <- pi*(exp(c(ppoT$logdbh, z))/2)^2 %*% Ts.in.r
+  raw.intraS <- pi*(exp(c(trees$logdbh, z))/2)^2 %*% Ts.in.r
   return(list(as.vector(raw.intraS)[1:nrow(trees)], as.vector(raw.intraS)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))]))
 }
 #intra.calc(ppoT, ppoS, sp="Prunus.polystachya")
@@ -287,11 +287,11 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
 #      surv.parm.unscale["surv.intraS.unscale.mu",]) / surv.parm.unscale["surv.intraS.unscale.sigma",])
 
 ## Distance-explicit asymmetric intraspecific competition (intraA.dist)
-# almost same as above, except only for adult trees, and more spatially sensitve
-intra.dist.calc <- function(trees, sp, r=sqrt(1600/pi)){
+# almost same as above, except only for adult trees, and more spatially sensitive
+intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
   # calc distance
-  dists <- spDists(ppoT)
-  dbh <- exp(ppoT$logdbh)
+  dists <- spDists(trees)
+  dbh <- exp(trees$logdbh)
   # diagonal elements and trees which are > sqrt(400/pi) m from focal should not be computed (note: 1600m2 is the area of a 40x40m plot)
   # to get rid simply set to a very large value
   dists[which(dists > r)] <- 1e10
@@ -301,11 +301,63 @@ intra.dist.calc <- function(trees, sp, r=sqrt(1600/pi)){
   # intraA is simply intraS divided by dbh
   return(raw.intraS.dist/dbh)
 }
-#intra.dist.calc(ppoT, sp="Prunus.polystachya")
-#hist(intraA <- intra.dist.calc(ppoT, sp="Prunus.polystachya"))
+#intra.dist.calc(ppoT)
+#hist(intraA <- intra.dist.calc(ppoT))
 #hist((log(intraA + grow.T.parm.unscale["grow.intraA.unscale.logoffset",]) -
 #      grow.T.parm.unscale["grow.intraA.unscale.mu",]) / grow.T.parm.unscale["grow.intraA.unscale.sigma",])
 
+## Heterospecific adult density around seedlings (HAE)
+# HAE is sum BA of all non focal species adult stems in 20x20 plot
+# we want to convert this 400m^2 into a circle about each focal seedling
+# 400 = pi*r^2
+HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
+  # spDists returns distance matrix with rows as trees and cols as seedlings
+  Ts.in.r <- ifelse(spDists(as.matrix(trees.hetero), as.matrix(seedlings.con)) < r, 1, 0)
+  raw.CAE <- as.vector(pi*(exp(trees$logdbh)/2)^2) %*% Ts.in.r
+  return(as.vector(raw.CAE))
+}
+#CAE.calc(sceT, ppoS)
+
+## Symmetric interspecific competition (interS)
+# almost same as above, except includes seedlings
+# returns interS for adults [[1]] and seedlings [[2]]
+inter.calc <- function(trees.hetero, trees.con, seedlings.con, sp, r = sqrt(400/pi)){
+  # convert seedling heights to dbh
+  h <- seedlings.con$logheight
+  z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
+  
+  # rbind coordinates of trees and seedlings
+  con.ALL <- as.matrix(rbind(trees.con[,1:2], seedlings.con[,1:2]))
+  # calc distance and find all within 400m2 radius of focal
+  dists <- spDists(trees.hetero[,1:2], con.ALL)
+  Ts.in.r <- ifelse(dists < sqrt(400/pi), 1, 0)
+  trees.hetero.ba <- matrix(pi*(exp(trees.hetero$logdbh)/2)^2, nrow=1)
+  raw.interS <- trees.hetero.ba %*% as.matrix(Ts.in.r)
+  return(list(as.vector(raw.interS)[1:nrow(trees.con)], as.vector(raw.interS)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))]))
+}
+#inter.calc(sceT, ppoT, ppoS, sp="Prunus.polystachya")
+#interS <- inter.calc(sceT, ppoT, ppoS, sp="Prunus.polystachya")[[2]]
+#hist((log(interS) -
+#      surv.parm.unscale["surv.interS.unscale.mu",]) / surv.parm.unscale["surv.interS.unscale.sigma",])
+
+## Distance-explicit symmetric interspecific competition (intraS.dist)
+# almost same as above, except only for adult trees, and more spatially sensitive
+inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
+  # calc distance
+  dists <- spDists(trees.hetero, trees.con)
+  dbh <- exp(trees.hetero$logdbh)
+  # diagonal elements and trees which are > sqrt(400/pi) m from focal should not be computed (note: 1600m2 is the area of a 40x40m plot)
+  # to get rid simply set to a very large value
+  dists[which(dists > r)] <- 1e10
+  diag(dists) <- 1e10
+  dists <- dists^-1
+  raw.interS.dist <- matrix(dbh, nrow=1) %*% dists
+  return(raw.interS.dist)
+}
+#inter.dist.calc(sceT, ppoT)
+#hist(interS <- inter.dist.calc(sceT, ppoT))
+#hist((log(interS) -
+#      grow.T.parm.unscale["grow.interS.unscale.mu",]) / grow.T.parm.unscale["grow.interS.unscale.sigma",])
 
 
 #################
@@ -321,26 +373,39 @@ nT = 20
 
 ppoT.ras <- sampleRandom(nssf.m, size=nT, na.rm=T, asRaster=T)
 ppoT.ras[!is.na(ppoT.ras)] <- rexp(nT)
-
-# just for plotting, we convert ppoT to points shapefile
 ppoT <- data.frame(rasterToPoints(ppoT.ras, spatial=F))
 names(ppoT) <- c("x", "y", "logdbh")
 
+sceT.ras <- sampleRandom(nssf.m, size=nT, na.rm=T, asRaster=T)
+sceT.ras[!is.na(sceT.ras)] <- rexp(nT)
+sceT <- data.frame(rasterToPoints(sceT.ras, spatial=F))
+names(sceT) <- c("x", "y", "logdbh")
+
 # rexp produces some super large trees. need to bring down their dbh to 50cm
 ppoT$logdbh[ppoT$logdbh > log(50)] <- log(50)
-
+sceT$logdbh[sceT$logdbh > log(50)] <- log(50)
 
 # starting population size for seedlings
 nS = 400
 ppoS.ras <- sampleRandom(nssf.m, size=nS, na.rm=T, asRaster=T)
 ppoS.ras[!is.na(ppoS.ras)] <- rexp(nS)
-
 ppoS <- data.frame(rasterToPoints(ppoS.ras, spatial=F))
 names(ppoS) <- c("x", "y", "logheight")
 
-plot(nssf.m, legend=F)
-points(ppoT, cex=ppoT$logdbh)
-points(data.frame(ppoS), col="grey", pch=4, cex=0.1)
+sceS.ras <- sampleRandom(nssf.m, size=nS, na.rm=T, asRaster=T)
+sceS.ras[!is.na(sceS.ras)] <- rexp(nS)
+sceS <- data.frame(rasterToPoints(sceS.ras, spatial=F))
+names(sceS) <- c("x", "y", "logheight")
+
+# Define a colour palette
+col.pal <- c("#E3C16F", "#946846", "#FAFF70", "#6D213C", "#65DEF1", "#F3F5F6", "#BAAB68", "#CBC5EA")
+col.t <- adjustcolor(col.pal, alpha.f=0.6)
+
+plot(nssf.m, legend=F, col=col.pal[c(6,5)])
+points(ppoT, cex=ppoT$logdbh, col=col.t[1], pch=16)
+points(data.frame(ppoS), col=col.t[1], pch=4, cex=0.1)
+points(sceT, cex=sceT$logdbh, col=col.t[2], pch=16)
+points(data.frame(sceS), col=col.t[2], pch=4, cex=0.1)
 scalebar(100, xy=c(367200, 152900), type="bar", lonlat=F, below="metres", divs=4)
 
 #######################
@@ -350,14 +415,23 @@ scalebar(100, xy=c(367200, 152900), type="bar", lonlat=F, below="metres", divs=4
 ppoT.init <- ppoT
 ppoS.init <- ppoS
 
+sceT.init <- sceT
+sceS.init <- sceS
+
 time <- 0
 maxTime <- 100
 
 (n.ppoT <- nrow(ppoT))
 (n.ppoS <- nrow(ppoS))
 
+(n.sceT <- nrow(sceT))
+(n.sceS <- nrow(sceS))
+
 (z.ppoT <- mean(ppoT$logdbh))
 (h.ppoS <- mean(ppoS$logheight))
+
+(z.sceT <- mean(sceT$logdbh))
+(h.sceS <- mean(sceS$logheight))
 
 while (time < maxTime) {
   
@@ -374,7 +448,7 @@ while (time < maxTime) {
   rm(seedling.CAE)
   
   # Tree growth and survival
-  intraA <- intra.dist.calc(ppoT, "Prunus.polystachya")
+  intraA <- intra.dist.calc(ppoT)
   ppoT$logdbh <- sT_z(nssf.m, ppoT, "Prunus.polystachya", intraS[[1]]) * GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intraA)
   if(sum(ppoT$logdbh==0) > 0)  ppoT <- ppoT[-which(ppoT$logdbh==0),]
   rm(intraA)
