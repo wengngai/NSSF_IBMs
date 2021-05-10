@@ -205,7 +205,7 @@ $$\log(recruits) = \beta_{ir} + \beta_{iD} DBH$$
 If we assume that $\beta_{iD}$ in both equations is equal, the only unknown parameter left in Eqn 2 is $\beta_{ir}$. We can solve for this:
 $$\beta_{iD} DBH=\log(fruits)-\beta_{if}=\log(recruits)-\beta_{ir}$$
 Thus,
-$$\beta_{ir} DBH=\log(recruits)-\log(fruits)+\beta_{if}$$
+$$\beta_{ir}=\log(recruits)-\log(fruits)+\beta_{if}$$
 All the variables on the RHS of this last equation are known values:
 * $\log⁡(recruits)$ can be approximated by the number of seedlings in 100-m radii around the surveyed trees as estimated using the dispersal kernel
 * $\log⁡(fruits)$ can be predicted from the fruiting volume model for each tree corresponding to the size and species of the surveyed trees (in the dispersal kernel survey data)
