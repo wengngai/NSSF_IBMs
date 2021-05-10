@@ -192,18 +192,18 @@ However, the response variable in this (recruitment) dispersal kernel was (withi
 
 ## (4) Scaling recruitment volume against parent tree size
 
-The dispersal kernel can be used in conjunction with transect data (area of transect, total number of seedlings per transect) to estimate the total number of seedlings in a 100m radius around each parent tree (assuming that the number of seedlings recruiting beyond that radius is very small).
+The dispersal kernel can be used in conjunction with transect data (area of transect, total number of seedlings per transect) to estimate the total number of seedlings in a 100 m radius around each parent tree (assuming that the number of seedlings recruiting beyond that radius is very small).
 
 This estimated number of recruits can then be regressed against DBH of the parent tree. However, the parent tree DBH coverage and sample size were very poor, and this regression turned out very poor.
 
 Thus, a better solution here was to borrow the scaling factor from the fruiting volume model for the seedling location model, implicitly assuming that recruitment fraction is the same (for each species) between individuals of different sizes (a reasonable assumption).
 
-The scaling of fruit production with tree size (from **(2) Fruiting volume model**) is:
-$$\log(fruits) = \beta_{if} + \beta_{iD} DBH$$
-And the scaling of recruitment with tree size can be represented similarly
-$$\log(recruits) = \beta_{ir} + \beta_{iD} DBH$$
-If we assume that $\beta_{iD}$ in both equations is equal, the only unknown parameter left in Eqn 2 is $\beta_{ir}$. We can solve for this:
-$$\beta_{iD} DBH=\log(fruits)-\beta_{if}=\log(recruits)-\beta_{ir}$$
+For individual $i$ of species $j$, the scaling of fruit production, $F_{ij}$,  with tree size, $D_{ij}$ (from **(2) Fruiting volume model**) is:
+$$\log(F_{ij}) = \phi_{0,j} + \phi_{D,j} D_{ij}$$
+And the scaling of recruitment, $R_{ij}$, with tree size can be represented similarly
+$$\log(R_{ij}) = \rho_{0,j} + \rho_{D,j} D_{ij}$$
+If we assume that $\phi_{D,j} = \rho_{D,j} = \beta_{D,j}$, the only unknown parameter left in Eqn 2 is $\rho_{0,j}$. We can solve for this:
+$$\beta_{D,j} D_{ij}=\log(F_{ij})-\phi_{0,j}=\log(R_{ij})-\rho_{0,j}$$
 Thus,
 $$\beta_{ir}=\log(recruits)-\log(fruits)+\beta_{if}$$
 All the variables on the RHS of this last equation are known values:
