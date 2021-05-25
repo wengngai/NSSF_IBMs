@@ -206,11 +206,12 @@ For individual $i$ of species $j$, the scaling of fruit production, $F_{ij}$,  w
 $$\log(F_{ij}) = \phi_{0,j} + \phi_{D,j} D_{ij}$$
 And the scaling of recruitment, $R_{ij}$, with tree size can be represented similarly
 $$\log(R_{ij}) = \rho_{0,j} + \rho_{D,j} D_{ij}$$
-If we assume that $\phi_{D,j} = \rho_{D,j} = \beta_{D,j}$, the only unknown parameter left in Eqn 2 is $\rho_{0,j}$. We can solve for this:
-$$\beta_{D,j} D_{ij}=\log(F_{ij})-\phi_{0,j}=\log(R_{ij})-\rho_{0,j}$$
+If we assume that $\phi_{D,j} = \rho_{D,j}$, the only unknown parameter left in Eqn 2 is $\rho_{0,j}$. We can solve for this:
+$$\log(F_{ij})-\phi_{0,j}=\log(R_{ij})-\rho_{0,j}$$
 Thus,
 $$\rho_{0,j}=\log(R_{ij})-\log(F_{ij})+\phi_{0,j}$$
 All the variables on the RHS of this last equation are known values:
+
 * $\log⁡(R_{ij})$ can be approximated by the number of seedlings in 100-m radii around the surveyed trees as estimated using the dispersal kernel
 * $\log⁡(F_{ij})$ can be predicted from the fruiting volume model for each tree corresponding to the size and species of the surveyed trees (in the dispersal kernel survey data)
 * $\phi_{0,j}$ is simply the random species intercept for species i in the **(2) fruiting volume model**
