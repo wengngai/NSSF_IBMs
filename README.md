@@ -16,7 +16,7 @@ These are predictors from the top models for each vital rate, as reported in (ea
 1. Seedling (DBH < 1 cm) growth: conspecific and heterospecific adult effects, and their interactions with seedling height
 2. Small tree (seedlings + saplings < 2.7 cm DBH) survival*: intraspecific competition and habitat mismatch
 3. Adult growth**: intra- and interspecific competition
-4. Large tree (DBH > 2.7 cm) surival*: intra- and interspecific competition
+4. Large tree (DBH > 2.7 cm) survival*: intra- and interspecific competition
 5. Fruiting probability: habitat mismatch
 
 *Small and large tree survival models are based off models from Needham et al. (Proc. B. 2018) and Johnson et al. (Nat. Ecol. Evol. 2018)
