@@ -1,6 +1,7 @@
 "","x"
-"surv.intraS.unscale.mu",1.53468663350201
-"surv.intraS.unscale.sigma",5.57708321045134
-"surv.intraS.unscale.logoffset",0.001
-"surv.interS.unscale.mu",9.19618206899986
-"surv.interS.unscale.sigma",0.40539798134307
+"intraA.unscale.logoffset",5e-05
+"intraA.unscale.mu",-1.776362019415
+"intraA.unscale.sigma",7.58271158485981
+"interAHM.unscale.logoffset",10
+"interAHM.unscale.mu",2.29738437361103
+"interAHM.unscale.sigma",0.103006382032513
