@@ -5,14 +5,14 @@ library(sp)
 # GROWTH PARAMS #
 #################
 
-(grow.T.parm <- t(read.csv("tree growth parameters Apr21.csv", header=T, row.names=1)))
-(grow.T.parm.unscale <- read.csv("tree growth model unscale params.csv", header=T, row.names=1))
-(grow.S.parm <- read.csv("seedling lmer growth params CAA Apr21.csv", header=T, row.names=1))
-(surv.parm <- t(read.csv("surv params Apr21.csv", header=T, row.names=1)))
-(surv.parm.unscale <- read.csv("survival model unscale params.csv", header=T, row.names=1))
-(fruit.parm <- read.csv("fruiting parameters Apr21.csv", header=T, row.names=1))
-(tran.parm <- read.csv("transition params CAA Mar21.csv", header=T, row.names=1))
-(rec.parm <- t(read.csv("dispersal kernel parameters Apr21.csv", header=T, row.names=1)))
+(grow.T.parm <- t(read.csv("data/tree growth parameters Apr21.csv", header=T, row.names=1)))
+(grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", header=T, row.names=1))
+(grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1))
+(surv.parm <- t(read.csv("data/surv params Apr21.csv", header=T, row.names=1)))
+(surv.parm.unscale <- read.csv("data/survival model unscale params.csv", header=T, row.names=1))
+(fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1))
+(tran.parm <- read.csv("data/transition params CAA Mar21.csv", header=T, row.names=1))
+(rec.parm <- t(read.csv("data/dispersal kernel parameters Apr21.csv", header=T, row.names=1)))
 
 # standardize some spp names
 colnames(surv.parm) <- gsub(" ", ".", colnames(surv.parm))

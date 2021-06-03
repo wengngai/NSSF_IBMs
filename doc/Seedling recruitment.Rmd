@@ -1,3 +1,7 @@
+---
+output:
+  html_document: default
+---
 # How many seedlings recruit around a tree of species i and DBH x each year?
 
 To answer this question, we have three sets of data, which are used to construct three types of models
@@ -207,9 +211,10 @@ $$\log(F_{ij})-\phi_{0,j}=\log(R_{ij})-\rho_{0,j}$$
 Thus,
 $$\rho_{0,j}=\log(R_{ij})-\log(F_{ij})+\phi_{0,j}$$
 All the variables on the RHS of this last equation are known values:
-* $\log(R_{ij})$ can be approximated by the number of seedlings in 100-m radii around the surveyed trees as estimated using the dispersal kernel
-* $\log(F_{ij})$ can be predicted from the fruiting volume model for each tree corresponding to the size and species of the surveyed trees (in the dispersal kernel survey data)
-* $\phi_{0,j}$ is simply the species intercept for species i in the **(2) fruiting volume model**
+
+* $\log⁡(R_{ij})$ can be approximated by the number of seedlings in 100-m radii around the surveyed trees as estimated using the dispersal kernel
+* $\log⁡(F_{ij})$ can be predicted from the fruiting volume model for each tree corresponding to the size and species of the surveyed trees (in the dispersal kernel survey data)
+* $\phi_{0,j}$ is simply the random species intercept for species i in the **(2) fruiting volume model**
 
 Thus $\rho_{0,j}$, which is an approximation of the (logged) germination + survival rate of the fruits of each species, can easily be calculated for each parent tree in the seedling location surveys, and then averaged across the species.
 
@@ -241,20 +246,3 @@ Thus, the procedure for the fruit production to seedling recruitment processes i
 3. Then, use the **(3) seedling location model** (2DT dispersal kernel) to estimate a vector of $n$ distances from the parent tree ($d$)
 
 4. Finally, populate the landscape around the parent tree with $n$ seedlings located $d$ distances from the parent at random angles and assign these seedlings heights corresponding to mean year-old seedling heights (with SD included to create variation)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
