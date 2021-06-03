@@ -11,8 +11,9 @@ library(sp)
 (surv.parm <- t(read.csv("data/surv params Apr21.csv", header=T, row.names=1)))
 (surv.parm.unscale <- read.csv("data/survival model unscale params.csv", header=T, row.names=1))
 (fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1))
-(tran.parm <- read.csv("data/transition params CAA Mar21.csv", header=T, row.names=1))
+(tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1))
 (rec.parm <- t(read.csv("data/dispersal kernel parameters Apr21.csv", header=T, row.names=1)))
+(HM.parm <- t(read.csv("data/HM values.csv", header=T, row.names=1)))
 
 # standardize some spp names
 colnames(surv.parm) <- gsub(" ", ".", colnames(surv.parm))
@@ -37,7 +38,7 @@ colnames(grow.T.parm) <- gsub(" ", ".", colnames(grow.T.parm))
 ## TREE Survival function, logistic regression
 # note: need to add interS effect eventually
 
-sT_z <- function(terrain, trees, sp, intraS)
+sT_z <- function(terrain, trees, sp, intraA, interAHM)
 {
   m.par <- surv.parm
   z <- trees[,"logdbh"]
@@ -45,10 +46,10 @@ sT_z <- function(terrain, trees, sp, intraS)
   plot_type[is.na(plot_type)] <- "dry"
   
   # scale intraS and interS, then calculate p1 and p2 from them
-  intraS.scaled <- (log(intraS + surv.parm.unscale["surv.intraS.unscale.logoffset",]) -
-                      surv.parm.unscale["surv.intraS.unscale.mu",]) / surv.parm.unscale["surv.intraS.unscale.sigma",]
-  #interS.scaled <- (log(interS) - surv.parm.unscale["surv.interS.unscale.mu",]) / 
-  #  surv.parm.unscale["surv.interS.unscale.sigma",]
+  intraA.scaled <- (log(intraS + surv.parm.unscale["intraA.unscale.logoffset",]) -
+                      surv.parm.unscale["intraA.unscale.mu",]) / surv.parm.unscale["intraA.unscale.sigma",]
+  interAHM.scaled <- (log(interAHM + surv.parm.unscale["interAHM.unscale.logoffset",]) 
+                      - surv.parm.unscale["interAHM.unscale.mu",]) /  surv.parm.unscale["interAHM.unscale.sigma",]
   
   p1 <- m.par[paste0("p1.", plot_type), sp] + (intraS.scaled * m.par["p1.intraS", sp])
   p2 <- m.par["p2", sp] + (intraS.scaled * m.par["p2.intraS", sp])
@@ -271,6 +272,8 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
   # convert seedling heights to dbh
   h <- seedlings$logheight
   z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
+  # concatenate adult and seedling zs
+  z <- c(trees$logdbh, z)
   
   # rbind coordinates of trees and seedlings
   ALL <- as.matrix(rbind(trees[,1:2], seedlings[,1:2]))
@@ -278,11 +281,16 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
   dists <- spDists(ALL)
   Ts.in.r <- ifelse(dists < sqrt(400/pi), 1, 0)
   diag(Ts.in.r) <- 0
-  raw.intraS <- pi*(exp(c(trees$logdbh, z))/2)^2 %*% Ts.in.r
-  return(list(as.vector(raw.intraS)[1:nrow(trees)], as.vector(raw.intraS)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))]))
+  # for asymmetric competition, we only want pairs in which focal is the larger of the two, so need to compute another matrix
+  zz <- matrix(rep(z, each=length(z)), ncol=length(z))
+  big.mat <- ifelse(t(zz)>zz, 1, 0)
+  pairs.to.count <- Ts.in.r * big.mat
+  # use matrix multiplication to obtain sum intraA for each individual
+  raw.intraA <- pi*(exp(z)/2)^2 %*% pairs.to.count
+  return(list(as.vector(raw.intraA)[1:nrow(trees)], as.vector(raw.intraA)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))]))
 }
 #intra.calc(ppoT, ppoS, sp="Prunus.polystachya")
-#intraS <- intra.calc(ppoT, ppoS, sp="Prunus.polystachya")[[2]]
+#intraA <- intra.calc(ppoT, ppoS, sp="Prunus.polystachya")[[2]]
 #hist((log(intraS + surv.parm.unscale["surv.intraS.unscale.logoffset",]) -
 #      surv.parm.unscale["surv.intraS.unscale.mu",]) / surv.parm.unscale["surv.intraS.unscale.sigma",])
 
@@ -364,48 +372,110 @@ inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
 # SETUP BASEMAP #
 #################
 
-nssf.m <- raster("basemap 10m-res.tif")
+nssf.m <- raster("data/basemap 10m-res.tif")
 nssf.m <- crop(nssf.m, extent(nssf.m, 220, 260, 120, 160))
 plot(nssf.m)
 
-# starting population size for adult trees
-nT = 20
+library(poweRlaw)
+## initialize PPO
+init.ppo.n <- 400
 
-ppoT.ras <- sampleRandom(nssf.m, size=nT, na.rm=T, asRaster=T)
-ppoT.ras[!is.na(ppoT.ras)] <- rexp(nT)
+# 20cm seedling height is the size of newly germinated seedling. calculate the theoretical DBH of this
+ppo.minlogdbh <- tran.parm["tran.int","Prunus.polystachya"] + tran.parm["tran.h","Prunus.polystachya"] * log(20)
+ppo.minDBH <- exp(ppo.minlogdbh)
+# use this minimum and the power law to create the size distribution (in untransformed DBH)
+init.ppo.dbh <- rplcon(init.ppo.n, ppo.minDBH, 2)
+
+# subset the data into seedlings and adults
+ppoS.logdbh <- log(init.ppo.dbh[which(init.ppo.dbh < 1)])
+ppoT.logdbh <- log(init.ppo.dbh[which(init.ppo.dbh >= 1)])
+
+# translate theoretical log DBH of seedlings into logheight (units used for all operations)
+ppoS.logheight <- (ppoS.logdbh - tran.parm["tran.int","Prunus.polystachya"]) / tran.parm["tran.h","Prunus.polystachya"]
+
+# create random points for ppoT, assign them logdbh values
+ppoT.ras <- sampleRandom(nssf.m, size=length(ppoT.logdbh), na.rm=T, asRaster=T)
+ppoT.ras[!is.na(ppoT.ras)] <- ppoT.logdbh
 ppoT <- data.frame(rasterToPoints(ppoT.ras, spatial=F))
 names(ppoT) <- c("x", "y", "logdbh")
 
-sceT.ras <- sampleRandom(nssf.m, size=nT, na.rm=T, asRaster=T)
-sceT.ras[!is.na(sceT.ras)] <- rexp(nT)
-sceT <- data.frame(rasterToPoints(sceT.ras, spatial=F))
-names(sceT) <- c("x", "y", "logdbh")
-
-# rexp produces some super large trees. need to bring down their dbh to 50cm
-ppoT$logdbh[ppoT$logdbh > log(50)] <- log(50)
-sceT$logdbh[sceT$logdbh > log(50)] <- log(50)
-
-# starting population size for seedlings
-nS = 400
-ppoS.ras <- sampleRandom(nssf.m, size=nS, na.rm=T, asRaster=T)
-ppoS.ras[!is.na(ppoS.ras)] <- rexp(nS)
+# create random points for ppoS, assign them logheight values
+ppoS.ras <- sampleRandom(nssf.m, size=length(ppoS.logheight), na.rm=T, asRaster=T)
+ppoS.ras[!is.na(ppoS.ras)] <- ppoS.logheight
 ppoS <- data.frame(rasterToPoints(ppoS.ras, spatial=F))
 names(ppoS) <- c("x", "y", "logheight")
 
-sceS.ras <- sampleRandom(nssf.m, size=nS, na.rm=T, asRaster=T)
-sceS.ras[!is.na(sceS.ras)] <- rexp(nS)
+## initialize SCE
+init.sce.n <- 500
+
+# 10cm seedling height is the size of newly germinated seedling. calculate the theoretical DBH of this
+sce.minlogdbh <- tran.parm["tran.int","Strombosia.ceylanica"] + tran.parm["tran.h","Strombosia.ceylanica"] * log(10)
+sce.minDBH <- exp(sce.minlogdbh)
+# use this minimum and the power law to create the size distribution (in untransformed DBH)
+init.sce.dbh <- rplcon(init.sce.n, sce.minDBH, 2)
+
+# subset the data into seedlings and adults
+sceS.logdbh <- log(init.sce.dbh[which(init.sce.dbh < 1)])
+sceT.logdbh <- log(init.sce.dbh[which(init.sce.dbh >= 1)])
+
+# translate theoretical log DBH of seedlings into logheight (units used for all operations)
+sceS.logheight <- (sceS.logdbh - tran.parm["tran.int","Strombosia.ceylanica"]) / tran.parm["tran.h","Strombosia.ceylanica"]
+
+# create random points for sceT, assign them logdbh values
+sceT.ras <- sampleRandom(nssf.m, size=length(sceT.logdbh), na.rm=T, asRaster=T)
+sceT.ras[!is.na(sceT.ras)] <- sceT.logdbh
+sceT <- data.frame(rasterToPoints(sceT.ras, spatial=F))
+names(sceT) <- c("x", "y", "logdbh")
+
+# create random points for sceS, assign them logheight values
+sceS.ras <- sampleRandom(nssf.m, size=length(sceS.logheight), na.rm=T, asRaster=T)
+sceS.ras[!is.na(sceS.ras)] <- sceS.logheight
 sceS <- data.frame(rasterToPoints(sceS.ras, spatial=F))
 names(sceS) <- c("x", "y", "logheight")
+
+## initialize "All other species" for background interspecific competition
+init.aos.n <- 2000
+
+# 10cm seedling height is the size of newly germinated seedling. calculate the theoretical DBH of this
+aos.minlogdbh <- tran.parm["tran.int","All.other.spp"] + tran.parm["tran.h","All.other.spp"] * log(10)
+aos.minDBH <- exp(aos.minlogdbh)
+# use this minimum and the power law to create the size distribution (in untransformed DBH)
+init.aos.dbh <- rplcon(init.aos.n, aos.minDBH, 2)
+
+# subset the data into seedlings and adults
+aosS.logdbh <- log(init.aos.dbh[which(init.aos.dbh < 1)])
+aosT.logdbh <- log(init.aos.dbh[which(init.aos.dbh >= 1)])
+
+# translate theoretical log DBH of seedlings into logheight (units used for all operations)
+aosS.logheight <- (aosS.logdbh - tran.parm["tran.int","All.other.spp"]) / tran.parm["tran.h","All.other.spp"]
+
+# create random points for aosT, assign them logdbh values
+aosT.ras <- sampleRandom(nssf.m, size=length(aosT.logdbh), na.rm=T, asRaster=T)
+aosT.ras[!is.na(aosT.ras)] <- aosT.logdbh
+aosT <- data.frame(rasterToPoints(aosT.ras, spatial=F))
+names(aosT) <- c("x", "y", "logdbh")
+
+# create random points for aosS, assign them logheight values
+aosS.ras <- sampleRandom(nssf.m, size=length(aosS.logheight), na.rm=T, asRaster=T)
+aosS.ras[!is.na(aosS.ras)] <- aosS.logheight
+aosS <- data.frame(rasterToPoints(aosS.ras, spatial=F))
+names(aosS) <- c("x", "y", "logheight")
+
+
 
 # Define a colour palette
 col.pal <- c("#E3C16F", "#946846", "#FAFF70", "#6D213C", "#65DEF1", "#F3F5F6", "#BAAB68", "#CBC5EA")
 col.t <- adjustcolor(col.pal, alpha.f=0.6)
 
 plot(nssf.m, legend=F, col=col.pal[c(6,5)])
+# PPO
 points(ppoT, cex=ppoT$logdbh, col=col.t[1], pch=16)
 points(data.frame(ppoS), col=col.t[1], pch=4, cex=0.1)
+# SCE
 points(sceT, cex=sceT$logdbh, col=col.t[2], pch=16)
 points(data.frame(sceS), col=col.t[2], pch=4, cex=0.1)
+# All other species (static--just for a background interspecific competition pressure)
+points(aosT, cex=aosT$logdbh,  pch=1)
 scalebar(100, xy=c(367200, 152900), type="bar", lonlat=F, below="metres", divs=4)
 
 #######################
