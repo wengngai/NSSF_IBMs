@@ -1,7 +1,12 @@
-"","x"
+"","V1"
 "intraA.unscale.logoffset",5e-05
 "intraA.unscale.mu",-1.776362019415
 "intraA.unscale.sigma",7.58271158485981
+"intraS.unscale.logoffset",0.001
+"intraS.unscale.mu",1.52396083107016
+"intraS.unscale.sigma",5.58404037049547
+"interS.unscale.mu",9.19613427788199
+"intraS.unscale.sigma",5.58404037049547
 "interAHM.unscale.logoffset",10
 "interAHM.unscale.mu",2.29738437361103
 "interAHM.unscale.sigma",0.103006382032513
