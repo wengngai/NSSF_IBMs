@@ -8,7 +8,7 @@ library(sp)
 (grow.T.parm <- t(read.csv("data/tree growth parameters Apr21.csv", header=T, row.names=1)))
 (grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", header=T, row.names=1))
 (grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1))
-(surv.parm <- t(read.csv("data/surv params Apr21.csv", header=T, row.names=1)))
+(surv.parm <- t(read.csv("data/surv params May21.csv", header=T, row.names=1)))
 (surv.parm.unscale <- read.csv("data/survival model unscale params.csv", header=T, row.names=1))
 (fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1))
 (tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1))
@@ -38,21 +38,28 @@ colnames(grow.T.parm) <- gsub(" ", ".", colnames(grow.T.parm))
 ## TREE Survival function, logistic regression
 # note: need to add interS effect eventually
 
-sT_z <- function(terrain, trees, sp, intraA, interAHM)
+sT_z <- function(terrain, trees, sp, intraA, interS, interA)
 {
   m.par <- surv.parm
   z <- trees[,"logdbh"]
   plot_type <- ifelse(extract(terrain, trees[,c("x","y")])==2, "wet", "dry")
   plot_type[is.na(plot_type)] <- "dry"
   
-  # scale intraS and interS, then calculate p1 and p2 from them
-  intraA.scaled <- (log(intraS + surv.parm.unscale["intraA.unscale.logoffset",]) -
+  # scale intraA, intraS, interS
+  intraA.scaled <- (log(intraA + surv.parm.unscale["intraA.unscale.logoffset",]) -
                       surv.parm.unscale["intraA.unscale.mu",]) / surv.parm.unscale["intraA.unscale.sigma",]
+  intraS.scaled <- (log(intraS + surv.parm.unscale["intraS.unscale.logoffset",]) -
+                      surv.parm.unscale["intraS.unscale.mu",]) / surv.parm.unscale["intraS.unscale.sigma",]
+  interS.scaled <- (log(interS + surv.parm.unscale["interS.unscale.logoffset",]) -
+                      surv.parm.unscale["interS.unscale.mu",]) / surv.parm.unscale["interS.unscale.sigma",]
+  # calculate interA*HM, then scale it
+  interAHM <- interA * HM.parm[paste0(plot_type,".hm.stem"),sp]
   interAHM.scaled <- (log(interAHM + surv.parm.unscale["interAHM.unscale.logoffset",]) 
                       - surv.parm.unscale["interAHM.unscale.mu",]) /  surv.parm.unscale["interAHM.unscale.sigma",]
   
-  p1 <- m.par[paste0("p1.", plot_type), sp] + (intraS.scaled * m.par["p1.intraS", sp])
-  p2 <- m.par["p2", sp] + (intraS.scaled * m.par["p2.intraS", sp])
+  # calculate p1 and p2 from these
+  p1 <- m.par[paste0("p1.", plot_type), sp] + (intraA.scaled * m.par["p1.intraA", sp])
+  p2 <- m.par["p2", sp] + (intraA.scaled * m.par["p2.intraS", sp])
   
   surv.prob <- ifelse( z <= 1,
                        m.par["K",sp] / ( 1 + exp(-m.par["r1",sp] * (z - p1)) ),
@@ -265,9 +272,22 @@ CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
 }
 #CAE.calc(ppoT, ppoS)
 
-## Symmetric intraspecific competition (intraS)
+## Heterospecific adult density around seedlings (HAE)
+# HAE is sum BA of all non focal species adult stems in 20x20 plot
+# we want to convert this 400m^2 into a circle about each focal seedling
+# 400 = pi*r^2
+HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
+  # spDists returns distance matrix with rows as trees and cols as seedlings
+  Ts.in.r <- ifelse(spDists(as.matrix(trees.hetero), as.matrix(seedlings.con)) < r, 1, 0)
+  raw.HAE <- as.vector(pi*(exp(trees.hetero$logdbh)/2)^2) %*% Ts.in.r
+  return(as.vector(raw.HAE))
+}
+#HAE.calc(sceT, ppoS)
+
+## Intraspecific competition (intra)
 # almost same as above, except includes seedlings
-# returns intraS for adults [[1]] and seedlings [[2]]
+# returns intraS (symmetric) for adults [[1]] and seedlings [[2]]
+# and intraA (asymmetric) for adults [[3]] and seedlings [[4]]
 intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
   # convert seedling heights to dbh
   h <- seedlings$logheight
@@ -285,14 +305,75 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
   zz <- matrix(rep(z, each=length(z)), ncol=length(z))
   big.mat <- ifelse(t(zz)>zz, 1, 0)
   pairs.to.count <- Ts.in.r * big.mat
-  # use matrix multiplication to obtain sum intraA for each individual
+  # use matrix multiplication to obtain summed intra for each individual
+  raw.intraS <- pi*(exp(z)/2)^2 %*% Ts.in.r
   raw.intraA <- pi*(exp(z)/2)^2 %*% pairs.to.count
-  return(list(as.vector(raw.intraA)[1:nrow(trees)], as.vector(raw.intraA)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))]))
+  return(list(
+    # intraS for adults [[1]] and seedlings [[2]]
+    as.vector(raw.intraS)[1:nrow(trees)], as.vector(raw.intraS)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))],
+    # intraA for adults [[3]] and seedlings [[4]]
+    as.vector(raw.intraA)[1:nrow(trees)], as.vector(raw.intraA)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))]
+    ))
 }
 #intra.calc(ppoT, ppoS, sp="Prunus.polystachya")
-#intraA <- intra.calc(ppoT, ppoS, sp="Prunus.polystachya")[[2]]
-#hist((log(intraS + surv.parm.unscale["surv.intraS.unscale.logoffset",]) -
+#intraS <- intra.calc(ppoT, ppoS, sp="Prunus.polystachya")[[2]]
+#intraA <- intra.calc(ppoT, ppoS, sp="Prunus.polystachya")[[4]]
+#plot(log(intraA+0.001) ~ log(intraS+0.001))
+#hist((log(intraA + surv.parm.unscale["surv.intraS.unscale.logoffset",]) -
 #      surv.parm.unscale["surv.intraS.unscale.mu",]) / surv.parm.unscale["surv.intraS.unscale.sigma",])
+
+
+## Interspecific competition (inter)
+# almost same as above except competition from hetero- instead of conspecific individuals
+# note: trees.hetero must include all non-focal species rbinded tgt in a 3 column matrix: [,1:2] = coordinates; [,3] = logdbh
+# returns interS for adults [[1]] and seedlings [[2]]
+# and interA for adults [[3]] and seedlings [[4]]
+inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con, sp, r = sqrt(400/pi)){
+  
+  # convert conspecific (i.e., focal species) seedling heights to dbh, combine with adult logdbh
+  h <- seedlings.con$logheight
+  z <- c(
+    (tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]),
+    trees.con$logdbh)
+  
+  # convert heterospecific (i.e., competitor species) seedling heights to dbh, combine with adult logdbh
+  h.hetero <- seedlings.hetero$logheight
+  z.hetero <- c(
+    (tran.parm["tran.int","All.other.spp"] + h.hetero*tran.parm["tran.h","All.other.spp"]),
+    trees.hetero$logdbh)
+  
+  # rbind coordinates of conspecific (i.e., focal species) and heterospecific (i.e., competitor) trees and seedlings
+  con.ALL <- as.matrix(rbind(trees.con[,1:2], seedlings.con[,1:2]))
+  hetero.ALL <- as.matrix(rbind(trees.hetero[,1:2], seedlings.hetero[,1:2]))
+  
+  # calc distance between heterospecific competitors and focal species individuals, find all within 400m2 radius of focal
+  dists <- spDists(hetero.ALL, con.ALL)
+  Ts.in.r <- ifelse(dists < sqrt(400/pi), 1, 0)
+  
+  # for asymmetric competition, we only want pairs in which focal is the larger of the two, so need to compute another matrix
+  z.con.mat <- matrix(rep(z, each=length(z.hetero)), ncol=length(z))
+  z.hetero.mat <- matrix(rep(z.hetero, length(z)), ncol=length(z))
+  big.mat <- ifelse(z.hetero.mat > z.con.mat, 1, 0)
+  pairs.to.count <- Ts.in.r * big.mat
+  # use matrix multiplication to obtain summed inter for each individual
+  raw.interS <- pi*(exp(z.hetero)/2)^2 %*% Ts.in.r
+  raw.interA <- pi*(exp(z.hetero)/2)^2 %*% pairs.to.count
+  
+  return(list(
+    # interS for adults [[1]] and seedlings [[2]]
+    as.vector(raw.interS)[1:nrow(trees.con)], as.vector(raw.interS)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))],
+    # and interA for adults [[3]] and seedlings [[4]]
+    as.vector(raw.interA)[1:nrow(trees.con)], as.vector(raw.interA)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))]
+  ))
+}
+#inter.calc(sceT, sceS, ppoT, ppoS, sp="Prunus.polystachya")
+#interS <- inter.calc(sceT, sceS, ppoT, ppoS, sp="Prunus.polystachya")[[2]]
+#interA <- inter.calc(sceT, sceS, ppoT, ppoS, sp="Prunus.polystachya")[[4]]
+#plot(log(interS+0.01) ~ log(interA+0.01))
+#hist((log(interS) -
+#      surv.parm.unscale["surv.interS.unscale.mu",]) / surv.parm.unscale["surv.interS.unscale.sigma",])
+
+# Below: Distance-explicit measures--only for adult growth models
 
 ## Distance-explicit asymmetric intraspecific competition (intraA.dist)
 # almost same as above, except only for adult trees, and more spatially sensitive
@@ -314,41 +395,7 @@ intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
 #hist((log(intraA + grow.T.parm.unscale["grow.intraA.unscale.logoffset",]) -
 #      grow.T.parm.unscale["grow.intraA.unscale.mu",]) / grow.T.parm.unscale["grow.intraA.unscale.sigma",])
 
-## Heterospecific adult density around seedlings (HAE)
-# HAE is sum BA of all non focal species adult stems in 20x20 plot
-# we want to convert this 400m^2 into a circle about each focal seedling
-# 400 = pi*r^2
-HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
-  # spDists returns distance matrix with rows as trees and cols as seedlings
-  Ts.in.r <- ifelse(spDists(as.matrix(trees.hetero), as.matrix(seedlings.con)) < r, 1, 0)
-  raw.CAE <- as.vector(pi*(exp(trees$logdbh)/2)^2) %*% Ts.in.r
-  return(as.vector(raw.CAE))
-}
-#CAE.calc(sceT, ppoS)
-
-## Symmetric interspecific competition (interS)
-# almost same as above, except includes seedlings
-# returns interS for adults [[1]] and seedlings [[2]]
-inter.calc <- function(trees.hetero, trees.con, seedlings.con, sp, r = sqrt(400/pi)){
-  # convert seedling heights to dbh
-  h <- seedlings.con$logheight
-  z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
-  
-  # rbind coordinates of trees and seedlings
-  con.ALL <- as.matrix(rbind(trees.con[,1:2], seedlings.con[,1:2]))
-  # calc distance and find all within 400m2 radius of focal
-  dists <- spDists(trees.hetero[,1:2], con.ALL)
-  Ts.in.r <- ifelse(dists < sqrt(400/pi), 1, 0)
-  trees.hetero.ba <- matrix(pi*(exp(trees.hetero$logdbh)/2)^2, nrow=1)
-  raw.interS <- trees.hetero.ba %*% as.matrix(Ts.in.r)
-  return(list(as.vector(raw.interS)[1:nrow(trees.con)], as.vector(raw.interS)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))]))
-}
-#inter.calc(sceT, ppoT, ppoS, sp="Prunus.polystachya")
-#interS <- inter.calc(sceT, ppoT, ppoS, sp="Prunus.polystachya")[[2]]
-#hist((log(interS) -
-#      surv.parm.unscale["surv.interS.unscale.mu",]) / surv.parm.unscale["surv.interS.unscale.sigma",])
-
-## Distance-explicit symmetric interspecific competition (intraS.dist)
+## Distance-explicit symmetric interspecific competition (interS.dist)
 # almost same as above, except only for adult trees, and more spatially sensitive
 inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
   # calc distance
