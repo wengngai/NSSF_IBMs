@@ -6,7 +6,7 @@
 "intraS.unscale.mu",1.52396083107016
 "intraS.unscale.sigma",5.58404037049547
 "interS.unscale.mu",9.19613427788199
-"intraS.unscale.sigma",5.58404037049547
+"interS.unscale.sigma",0.405414810302147
 "interAHM.unscale.logoffset",10
 "interAHM.unscale.mu",2.29738437361103
 "interAHM.unscale.sigma",0.103006382032513
