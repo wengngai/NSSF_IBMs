@@ -8,7 +8,7 @@ library(sp)
 (grow.T.parm <- t(read.csv("data/tree growth parameters Apr21.csv", header=T, row.names=1)))
 (grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", header=T, row.names=1))
 (grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1))
-(surv.parm <- t(read.csv("data/surv params May21.csv", header=T, row.names=1)))
+(surv.parm <- t(read.csv("data/surv params Jun21.csv", header=T, row.names=1)))
 (surv.parm.unscale <- read.csv("data/survival model unscale params.csv", header=T, row.names=1))
 (fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1))
 (tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1))
@@ -18,6 +18,7 @@ library(sp)
 # standardize some spp names
 colnames(surv.parm) <- gsub(" ", ".", colnames(surv.parm))
 colnames(grow.T.parm) <- gsub(" ", ".", colnames(grow.T.parm))
+colnames(HM.parm) <- gsub(" ", ".", colnames(HM.parm))
 
 
 #################################
@@ -38,7 +39,7 @@ colnames(grow.T.parm) <- gsub(" ", ".", colnames(grow.T.parm))
 ## TREE Survival function, logistic regression
 # note: need to add interS effect eventually
 
-sT_z <- function(terrain, trees, sp, intraA, interS, interA)
+sT_z <- function(terrain, trees, sp, intraS, intraA, interS, interA)
 {
   m.par <- surv.parm
   z <- trees[,"logdbh"]
@@ -50,19 +51,20 @@ sT_z <- function(terrain, trees, sp, intraA, interS, interA)
                       surv.parm.unscale["intraA.unscale.mu",]) / surv.parm.unscale["intraA.unscale.sigma",]
   intraS.scaled <- (log(intraS + surv.parm.unscale["intraS.unscale.logoffset",]) -
                       surv.parm.unscale["intraS.unscale.mu",]) / surv.parm.unscale["intraS.unscale.sigma",]
-  interS.scaled <- (log(interS + surv.parm.unscale["interS.unscale.logoffset",]) -
+  interS.scaled <- (log(interS) -
                       surv.parm.unscale["interS.unscale.mu",]) / surv.parm.unscale["interS.unscale.sigma",]
   # calculate interA*HM, then scale it
-  interAHM <- interA * HM.parm[paste0(plot_type,".hm.stem"),sp]
+  interAHM <- interA * HM.parm[paste0(plot_type,".hm.stem"),sp]  # use HM.stem for this calculation for now
   interAHM.scaled <- (log(interAHM + surv.parm.unscale["interAHM.unscale.logoffset",]) 
                       - surv.parm.unscale["interAHM.unscale.mu",]) /  surv.parm.unscale["interAHM.unscale.sigma",]
   
   # calculate p1 and p2 from these
-  p1 <- m.par[paste0("p1.", plot_type), sp] + (intraA.scaled * m.par["p1.intraA", sp])
-  p2 <- m.par["p2", sp] + (intraA.scaled * m.par["p2.intraS", sp])
+  p1 <- m.par["p1", sp] + (intraA.scaled * m.par["p1.intraA", sp])
+  r1 <- m.par["r1", sp] + (interAHM.scaled * m.par["r1.interAHM", sp])
+  p2 <- m.par["p2", sp] + (intraS.scaled * m.par["p2.intraS", sp]) + (interS.scaled * m.par["p2.interS", sp])
   
   surv.prob <- ifelse( z <= 1,
-                       m.par["K",sp] / ( 1 + exp(-m.par["r1",sp] * (z - p1)) ),
+                       m.par["K",sp] / ( 1 + exp(-r1 * (z - p1)) ),
                        m.par["K",sp] / ( 1 + exp(-m.par["r2",sp] * (z - p2)) )
   )
   
@@ -71,14 +73,14 @@ sT_z <- function(terrain, trees, sp, intraA, interS, interA)
   surv[is.na(surv)] <- 0
   return(surv)
 }
-#sT_z(nssf.m, ppoT, "Prunus.polystachya", 100)
+#sT_z(nssf.m, ppoT, "Prunus.polystachya", 1, 1, 1, 1)
 #sT_z(nssf.m, ppoT, "Prunus.polystachya", intra.calc(ppoT, ppoS, "Prunus.polystachya")[[1]])
 
 ## TREE Growth function
 # this is the only function that uses dbh instead of logdbh
 # note: need to add interS effect eventually
 
-GT_z1z <- function(terrain, trees, sp, intraA)
+GT_z1z <- function(terrain, trees, sp, intraA, interS)
 {
   m.par <- grow.T.parm
   z <- trees[,"logdbh"]
@@ -89,20 +91,27 @@ GT_z1z <- function(terrain, trees, sp, intraA)
   # scale intraA and interS
   intraA.scaled <- (log(intraA + grow.T.parm.unscale["grow.intraA.unscale.logoffset",]) -
                       grow.T.parm.unscale["grow.intraA.unscale.mu",]) / grow.T.parm.unscale["grow.intraA.unscale.sigma",]
-  #interS.scaled <- (log(interS) - grow.T.parm.unscale["grow.interS.unscale.mu",]) / 
-  #  grow.T.parm.unscale["grow.interS.unscale.sigma",]
+  interS.scaled <- (log(interS) - grow.T.parm.unscale["grow.interS.unscale.mu",]) / 
+                      grow.T.parm.unscale["grow.interS.unscale.sigma",]
+  interS.scaled[which(interS.scaled < -2)] <- -2 # in case too little interspecific competition causes infinite growth
+  
+  # calculate param b and c values
+  b <- m.par["b", sp] + (intraA.scaled * m.par["b.intraA", sp]) + (interS.scaled * m.par["b.interS", sp])
+  c <- m.par["c", sp] + (intraA.scaled * m.par["c.intraA", sp]) + (interS.scaled * m.par["c.interS", sp])
+  
   loggrowth <- (
     m.par["a",sp] * 
-      (dbh ^ (m.par["b", sp] + intraA.scaled * m.par["b.intraA", sp])) *
-      exp(-dbh * (m.par["c", sp] + intraA.scaled * m.par["c.intraA", sp]))
+      (dbh ^ b) *
+      exp(-dbh * c)
   ) + rnorm(n = length(z), mean = 0, sd = m.par["sigma",sp]) # add the noise in (sigma)
+  
   dbh1 <- dbh + (exp(loggrowth) - 1)
   dbh1[which(dbh1 < 1)] <- 1
   z1 <- log(dbh1)
   names(z1) <- NULL
   return(z1)
 }
-#plot(GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intra.dist.calc(ppoT)) ~ ppoT[,"logdbh"], cex=3)
+#plot(GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intra.dist.calc(ppoT), inter.dist.calc(rbind(aosT,sceT), ppoT)) ~ ppoT[,"logdbh"], cex=3)
 #abline(0,1, lty=2)
 
 ## FLOWERING function, logistic regression
@@ -154,32 +163,34 @@ c_0h1 <- function(n, sp)
 ## SEEDLING Growth function
 # note: need to add HAE effect eventually
 
-GS_h1h <- function(terrain, seedlings, sp, CAE)
+GS_h1h <- function(terrain, seedlings, sp, CAE, HAE)
 {
   # first few lines can be modified for later expansion
   m.par <- grow.S.parm
   h <- seedlings[,"logheight"]
-  plot_type <- ifelse(extract(terrain, seedlings[,c("x","y")])==2, "wet", "dry")
-  plot_type[is.na(plot_type)] <- "dry"
   CAE.scaled <- ( log(CAE+10) - m.par["grow.S.CAE.unscale.mu",sp] ) / m.par["grow.S.CAE.unscale.sigma",sp]
+  HAE.scaled <- ( log(HAE) - m.par["grow.S.HAE.unscale.mu",sp] ) / m.par["grow.S.HAE.unscale.sigma",sp]
+  HAE.scaled[which(HAE.scaled < -2)] <- -2 # replace HAE with a min value if too low
   
   mu <- m.par["grow.S.int",sp] + 					# intercept
     m.par["grow.S.CAE", sp] * CAE.scaled +			# CAE
+    m.par["grow.S.HAE", sp] * HAE.scaled +			# HAE
     m.par["grow.S.h", sp] * h +        				# height
-    m.par["grow.S.CAExh", sp] * h * CAE.scaled			# interaction
+    m.par["grow.S.CAExh", sp] * h * CAE.scaled +			# CAE interaction
+    m.par["grow.S.HAExh", sp] * h * HAE.scaled			# HAE interaction
   
   h1 <- mu + rnorm(n = length(mu), mean = 0, sd = m.par["grow.S.sigma",sp])
   
   names(h1) <- NULL
   return(h1)
 }
-#plot(GS_h1h(nssf.m, ppoS, "Prunus.polystachya", 100) ~ ppoS[,"logheight"])
+#plot(GS_h1h(nssf.m, ppoS, "Prunus.polystachya", 10, 10) ~ ppoS[,"logheight"])
 #points(GS_h1h(nssf.m, ppoS, "Prunus.polystachya", 1000) ~ ppoS[,"logheight"], col="red")
 #abline(0,1,lty=2,lwd=2)
 
 ## SEEDLING Survival function, logistic regression
 
-sS_h <- function(terrain, seedlings, sp, intraS)
+sS_h <- function(terrain, seedlings, sp, intraA, interA)
 {
   m.par <- surv.parm
   h <- seedlings[,"logheight"]
@@ -189,20 +200,26 @@ sS_h <- function(terrain, seedlings, sp, intraS)
   # transform logheight to logdbh
   z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
   
-  # scale intra, then calculate p1 from it
-  intraS.scaled <- (log(intraS + surv.parm.unscale["surv.intraS.unscale.logoffset",]) -
-                      surv.parm.unscale["surv.intraS.unscale.mu",]) / surv.parm.unscale["surv.intraS.unscale.sigma",]
+  # scale intraA, intraS, interS
+  intraA.scaled <- (log(intraA + surv.parm.unscale["intraA.unscale.logoffset",]) -
+                      surv.parm.unscale["intraA.unscale.mu",]) / surv.parm.unscale["intraA.unscale.sigma",]
+  # calculate interA*HM, then scale it
+  interAHM <- interA * HM.parm[paste0(plot_type,".hm.stem"),sp]  # use HM.stem for this calculation for now
+  interAHM.scaled <- (log(interAHM + surv.parm.unscale["interAHM.unscale.logoffset",]) 
+                      - surv.parm.unscale["interAHM.unscale.mu",]) /  surv.parm.unscale["interAHM.unscale.sigma",]
   
-  p1 <- m.par[paste0("p1.", plot_type), sp] + (intraS.scaled * m.par["p1.intraS", sp])
+  # calculate p1 and p2 from these
+  p1 <- m.par["p1", sp] + (intraA.scaled * m.par["p1.intraA", sp])
+  r1 <- m.par["r1", sp] + (interAHM.scaled * m.par["r1.interAHM", sp])
   
-  surv.prob <- m.par["K",sp] / ( 1 + exp(-m.par["r1",sp] * (z - p1)) )
+  surv.prob <- m.par["K",sp] / ( 1 + exp(-r1 * (z - p1)) )
   
   # return binary outcome
   surv <- rbinom(n = length(z), prob = surv.prob, size = 1)
   surv[is.na(surv)] <- 0
   return(surv)
 }
-#sS_h(nssf.m, ppoS, "Prunus.polystachya", 100) 
+#sS_h(nssf.m, ppoS, "Prunus.polystachya", 1, 1) 
 #sS_h(nssf.m, ppoS, "Prunus.polystachya", intra.calc(ppoT, ppoS, "Prunus.polystachya")[[2]]) * GS_h1h(nssf.m, ppoS, "Prunus.polystachya", 100)
 #plot(jitter(sS_h(nssf.m, ppoS, "Prunus.polystachya")) ~ sqrt(ppoS[,"logheight"]))
 
@@ -256,9 +273,9 @@ twoDT.sample <- function(n, sp) {
 }
 #hist(twoDT.sample(200, "Gironniera.nervosa"), breaks=100)
 
-######################################
-# FUNCTIONS FOR EXTRACTING VARIABLES #
-######################################
+#################################################
+# FUNCTIONS FOR EXTRACTING COMPETITIO VARIABLES #
+#################################################
 
 ## Conspecific adult density around seedlings (CAE)
 # CAE is sum BA of all adult stems in 20x20 plot
@@ -407,12 +424,11 @@ inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
   diag(dists) <- 1e10
   dists <- dists^-1
   raw.interS.dist <- matrix(dbh, nrow=1) %*% dists
-  return(raw.interS.dist)
+  return(as.vector(raw.interS.dist))
 }
 #inter.dist.calc(sceT, ppoT)
 #hist(interS <- inter.dist.calc(sceT, ppoT))
-#hist((log(interS) -
-#      grow.T.parm.unscale["grow.interS.unscale.mu",]) / grow.T.parm.unscale["grow.interS.unscale.sigma",])
+#hist((log(interS) - grow.T.parm.unscale["grow.interS.unscale.mu",]) / grow.T.parm.unscale["grow.interS.unscale.sigma",])
 
 
 #################
@@ -424,6 +440,7 @@ nssf.m <- crop(nssf.m, extent(nssf.m, 220, 260, 120, 160))
 plot(nssf.m)
 
 library(poweRlaw)
+
 ## initialize PPO
 init.ppo.n <- 400
 
@@ -453,7 +470,7 @@ ppoS <- data.frame(rasterToPoints(ppoS.ras, spatial=F))
 names(ppoS) <- c("x", "y", "logheight")
 
 ## initialize SCE
-init.sce.n <- 500
+init.sce.n <- 600
 
 # 10cm seedling height is the size of newly germinated seedling. calculate the theoretical DBH of this
 sce.minlogdbh <- tran.parm["tran.int","Strombosia.ceylanica"] + tran.parm["tran.h","Strombosia.ceylanica"] * log(10)
@@ -483,8 +500,8 @@ names(sceS) <- c("x", "y", "logheight")
 ## initialize "All other species" for background interspecific competition
 init.aos.n <- 2000
 
-# 10cm seedling height is the size of newly germinated seedling. calculate the theoretical DBH of this
-aos.minlogdbh <- tran.parm["tran.int","All.other.spp"] + tran.parm["tran.h","All.other.spp"] * log(10)
+# Use 60cm min seedling height for all other spp. (just need competition effect, and young seedlings contribute little)
+aos.minlogdbh <- tran.parm["tran.int","All.other.spp"] + tran.parm["tran.h","All.other.spp"] * log(60)
 aos.minDBH <- exp(aos.minlogdbh)
 # use this minimum and the power law to create the size distribution (in untransformed DBH)
 init.aos.dbh <- rplcon(init.aos.n, aos.minDBH, 2)
@@ -553,62 +570,129 @@ maxTime <- 100
 while (time < maxTime) {
   
   # Recruitment: initiate fruiting, but don't add new recruits to ppoS yet (let them grow/die first)
-  fruiting.index <- which(p_bz(nssf.m, ppoT, "Prunus.polystachya")==1)
-  prod.vec <- b_z(nssf.m, ppoT[fruiting.index,], "Prunus.polystachya")
-  parent.loc <- ppoT[fruiting.index, 1:2]
+  # PPO ("Prunus.polystachya")
+  fruiting.index.ppo <- which(p_bz(nssf.m, ppoT, "Prunus.polystachya")==1)
+  prod.vec.ppo <- b_z(nssf.m, ppoT[fruiting.index.ppo,], "Prunus.polystachya")
+  parent.loc.ppo <- ppoT[fruiting.index.ppo, 1:2]
+  # SCE ("Strombosia.ceylanica")
+  fruiting.index.sce <- which(p_bz(nssf.m, sceT, "Strombosia.ceylannica")==1)
+  prod.vec.sce <- b_z(nssf.m, sceT[fruiting.index.sce,], "Strombosia.ceylannica")
+  parent.loc.sce <- sceT[fruiting.index.sce, 1:2]
+  
+  # Extract competition measures
+  # PPO ("Prunus.polystachya")
+  inter.on.PPO <- inter.calc(rbind(sceT, aosT), rbind(sceS, aosS), ppoT, ppoS, sp="Prunus.polystachya")
+  intra.on.PPO <- intra.calc(ppoT, ppoS, sp="Prunus.polystachya")
+  CAE.on.ppoS <- CAE.calc(ppoT, ppoS)
+  HAE.on.ppoS <- HAE.calc(rbind(sceT, aosT), ppoS)
+  intra.dist.on.PPO <- intra.dist.calc(ppoT)
+  inter.dist.on.PPO <- inter.dist.calc(rbind(sceT, aosT), ppoT)
+  # SCE ("Strombosia.ceylanica")
+  inter.on.SCE <- inter.calc(rbind(ppoT, aosT), rbind(ppoS, aosS), sceT, sceS, sp="Strombosia.ceylanica")
+  intra.on.SCE <- intra.calc(sceT, sceS, sp="Strombosia.ceylanica")
+  CAE.on.sceS <- CAE.calc(sceT, sceS)
+  HAE.on.sceS <- HAE.calc(rbind(ppoT, aosT), sceS)
+  intra.dist.on.SCE <- intra.dist.calc(sceT)
+  inter.dist.on.SCE <- inter.dist.calc(rbind(ppoT, aosT), sceT)
   
   # Seedling growth and survival
-  seedling.CAE <- CAE.calc(ppoT, ppoS)
-  intraS <- intra.calc(ppoT, ppoS, "Prunus.polystachya")
-  ppoS$logheight <- sS_h(nssf.m, ppoS, "Prunus.polystachya", intraS[[2]]) * GS_h1h(nssf.m, ppoS, "Prunus.polystachya", seedling.CAE)
+  # PPO ("Prunus.polystachya")
+  ppoS$logheight <- sS_h(nssf.m, ppoS, "Prunus.polystachya", intra.on.PPO[[4]], inter.on.PPO[[4]]) * 
+    GS_h1h(nssf.m, ppoS, "Prunus.polystachya", CAE.on.ppoS, HAE.on.ppoS)
   if(sum(ppoS$logheight==0) > 0)  ppoS <- ppoS[-which(ppoS$logheight==0),]
-  rm(seedling.CAE)
+  # SCE ("Strombosia.ceylanica")
+  sceS$logheight <- sS_h(nssf.m, sceS, "Strombosia.ceylanica", intra.on.SCE[[4]], inter.on.SCE[[4]]) * 
+    GS_h1h(nssf.m, sceS, "Strombosia.ceylanica", CAE.on.sceS, HAE.on.sceS)
+  if(sum(sceS$logheight==0) > 0)  sceS <- sceS[-which(sceS$logheight==0),]
   
   # Tree growth and survival
-  intraA <- intra.dist.calc(ppoT)
-  ppoT$logdbh <- sT_z(nssf.m, ppoT, "Prunus.polystachya", intraS[[1]]) * GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intraA)
+  # PPO ("Prunus.polystachya")
+  ppoT$logdbh <- sT_z(nssf.m, ppoT, "Prunus.polystachya", intra.on.PPO[[1]], intra.on.PPO[[3]], inter.on.PPO[[1]], inter.on.PPO[[3]]) * 
+    GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intra.dist.on.PPO, inter.dist.on.PPO)
   if(sum(ppoT$logdbh==0) > 0)  ppoT <- ppoT[-which(ppoT$logdbh==0),]
-  rm(intraA)
+  # SCE ("Strombosia.ceylanica")
+  sceT$logdbh <- sT_z(nssf.m, sceT, "Strombosia.ceylanica", intra.on.SCE[[1]], intra.on.SCE[[3]], inter.on.SCE[[1]], inter.on.SCE[[3]]) * 
+    GT_z1z(nssf.m, sceT, "Strombosia.ceylanica", intra.dist.on.SCE, inter.dist.on.SCE)
+  if(sum(sceT$logdbh==0) > 0)  sceT <- sceT[-which(sceT$logdbh==0),]
+
+  # Conserve memory by deleting competition indices (don't need anymore)
+  #rm()
   
   # Seedling-sapling transition
+  # PPO ("Prunus.polystachya")
   ppoTS <- T_z1h1(ppoT, ppoS, "Prunus.polystachya")
   ppoT <- ppoTS[[1]]
   ppoS <- ppoTS[[2]]
-  rm(intraS)
+  # SCE ("Strombosia.ceylanica")
+  sceTS <- T_z1h1(sceT, sceS, "Strombosia.ceylanica")
+  sceT <- sceTS[[1]]
+  sceS <- sceTS[[2]]
   
   # This is the current number of seedlings:
+  # PPO ("Prunus.polystachya")
   n.old.ppoS <- nrow(ppoS)
+  # SCE ("Strombosia.ceylanica")
+  n.old.sceS <- nrow(sceS)
   
   # Recruitment: now add new recruits to ppoS
-  if(length(prod.vec) > 0){
-    for(i in 1:length(prod.vec)){
-      distances <- twoDT.sample(prod.vec[i], "Prunus.polystachya")
-      x <- parent.loc[i,1] + (distances * cos(runif(length(distances), min=1, max=360)))
-      y <- parent.loc[i,2] + (distances * sin(runif(length(distances), min=1, max=360)))
+  # PPO ("Prunus.polystachya")
+  if(length(prod.vec.ppo) > 0){
+    for(i in 1:length(prod.vec.ppo)){
+      distances <- twoDT.sample(prod.vec.ppo[i], "Prunus.polystachya")
+      x <- parent.loc.ppo[i,1] + (distances * cos(runif(length(distances), min=1, max=360)))
+      y <- parent.loc.ppo[i,2] + (distances * sin(runif(length(distances), min=1, max=360)))
       logheight <- c_0h1(length(distances), "Prunus.polystachya")
       ppoS <- rbind(ppoS, cbind(x, y, logheight))
     }
   }
-  # Kill off recruits that are located too close (< 10cm) to each other
+  # SCE ("Strombosia.ceylanica")
+  if(length(prod.vec.sce) > 0){
+    for(i in 1:length(prod.vec.sce)){
+      distances <- twoDT.sample(prod.vec.sce[i], "Strombosia.ceylanica")
+      x <- parent.loc.sce[i,1] + (distances * cos(runif(length(distances), min=1, max=360)))
+      y <- parent.loc.sce[i,2] + (distances * sin(runif(length(distances), min=1, max=360)))
+      logheight <- c_0h1(length(distances), "Strombosia.ceylanica")
+      sceS <- rbind(sceS, cbind(x, y, logheight))
+    }
+  }
+  
+  # Kill off 50% of all recruits that are located < 20cm from each other
+  # PPO ("Prunus.polystachya")
   inter.rec.dists <- spDists(ppoS[(n.old.ppoS+1):nrow(ppoS),])
   diag(inter.rec.dists) <- NA
   clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.2)), rownames(ppoS))
-  rm(inter.rec.dists)
   if(length(clustered.recs >0)){
     dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
     ppoS <- ppoS[-dying.recs,]
   }
-  rm(clustered.recs)
+  # SCE ("Strombosia.ceylanica")
+  inter.rec.dists <- spDists(sceS[(n.old.sceS+1):nrow(sceS),])
+  diag(inter.rec.dists) <- NA
+  clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.2)), rownames(ppoS))
+  if(length(clustered.recs >0)){
+    dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
+    sceS <- sceS[-dying.recs,]
+  }
   
   # Take stock of all individuals
+  # PPO ("Prunus.polystachya")
   n1.ppoT <- nrow(ppoT)
   n.ppoT <- c(n.ppoT, n1.ppoT) 
   n1.ppoS <- nrow(ppoS)
   n.ppoS <- c(n.ppoS, n1.ppoS) 
+  # SCE ("Strombosia.ceylanica")
+  n1.sceT <- nrow(sceT)
+  n.sceT <- c(n.sceT, n1.sceT) 
+  n1.sceS <- nrow(sceS)
+  n.sceS <- c(n.sceS, n1.sceS) 
   
   # calculate mean sizes of adults and saplings and add to string  
+  # PPO ("Prunus.polystachya")
   z.ppoT <- c(z.ppoT, mean(ppoT$logdbh))
   h.ppoS <- c(h.ppoS, mean(ppoS$logheight))
+  # SCE ("Strombosia.ceylanica")
+  z.sceT <- c(z.sceT, mean(sceT$logdbh))
+  h.sceS <- c(h.sceS, mean(sceS$logheight))
   
   # move to next time point
   time <- time + 1
