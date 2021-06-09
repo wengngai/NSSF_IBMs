@@ -271,7 +271,9 @@ twoDT.sample <- function(n, sp, max_dist = 100) {
     probs # using these probabilities
   )
 }
-#hist(twoDT.sample(200, "Gironniera.nervosa"), breaks=100)
+# par(mfrow = c(1, 2))
+# hist(twoDT.sample(200, "Gironniera.nervosa", max_dist = 100), breaks=100)
+# hist(twoDT.sample(200, "Gironniera.nervosa", max_dist = 410), breaks=100)
 
 #################################################
 # FUNCTIONS FOR EXTRACTING COMPETITIO VARIABLES #
