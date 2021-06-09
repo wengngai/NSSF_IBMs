@@ -259,8 +259,8 @@ twoDT.pdf <- function(dist, S, L) { S /
 
 # this function takes input of germinant number, generates vector of distances from mother tree 
 # up to 100m from mother tree, and to a spatial resolution of 0.1m (because of discretization of pdf in "support")
-twoDT.sample <- function(n, sp) {
-  support <- seq(0.1, 100, 0.1)
+twoDT.sample <- function(n, sp, max_dist = 100) {
+  support <- seq(0.1, max_dist, 0.1)
   m.par <- rec.parm
   probs <- twoDT.pdf(support, m.par["S",sp], m.par["L",sp])
   probs <- probs/sum(probs) # normalize probability 
