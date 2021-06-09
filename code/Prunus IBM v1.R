@@ -641,7 +641,7 @@ while (time < maxTime) {
   if(length(prod.vec.ppo) > 0){
     for(i in 1:length(prod.vec.ppo)){
       distances <- twoDT.sample(prod.vec.ppo[i], "Prunus.polystachya")
-      angles <- runif(length(distances), min=1, max=360)
+      angles <- runif(length(distances), min=0, max=360)
       x <- parent.loc.ppo[i,1] + (distances * cos(angles))
       y <- parent.loc.ppo[i,2] + (distances * sin(angles))
       logheight <- c_0h1(length(distances), "Prunus.polystachya")
@@ -652,7 +652,7 @@ while (time < maxTime) {
   if(length(prod.vec.sce) > 0){
     for(i in 1:length(prod.vec.sce)){
       distances <- twoDT.sample(prod.vec.sce[i], "Strombosia.ceylanica")
-      angles <- runif(length(distances), min=1, max=360)
+      angles <- runif(length(distances), min=0, max=360)
       x <- parent.loc.sce[i,1] + (distances * cos(angles))
       y <- parent.loc.sce[i,2] + (distances * sin(angles))
       logheight <- c_0h1(length(distances), "Strombosia.ceylanica")
