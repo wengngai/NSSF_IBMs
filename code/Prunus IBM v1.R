@@ -418,7 +418,7 @@ intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
 # almost same as above, except only for adult trees, and more spatially sensitive
 inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
   # calc distance
-  dists <- spDists(trees.hetero, trees.con)
+  dists <- spDists(as.matrix(trees.hetero), as.matrix(trees.con))
   dbh <- exp(trees.hetero$logdbh)
   # diagonal elements and trees which are > sqrt(400/pi) m from focal should not be computed (note: 1600m2 is the area of a 40x40m plot)
   # to get rid simply set to a very large value
