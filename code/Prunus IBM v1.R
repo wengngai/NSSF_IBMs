@@ -673,7 +673,7 @@ while (time < maxTime) {
   # SCE ("Strombosia.ceylanica")
   inter.rec.dists <- spDists(sceS[(n.old.sceS+1):nrow(sceS),])
   diag(inter.rec.dists) <- NA
-  clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.2)), rownames(ppoS))
+  clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.2)), rownames(sceS))
   if(length(clustered.recs >0)){
     dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
     sceS <- sceS[-dying.recs,]
@@ -705,6 +705,7 @@ while (time < maxTime) {
 }
 
 par(mfrow=c(1,2), mar=c(4,4,2,2))
+# initial condition
 plot(nssf.m, legend=F, col=col.pal[c(6,5)], main="Initial condition")
 # PPO
 points(ppoT.init, cex=ppoT$logdbh, col=col.t[1], pch=16)
@@ -714,7 +715,7 @@ points(sceT.init, cex=sceT$logdbh, col=col.t[2], pch=16)
 points(data.frame(sceS.init), col=col.t[2], pch=4, cex=0.1)
 legend('bottomleft', bg="white", legend=c("Adult tree", "Seedling"), 
        pch=c(1,4), pt.cex=c(3,0.1), col=c("black","grey"))
-
+# final condition
 plot(nssf.m, col=col.pal[c(6,5)], main=paste0("After ", time, " years"), legend=F)
 # PPO
 points(ppoT, cex=ppoT$logdbh, col=col.t[1], pch=16)
@@ -723,7 +724,10 @@ points(data.frame(ppoS), col=col.t[1], pch=4, cex=0.1)
 points(sceT, cex=sceT$logdbh, col=col.t[2], pch=16)
 points(data.frame(sceS), col=col.t[2], pch=4, cex=0.1)
 scalebar(100, xy=c(367200, 152900), type="bar", lonlat=F, below="metres", divs=4)
-
+# All other spp
+points(aosT, cex=aosT$logdbh,  pch=1)
+legend('bottomleft', bg="white", legend=c("Prunus", "Strombosia"), 
+       pch=16, pt.cex=2, col=col.t[1:2])
 
 par(mfrow=c(1,2), mar=c(5.5,5.5,2,2))
 plot(n.ppoT ~ c(1:length(n.ppoT)), lwd=5, col=col.pal[1], type="l",
