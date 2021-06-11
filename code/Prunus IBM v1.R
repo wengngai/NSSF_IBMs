@@ -715,6 +715,9 @@ points(sceT.init, cex=sceT$logdbh, col=col.t[2], pch=16)
 points(data.frame(sceS.init), col=col.t[2], pch=4, cex=0.1)
 legend('bottomleft', bg="white", legend=c("Adult tree", "Seedling"), 
        pch=c(1,4), pt.cex=c(3,0.1), col=c("black","grey"))
+# All other spp
+points(aosT, cex=aosT$logdbh,  pch=1)
+
 # final condition
 plot(nssf.m, col=col.pal[c(6,5)], main=paste0("After ", time, " years"), legend=F)
 # PPO
@@ -726,8 +729,8 @@ points(data.frame(sceS), col=col.t[2], pch=4, cex=0.1)
 scalebar(100, xy=c(367200, 152900), type="bar", lonlat=F, below="metres", divs=4)
 # All other spp
 points(aosT, cex=aosT$logdbh,  pch=1)
-legend('bottomleft', bg="white", legend=c("Prunus", "Strombosia"), 
-       pch=16, pt.cex=2, col=col.t[1:2])
+legend('bottomleft', bg="white", legend=c("Prunus", "Strombosia", "All other spp."), 
+       pch=c(16,16,1), pt.cex=2, col=c(col.t[1:2],"black"))
 
 par(mfrow=c(1,2), mar=c(5.5,5.5,2,2))
 plot(n.ppoT ~ c(1:length(n.ppoT)), lwd=5, col=col.pal[1], type="l",
@@ -756,7 +759,8 @@ legend('bottomright',
        col=col.pal[1:2], lwd=3, cex=1.5, bty="n")
 
 par(mfrow=c(1,2))
-hist(ppoS$logheight, col=col.t[1], main="", xlab="Height (log-transformed)")
+hist(ppoS$logheight, col=col.t[1], main="", xlab="Seedling height (log-transformed)")
 hist(sceS$logheight, col=col.t[2], add=T)
-hist(ppoT$logdbh, col=col.t[1], main="", xlab="DBH (log-transformed")
+hist(ppoT$logdbh, col=col.t[1], main="", xlab="Adult DBH (log-transformed)")
 hist(sceT$logdbh, col=col.t[2], add=T)
+legend('topright', fill=col.t[1:2], legend=c("Prunus", "Strombosia"), title="Species", bty="n")
