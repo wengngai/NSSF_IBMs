@@ -3,6 +3,9 @@
 .RData
 .Ruserdata
 
+## HR's cluster script
+code/run_sim.sh
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
