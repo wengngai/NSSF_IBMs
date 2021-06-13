@@ -31,7 +31,7 @@ sT_z <- function(terrain, trees, sp, intraS, intraA, interS, interA)
     interS.scaled <- (log(interS) -
                           surv.parm.unscale["interS.unscale.mu",]) / surv.parm.unscale["interS.unscale.sigma",]
     # calculate interA*HM, then scale it
-    interAHM <- interA * HM.parm[paste0(plot_type,".hm.stem"),sp]  # use HM.stem for this calculation for now
+    interAHM <- interA * HM.parm[paste0(plot_type,".hm.stem"), sp]  # use HM.stem for this calculation for now
     interAHM.scaled <- (log(interAHM + surv.parm.unscale["interAHM.unscale.logoffset",]) 
                         - surv.parm.unscale["interAHM.unscale.mu",]) /  surv.parm.unscale["interAHM.unscale.sigma",]
     
@@ -100,7 +100,7 @@ p_bz <- function(terrain, trees, sp)
     plot_type <- ifelse(extract(terrain, trees[,c("x","y")])==2, "wet", "dry")
     plot_type[is.na(plot_type)] <- "dry"
     
-    linear.p <- m.par[paste0("fruit.int.",plot_type),sp] + m.par["fruit.z",sp] * z      # linear predictor
+    linear.p <- m.par[paste0("fruit.int.",plot_type), sp] + m.par["fruit.z", sp] * z      # linear predictor
     
     # return binary outcome
     surv <- rbinom(n = length(linear.p), prob = 1/(1+exp(-linear.p)), size = 1)	# logistic transformation to probability
@@ -108,6 +108,7 @@ p_bz <- function(terrain, trees, sp)
     return(surv)
 }
 #p_bz(nssf.m, ppoT, "Prunus.polystachya")
+#p_bz(nssf.m, sceT, "Strombosia.ceylanica")
 
 ## SEEDLING production function (this is seedling recruitment, not seed production)
 
@@ -175,13 +176,13 @@ sS_h <- function(terrain, seedlings, sp, intraA, interA)
     plot_type[is.na(plot_type)] <- "dry"
     
     # transform logheight to logdbh
-    z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
+    z <- tran.parm["tran.int", sp] + h*tran.parm["tran.h", sp]
     
     # scale intraA, intraS, interS
     intraA.scaled <- (log(intraA + surv.parm.unscale["intraA.unscale.logoffset",]) -
                           surv.parm.unscale["intraA.unscale.mu",]) / surv.parm.unscale["intraA.unscale.sigma",]
     # calculate interA*HM, then scale it
-    interAHM <- interA * HM.parm[paste0(plot_type,".hm.stem"),sp]  # use HM.stem for this calculation for now
+    interAHM <- interA * HM.parm[paste0(plot_type,".hm.stem"), sp]  # use HM.stem for this calculation for now
     interAHM.scaled <- (log(interAHM + surv.parm.unscale["interAHM.unscale.logoffset",]) 
                         - surv.parm.unscale["interAHM.unscale.mu",]) /  surv.parm.unscale["interAHM.unscale.sigma",]
     
@@ -189,7 +190,7 @@ sS_h <- function(terrain, seedlings, sp, intraA, interA)
     p1 <- m.par["p1", sp] + (intraA.scaled * m.par["p1.intraA", sp])
     r1 <- m.par["r1", sp] + (interAHM.scaled * m.par["r1.interAHM", sp])
     
-    surv.prob <- m.par["K",sp] / ( 1 + exp(-r1 * (z - p1)) )
+    surv.prob <- m.par["K", sp] / ( 1 + exp(-r1 * (z - p1)) )
     
     # return binary outcome
     surv <- rbinom(n = length(z), prob = surv.prob, size = 1)
@@ -209,12 +210,12 @@ T_z1h1 <- function(trees, seedlings, sp)
     h1 <- seedlings[,"logheight"]
     
     # compute logdbh from logheight
-    mu <- (m.par["tran.int",sp] + m.par["tran.h",sp] * h1)
+    mu <- (m.par["tran.int", sp] + m.par["tran.h", sp] * h1)
     
     # only initiate transitions if there is at least one seedling larger than 1cm DBH
     if(sum(mu>0) > 0){
         tran.index <- which(mu > 0) # mu > 0 because log(1) = 0
-        tran.loc <- ppoS[tran.index,c("x","y")]
+        tran.loc <- seedlings[tran.index,c("x","y")]
         # add sapling to tree df
         newsaplings <- cbind(tran.loc, mu[tran.index])
         names(newsaplings) <- names(trees)
@@ -395,7 +396,7 @@ intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
 # almost same as above, except only for adult trees, and more spatially sensitive
 inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
     # calc distance
-    dists <- spDists(as.matrix(trees.hetero), as.matrix(trees.con))
+    dists <- spDists(as.matrix(trees.hetero[,1:2]), as.matrix(trees.con[,1:2]))
     dbh <- exp(trees.hetero$logdbh)
     # diagonal elements and trees which are > sqrt(400/pi) m from focal should not be computed (note: 1600m2 is the area of a 40x40m plot)
     # to get rid simply set to a very large value
