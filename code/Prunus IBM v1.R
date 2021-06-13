@@ -1,7 +1,6 @@
 library(raster)
 library(sp)
 library(poweRlaw)
-library(tictoc)
 
 #################
 # GROWTH PARAMS #
@@ -168,10 +167,7 @@ maxTime <- 10
 
 while (time < maxTime) {
   
-  tic.clearlog()
-  
   # Recruitment: initiate fruiting, but don't add new recruits to ppoS yet (let them grow/die first)
-  tic("initiate fruiting")
   # PPO ("Prunus.polystachya")
   fruiting.index.ppo <- which(p_bz(nssf.m, ppoT, "Prunus.polystachya")==1)
   prod.vec.ppo <- b_z(nssf.m, ppoT[fruiting.index.ppo,], "Prunus.polystachya")
@@ -181,26 +177,13 @@ while (time < maxTime) {
   prod.vec.sce <- b_z(nssf.m, sceT[fruiting.index.sce,], "Strombosia.ceylanica")
   parent.loc.sce <- sceT[fruiting.index.sce, 1:2]
   
-  toc(log = TRUE, quiet = TRUE)
-  
   # Extract competition measures
   # PPO ("Prunus.polystachya")
-  tic("Comp: inter.calc")
   inter.on.PPO <- inter.calc(rbind(sceT, aosT), rbind(sceS, aosS), ppoT, ppoS, sp="Prunus.polystachya")
-  toc(log = TRUE, quiet = TRUE)
-  tic("Comp: intra.calc")
   intra.on.PPO <- intra.calc(ppoT, ppoS, sp="Prunus.polystachya")
-  toc(log = TRUE, quiet = TRUE)
-  tic("Comp: CAE.calc")
   CAE.on.ppoS <- CAE.calc(ppoT, ppoS)
-  toc(log = TRUE, quiet = TRUE)
-  tic("Comp: HAE.calc")
   HAE.on.ppoS <- HAE.calc(rbind(sceT, aosT), ppoS)
-  toc(log = TRUE, quiet = TRUE)
-  tic("Comp: intra.dist.calc")
   intra.dist.on.PPO <- intra.dist.calc(ppoT)
-  toc(log = TRUE, quiet = TRUE)
-  tic("Comp: inter.dist.calc")
   inter.dist.on.PPO <- inter.dist.calc(rbind(sceT, aosT), ppoT)
   # SCE ("Strombosia.ceylanica")
   inter.on.SCE <- inter.calc(rbind(ppoT, aosT), rbind(ppoS, aosS), sceT, sceS, sp="Strombosia.ceylanica")
@@ -210,10 +193,7 @@ while (time < maxTime) {
   intra.dist.on.SCE <- intra.dist.calc(sceT)
   inter.dist.on.SCE <- inter.dist.calc(rbind(ppoT, aosT), sceT)
   
-  toc(log = TRUE, quiet = TRUE)
-  
   # Seedling growth and survival
-  tic("seedling grow surv")
   # PPO ("Prunus.polystachya")
   ppoS$logheight <- sS_h(nssf.m, ppoS, "Prunus.polystachya", intra.on.PPO[[4]], inter.on.PPO[[4]]) * 
     GS_h1h(nssf.m, ppoS, "Prunus.polystachya", CAE.on.ppoS, HAE.on.ppoS)
@@ -223,10 +203,7 @@ while (time < maxTime) {
     GS_h1h(nssf.m, sceS, "Strombosia.ceylanica", CAE.on.sceS, HAE.on.sceS)
   if(sum(sceS$logheight==0) > 0)  sceS <- sceS[-which(sceS$logheight==0),]
   
-  toc(log = TRUE, quiet = TRUE)
-  
   # Tree growth and survival
-  tic("tree grow surv")
   # PPO ("Prunus.polystachya")
   ppoT$logdbh <- sT_z(nssf.m, ppoT, "Prunus.polystachya", intra.on.PPO[[1]], intra.on.PPO[[3]], inter.on.PPO[[1]], inter.on.PPO[[3]]) * 
     GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intra.dist.on.PPO, inter.dist.on.PPO)
@@ -236,13 +213,10 @@ while (time < maxTime) {
     GT_z1z(nssf.m, sceT, "Strombosia.ceylanica", intra.dist.on.SCE, inter.dist.on.SCE)
   if(sum(sceT$logdbh==0) > 0)  sceT <- sceT[-which(sceT$logdbh==0),]
   
-  toc(log = TRUE, quiet = TRUE)
-
   # Conserve memory by deleting competition indices (don't need anymore)
   #rm()
   
   # Seedling-sapling transition
-  tic("seedling to sapling")
   # PPO ("Prunus.polystachya")
   ppoTS <- T_z1h1(ppoT, ppoS, "Prunus.polystachya")
   ppoT <- ppoTS[[1]]
@@ -258,10 +232,7 @@ while (time < maxTime) {
   # SCE ("Strombosia.ceylanica")
   n.old.sceS <- nrow(sceS)
   
-  toc(log = TRUE, quiet = TRUE)
-  
   # Recruitment: now add new recruits to ppoS
-  tic("add recruits")
   # PPO ("Prunus.polystachya")
   if(length(prod.vec.ppo) > 0){
     for(i in 1:length(prod.vec.ppo)){
@@ -285,10 +256,7 @@ while (time < maxTime) {
     }
   }
   
-  toc(log = TRUE, quiet = TRUE)
-  
   # Kill off 50% of all recruits that are located < 20cm from each other
-  tic("kill recruits")
   # PPO ("Prunus.polystachya")
   inter.rec.dists <- spDists(ppoS[(n.old.ppoS+1):nrow(ppoS),])
   diag(inter.rec.dists) <- NA
@@ -306,10 +274,7 @@ while (time < maxTime) {
     sceS <- sceS[-dying.recs,]
   }
   
-  toc(log = TRUE, quiet = TRUE)
-  
   # Take stock of all individuals
-  tic("take stock")
   # PPO ("Prunus.polystachya")
   n1.ppoT <- nrow(ppoT)
   n.ppoT <- c(n.ppoT, n1.ppoT) 
@@ -321,10 +286,7 @@ while (time < maxTime) {
   n1.sceS <- nrow(sceS)
   n.sceS <- c(n.sceS, n1.sceS) 
   
-  toc(log = TRUE, quiet = TRUE)
-  
   # calculate mean sizes of adults and saplings and add to string  
-  tic("calc mean pop sizes")
   # PPO ("Prunus.polystachya")
   z.ppoT <- c(z.ppoT, mean(ppoT$logdbh))
   h.ppoS <- c(h.ppoS, mean(ppoS$logheight))
@@ -332,14 +294,11 @@ while (time < maxTime) {
   z.sceT <- c(z.sceT, mean(sceT$logdbh))
   h.sceS <- c(h.sceS, mean(sceS$logheight))
   
-  toc(log = TRUE, quiet = TRUE)
-  
   # move to next time point
   time <- time + 1
   print(time) # slow the model
 }
 
-tic.log(format = TRUE)
 
 par(mfrow=c(1,2), mar=c(4,4,2,2))
 # initial condition
