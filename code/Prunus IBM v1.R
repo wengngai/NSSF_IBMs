@@ -40,7 +40,7 @@ source("code/setup_map.R")
 #######################
 
 time <- 0
-maxTime <- 10
+maxTime <- 100
 
 ppoT.init <- ppoT
 ppoS.init <- ppoS
@@ -60,6 +60,8 @@ sceS.init <- sceS
 (z.sceT <- mean(sceT$logdbh))
 (h.sceS <- mean(sceS$logheight))
 
+# progress bar
+pb <- txtProgressBar(min = 0, max = maxTime, style = 3)
 while (time < maxTime) {
   
   # Recruitment: initiate fruiting, but don't add new recruits to ppoS yet (let them grow/die first)
@@ -131,7 +133,7 @@ while (time < maxTime) {
   # PPO ("Prunus.polystachya")
   if(length(prod.vec.ppo) > 0){
     for(i in 1:length(prod.vec.ppo)){
-      distances <- twoDT.sample(prod.vec.ppo[i], "Prunus.polystachya")
+      distances <- twoDT.sample(prod.vec.ppo[i], "Prunus.polystachya", max_dist = 410)
       angles <- runif(length(distances), min=0, max=360)
       x <- parent.loc.ppo[i,1] + (distances * cos(angles))
       y <- parent.loc.ppo[i,2] + (distances * sin(angles))
@@ -142,7 +144,7 @@ while (time < maxTime) {
   # SCE ("Strombosia.ceylanica")
   if(length(prod.vec.sce) > 0){
     for(i in 1:length(prod.vec.sce)){
-      distances <- twoDT.sample(prod.vec.sce[i], "Strombosia.ceylanica")
+      distances <- twoDT.sample(prod.vec.sce[i], "Strombosia.ceylanica", max_dist = 410)
       angles <- runif(length(distances), min=0, max=360)
       x <- parent.loc.sce[i,1] + (distances * cos(angles))
       y <- parent.loc.sce[i,2] + (distances * sin(angles))
@@ -191,7 +193,20 @@ while (time < maxTime) {
   
   # move to next time point
   time <- time + 1
-  print(time) # slow the model
+  
+  # update progress bar
+  setTxtProgressBar(pb, time)
 }
 
+close(pb)
 
+# output to be saved
+out <- 
+  list(nssf.m, 
+       ppoT.init, sceT.init,
+       ppoT, sceT, aosT,
+       n.ppoT, n.sceT,
+       n.ppoS, n.sceS,
+       z.ppoT, z.sceT,
+       h.ppoS, h.sceS)
+saveRDS(out, file = "out/sim_out.rds")
