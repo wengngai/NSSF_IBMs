@@ -1,6 +1,7 @@
 library(raster)
 library(sp)
 library(poweRlaw)
+library(tictoc)
 
 #################
 # GROWTH PARAMS #
@@ -40,7 +41,7 @@ source("code/setup_map.R")
 #######################
 
 time <- 0
-maxTime <- 50
+maxTime <- 10
 
 ppoT.init <- ppoT
 ppoS.init <- ppoS
