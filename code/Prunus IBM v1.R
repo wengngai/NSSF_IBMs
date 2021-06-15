@@ -40,7 +40,7 @@ source("code/setup_map.R")
 #######################
 
 time <- 0
-maxTime <- 100
+maxTime <- 50
 
 ppoT.init <- ppoT
 ppoS.init <- ppoS
@@ -60,11 +60,19 @@ sceS.init <- sceS
 (z.sceT <- mean(sceT$logdbh))
 (h.sceS <- mean(sceS$logheight))
 
+ba.ppoT <- sum(pi * (exp(ppoT$logdbh)/2)^2)
+ba.ppoS <- sum(pi * (exp(ppoS$logheight)/2)^2)
+
+ba.sceT <- sum(pi * (exp(sceT$logdbh)/2)^2)
+ba.sceS <- sum(pi * (exp(sceS$logheight)/2)^2)
+
 # progress bar
 pb <- txtProgressBar(min = 0, max = maxTime, style = 3)
 t.start <- Sys.time()
 while (time < maxTime) {
   
+  tic.clearlog()
+  tic("1")
   # Recruitment: initiate fruiting, but don't add new recruits to ppoS yet (let them grow/die first)
   # PPO ("Prunus.polystachya")
   fruiting.index.ppo <- which(p_bz(nssf.m, ppoT, "Prunus.polystachya")==1)
@@ -74,7 +82,9 @@ while (time < maxTime) {
   fruiting.index.sce <- which(p_bz(nssf.m, sceT, "Strombosia.ceylanica")==1)
   prod.vec.sce <- b_z(nssf.m, sceT[fruiting.index.sce,], "Strombosia.ceylanica")
   parent.loc.sce <- sceT[fruiting.index.sce, 1:2]
+  toc(log = TRUE, quiet = TRUE)
   
+  tic("2")
   # Extract competition measures
   # PPO ("Prunus.polystachya")
   inter.on.PPO <- inter.calc(rbind(sceT, aosT), rbind(sceS, aosS), ppoT, ppoS, sp="Prunus.polystachya")
@@ -90,7 +100,9 @@ while (time < maxTime) {
   HAE.on.sceS <- HAE.calc(rbind(ppoT, aosT), sceS)
   intra.dist.on.SCE <- intra.dist.calc(sceT)
   inter.dist.on.SCE <- inter.dist.calc(rbind(ppoT, aosT), sceT)
+  toc(log = TRUE, quiet = TRUE)
   
+  tic("3")
   # Seedling growth and survival
   # PPO ("Prunus.polystachya")
   ppoS$logheight <- sS_h(nssf.m, ppoS, "Prunus.polystachya", intra.on.PPO[[4]], inter.on.PPO[[4]]) * 
@@ -100,7 +112,9 @@ while (time < maxTime) {
   sceS$logheight <- sS_h(nssf.m, sceS, "Strombosia.ceylanica", intra.on.SCE[[4]], inter.on.SCE[[4]]) * 
     GS_h1h(nssf.m, sceS, "Strombosia.ceylanica", CAE.on.sceS, HAE.on.sceS)
   if(sum(sceS$logheight==0) > 0)  sceS <- sceS[-which(sceS$logheight==0),]
+  toc(log = TRUE, quiet = TRUE)
   
+  tic("4")
   # Tree growth and survival
   # PPO ("Prunus.polystachya")
   ppoT$logdbh <- sT_z(nssf.m, ppoT, "Prunus.polystachya", intra.on.PPO[[1]], intra.on.PPO[[3]], inter.on.PPO[[1]], inter.on.PPO[[3]]) * 
@@ -110,10 +124,12 @@ while (time < maxTime) {
   sceT$logdbh <- sT_z(nssf.m, sceT, "Strombosia.ceylanica", intra.on.SCE[[1]], intra.on.SCE[[3]], inter.on.SCE[[1]], inter.on.SCE[[3]]) * 
     GT_z1z(nssf.m, sceT, "Strombosia.ceylanica", intra.dist.on.SCE, inter.dist.on.SCE)
   if(sum(sceT$logdbh==0) > 0)  sceT <- sceT[-which(sceT$logdbh==0),]
+  toc(log = TRUE, quiet = TRUE)
   
   # Conserve memory by deleting competition indices (don't need anymore)
   #rm()
   
+  tic("5")
   # Seedling-sapling transition
   # PPO ("Prunus.polystachya")
   ppoTS <- T_z1h1(ppoT, ppoS, "Prunus.polystachya")
@@ -123,7 +139,9 @@ while (time < maxTime) {
   sceTS <- T_z1h1(sceT, sceS, "Strombosia.ceylanica")
   sceT <- sceTS[[1]]
   sceS <- sceTS[[2]]
+  toc(log = TRUE, quiet = TRUE)
   
+  tic("6")
   # This is the current number of seedlings:
   # PPO ("Prunus.polystachya")
   n.old.ppoS <- nrow(ppoS)
@@ -153,7 +171,9 @@ while (time < maxTime) {
       sceS <- rbind(sceS, cbind(x, y, logheight))
     }
   }
+  toc(log = TRUE, quiet = TRUE)
   
+  tic("7")
   # Kill off 50% of all recruits that are located < 20cm from each other
   # PPO ("Prunus.polystachya")
   inter.rec.dists <- spDists(ppoS[(n.old.ppoS+1):nrow(ppoS),])
@@ -171,7 +191,9 @@ while (time < maxTime) {
     dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
     sceS <- sceS[-dying.recs,]
   }
+  toc(log = TRUE, quiet = TRUE)
   
+  tic("8")
   # Take stock of all individuals
   # PPO ("Prunus.polystachya")
   n1.ppoT <- nrow(ppoT)
@@ -183,7 +205,9 @@ while (time < maxTime) {
   n.sceT <- c(n.sceT, n1.sceT) 
   n1.sceS <- nrow(sceS)
   n.sceS <- c(n.sceS, n1.sceS) 
+  toc(log = TRUE, quiet = TRUE)
   
+  tic("9")
   # calculate mean sizes of adults and saplings and add to string  
   # PPO ("Prunus.polystachya")
   z.ppoT <- c(z.ppoT, mean(ppoT$logdbh))
@@ -191,6 +215,13 @@ while (time < maxTime) {
   # SCE ("Strombosia.ceylanica")
   z.sceT <- c(z.sceT, mean(sceT$logdbh))
   h.sceS <- c(h.sceS, mean(sceS$logheight))
+  toc(log = TRUE, quiet = TRUE)
+  
+  # calculate total basal area of adults and saplings
+  ba.ppoT <- c(ba.ppoT, sum(pi * (exp(ppoT$logdbh)/2)^2))
+  ba.ppoS <- c(ba.ppoS, sum(pi * (exp(ppoS$logheight)/2)^2))
+  ba.sceT <- c(ba.sceT, sum(pi * (exp(sceT$logdbh)/2)^2))
+  ba.sceS <- c(ba.sceS, sum(pi * (exp(sceS$logheight)/2)^2))
   
   # move to next time point
   time <- time + 1
@@ -198,6 +229,8 @@ while (time < maxTime) {
   # update progress bar
   setTxtProgressBar(pb, time)
 }
+
+tic.log(format = TRUE)
 
 close(pb)
 t.end <- Sys.time()
@@ -211,5 +244,7 @@ out <-
        n.ppoT, n.sceT,
        n.ppoS, n.sceS,
        z.ppoT, z.sceT,
-       h.ppoS, h.sceS)
+       h.ppoS, h.sceS,
+       ba.ppoT, ba.ppoS,
+       ba.sceT, ba.sceS)
 saveRDS(out, file = "out/sim_out.rds")
