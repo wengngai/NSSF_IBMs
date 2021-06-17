@@ -253,9 +253,9 @@ twoDT.sample <- function(n, sp, max_dist = 100) {
 # hist(twoDT.sample(200, "Gironniera.nervosa", max_dist = 100), breaks=100)
 # hist(twoDT.sample(200, "Gironniera.nervosa", max_dist = 410), breaks=100)
 
-#################################################
-# FUNCTIONS FOR EXTRACTING COMPETITIO VARIABLES #
-#################################################
+##################################################
+# FUNCTIONS FOR EXTRACTING COMPETITION VARIABLES #
+##################################################
 
 ## Conspecific adult density around seedlings (CAE)
 # CAE is sum BA of all adult stems in 20x20 plot
