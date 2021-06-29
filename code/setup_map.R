@@ -90,6 +90,25 @@ aosS.ras[!is.na(aosS.ras)] <- aosS.logheight
 aosS <- data.frame(rasterToPoints(aosS.ras, spatial=F))
 names(aosS) <- c("x", "y", "logheight")
 
+# Set up grid for reducing memory consumption when computing inter-individual distances
+
+# create low resolution raster (100 x 100m)
+nssf.100 <- aggregate(nssf.m, fact=10)
+# assign cell values = index
+nssf.100 <- setValues(nssf.100, 1:length(nssf.100))
+# create list of indexed grid neighbours
+grid.neighbours <- list()
+for(i in 1:length(nssf.100)) grid.neighbours[[i]] <- unique(as.vector(adjacent(nssf.100, i, directions=8, matrix=F)))
+
+# Add another attribute (column) to individual data
+ppoT$grid <- extract(nssf.100, ppoT[,c("x","y")])
+ppoS$grid <- extract(nssf.100, ppoS[,c("x","y")])
+
+sceT$grid <- extract(nssf.100, sceT[,c("x","y")])
+sceS$grid <- extract(nssf.100, sceS[,c("x","y")])
+
+aosT$grid <- extract(nssf.100, aosT[,c("x","y")])
+aosS$grid <- extract(nssf.100, aosS[,c("x","y")])
 
 
 # Define a colour palette
