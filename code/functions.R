@@ -276,7 +276,10 @@ CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
         # seedlings in grid i
         focal <- seedlings[seedlings$grid==i,]
         # trees in neighbouring grids
-        neighbours <- trees[trees$grid %in% grid.neighbours[[i]],]
+        neighbours <- rbind(
+            trees[trees$grid==i,],
+            trees[trees$grid %in% grid.neighbours[[i]],]
+        )
         # compute distance matrix only if there are both seedlings and trees in the grids
         if(nrow(focal)>0 & nrow(neighbours)>0){
             dist.mat <- spDists(
@@ -286,7 +289,7 @@ CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
             Ts.in.r <- ifelse(dist.mat < r, 1, 0)
             raw.CAE[which(seedlings$grid==i)] <-  Ts.in.r %*% as.vector(pi*(exp(neighbours$logdbh)/2)^2)
             # if only have seedlings (but no trees), assign zero CAE. if not, ignore
-        } else if (nrow(focal)>0) {
+        } else if (nrow(focal)>0 & nrow(neighbours)==0) {
             raw.CAE[which(seedlings$grid==i)] <- 0
         }
     }
@@ -324,7 +327,10 @@ HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
         # seedlings in grid i
         focal <- seedlings.con[seedlings.con$grid==i,]
         # trees in neighbouring grids
-        neighbours <- trees.hetero[trees.hetero$grid %in% grid.neighbours[[i]],]
+        neighbours <- rbind(
+            trees.hetero[trees.hetero$grid==i,],
+            trees.hetero[trees.hetero$grid %in% grid.neighbours[[i]],]
+        )
         # compute distance matrix only if there are both seedlings and trees in the grids
         if(nrow(focal)>0 & nrow(neighbours)>0){
             dist.mat <- spDists(
@@ -334,7 +340,7 @@ HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
             Ts.in.r <- ifelse(dist.mat < r, 1, 0)
             raw.HAE[which(seedlings.con$grid==i)] <-  Ts.in.r %*% as.vector(pi*(exp(neighbours$logdbh)/2)^2)
             # if only have seedlings (but no trees), assign zero CAE. if not, ignore
-        } else if (nrow(focal)>0) {
+        } else if (nrow(focal)>0 & nrow(neighbours)==0) {
             raw.HAE[which(seedlings.con$grid==i)] <- 0
         }
     }
@@ -395,34 +401,40 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
         )
         # compute the distance matrices
         if(nrow(focalTs > 0)){
-            dist.Ts <- spDists(as.matrix(focalTs[,1:2]), as.matrix(neighbours[,1:2]))
+            # neighbours to trees: first elements must be focal trees themselves (form the diagonal of the spDists matrix)
+            # then, seedlings within the focal grid, then everything else in neighbouring grids
+            Tneighbours <- rbind(focalTs[, c("x","y","logdbh")], focalSs[,c("x","y","logdbh")], neighbours)
+            dist.Ts <- spDists(as.matrix(focalTs[,1:2]), as.matrix(Tneighbours[,1:2]))
             Ts.in.r <- ifelse(dist.Ts < sqrt(400/pi), 1, 0)
             diag(Ts.in.r) <- 0
             
             # for asymmetric competition, we only want pairs in which focal is the smaller of the two, so need to compute another matrix
             T.big.mat <- ifelse(
-                matrix(rep(focalTs$logdbh, nrow(neighbours)), nrow=nrow(focalTs)) <
-                    matrix(rep(neighbours$logdbh, each=nrow(focalTs)), nrow=nrow(focalTs))
+                matrix(rep(focalTs$logdbh, nrow(Tneighbours)), nrow=nrow(focalTs)) <
+                    matrix(rep(Tneighbours$logdbh, each=nrow(focalTs)), nrow=nrow(focalTs))
                 , 1, 0)
             T.pairs.to.count <- Ts.in.r * T.big.mat
             
             # use matrix multiplication to obtain summed intra for each individual
-            T.raw.intraS[trees$grid==i] <- Ts.in.r %*% (pi*(exp(neighbours$logdbh)/2)^2)
-            T.raw.intraA[trees$grid==i] <- T.pairs.to.count %*% (pi*(exp(neighbours$logdbh)/2)^2) 
+            T.raw.intraS[trees$grid==i] <- Ts.in.r %*% (pi*(exp(Tneighbours$logdbh)/2)^2)
+            T.raw.intraA[trees$grid==i] <- T.pairs.to.count %*% (pi*(exp(Tneighbours$logdbh)/2)^2) 
         }
         if(nrow(focalSs > 0)){
-            dist.Ss <- spDists(as.matrix(focalSs[,1:2]), as.matrix(neighbours[,1:2]))
+            # Sneighbours to seedlings: first elements must be focal seedlings themselves (form the diagonal of the spDists matrix)
+            # then, trees within the focal grid, then everything else in neighbouring grids
+            Sneighbours <- rbind(focalSs[, c("x","y","logdbh")], focalTs[,c("x","y","logdbh")], neighbours)
+            dist.Ss <- spDists(as.matrix(focalSs[,1:2]), as.matrix(Sneighbours[,1:2]))
             Ss.in.r <- ifelse(dist.Ss < sqrt(400/pi), 1, 0)
             diag(Ss.in.r) <- 0
             
             S.big.mat <- ifelse(
-                matrix(rep(focalSs$logdbh, nrow(neighbours)), nrow=nrow(focalSs)) <
-                    matrix(rep(neighbours$logdbh, each=nrow(focalSs)), nrow=nrow(focalSs))
+                matrix(rep(focalSs$logdbh, nrow(Sneighbours)), nrow=nrow(focalSs)) <
+                    matrix(rep(Sneighbours$logdbh, each=nrow(focalSs)), nrow=nrow(focalSs))
                 , 1, 0)
             S.pairs.to.count <- Ss.in.r * S.big.mat
             
-            S.raw.intraS[seedlings$grid==i] <- Ss.in.r %*% (pi*(exp(neighbours$logdbh)/2)^2)
-            S.raw.intraA[seedlings$grid==i] <- S.pairs.to.count %*% (pi*(exp(neighbours$logdbh)/2)^2)
+            S.raw.intraS[seedlings$grid==i] <- Ss.in.r %*% (pi*(exp(Sneighbours$logdbh)/2)^2)
+            S.raw.intraA[seedlings$grid==i] <- S.pairs.to.count %*% (pi*(exp(Sneighbours$logdbh)/2)^2)
         }
     }
     
@@ -508,6 +520,31 @@ intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
     raw.intraS.dist <- (dists %*% dbh)
     # intraA is simply intraS divided by dbh
     return(raw.intraS.dist/dbh)
+}
+
+# new intra.dist.calc
+intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
+    raw.intraS.dist <- rep(NA, nrow(trees))
+    for(i in 1:length(nssf.100)){
+        focal <- trees[trees$grid==i,]
+        neighbours <- rbind(
+            trees[trees$grid==i,],
+            trees[trees$grid %in% grid.neighbours[[i]],]
+        )
+        # compute distance matrix only if there are both focals and neighbours in the grids
+        if(nrow(focal)>0){
+            dist.mat <- spDists(
+                as.matrix(focal[,c("x","y")]), 
+                as.matrix(neighbours[,c("x","y")])
+            )
+            dist.mat[which(dist.mat > r)] <- 1e10
+            diag(dist.mat) <- 1e10
+            dist.mat <- dist.mat^-1        
+            raw.intraS.dist[which(trees$grid==i)] <- dist.mat %*% exp(neighbours$logdbh)
+        } 
+    }
+    # intraA is simply intraS divided by dbh
+    return(raw.intraS.dist/exp(trees$logdbh))
 }
 #intra.dist.calc(ppoT)
 #hist(intraA <- intra.dist.calc(ppoT))

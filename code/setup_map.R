@@ -96,9 +96,9 @@ names(aosS) <- c("x", "y", "logheight")
 nssf.100 <- aggregate(nssf.m, fact=10)
 # assign cell values = index
 nssf.100 <- setValues(nssf.100, 1:length(nssf.100))
-# create list of indexed grid neighbours
+# create list of indexed grid neighbours (NOT including focal grid cell)
 grid.neighbours <- list()
-for(i in 1:length(nssf.100)) grid.neighbours[[i]] <- unique(as.vector(adjacent(nssf.100, i, directions=8, matrix=F)))
+for(i in 1:length(nssf.100)) grid.neighbours[[i]] <- adjacent(nssf.100, i, directions=8, matrix=F)[,2]
 
 # Add another attribute (column) to individual data
 ppoT$grid <- extract(nssf.100, ppoT[,c("x","y")])
