@@ -497,6 +497,68 @@ inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con,
         as.vector(raw.interA)[1:nrow(trees.con)], as.vector(raw.interA)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))]
     ))
 }
+
+# New inter.calc
+inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con, sp, r = sqrt(400/pi)){
+    # convert seedling heights to dbh
+    seedlings.con$logdbh <- tran.parm["tran.int",sp] + seedlings.con$logheight*tran.parm["tran.h",sp]
+    seedlings.hetero$logdbh <- tran.parm["tran.int", "All.other.spp"] + seedlings.hetero$logheight*tran.parm["tran.h", "All.other.spp"]
+    
+    T.raw.interS <- rep(NA, nrow(trees.con))
+    T.raw.interA <- rep(NA, nrow(trees.con))
+    S.raw.interS <- rep(NA, nrow(seedlings.con))
+    S.raw.interA <- rep(NA, nrow(seedlings.con))
+    
+    for(i in 1:length(nssf.100)){
+        # need to separate focal trees from focal seedlings so that matching back is easier
+        focalTs <- trees.con[trees.con$grid==i,]
+        focalSs <- seedlings.con[seedlings.con$grid==i,]
+        # neighbours are all heterospecific Ts and Ss from both focal grid and neighbouring grids
+        neighbours <- rbind(
+            trees.hetero[trees.hetero$grid %in% grid.neighbours[[i]], c("x","y","logdbh")],
+            seedlings.hetero[seedlings.hetero$grid %in% grid.neighbours[[i]], c("x","y","logdbh")]
+        )
+        # compute the distance matrices
+        if(nrow(focalTs > 0)){
+            dist.Ts <- spDists(as.matrix(focalTs[,1:2]), as.matrix(neighbours[,1:2]))
+            Ts.in.r <- ifelse(dist.Ts < sqrt(400/pi), 1, 0)
+            
+            # for asymmetric competition, we only want pairs in which focal is the smaller of the two, so need to compute another matrix
+            T.big.mat <- ifelse(
+                matrix(rep(focalTs$logdbh, nrow(neighbours)), nrow=nrow(focalTs)) <
+                    matrix(rep(neighbours$logdbh, each=nrow(focalTs)), nrow=nrow(focalTs))
+                , 1, 0)
+            T.pairs.to.count <- Ts.in.r * T.big.mat
+            
+            # use matrix multiplication to obtain summed inter for each individual
+            T.raw.interS[trees.con$grid==i] <- Ts.in.r %*% (pi*(exp(neighbours$logdbh)/2)^2)
+            T.raw.interA[trees.con$grid==i] <- T.pairs.to.count %*% (pi*(exp(neighbours$logdbh)/2)^2) 
+        }
+        if(nrow(focalSs > 0)){
+            # Sneighbours to seedlings: first elements must be focal seedlings themselves (form the diagonal of the spDists matrix)
+            # then, trees within the focal grid, then everything else in neighbouring grids
+            dist.Ss <- spDists(as.matrix(focalSs[,1:2]), as.matrix(neighbours[,1:2]))
+            Ss.in.r <- ifelse(dist.Ss < sqrt(400/pi), 1, 0)
+            
+            S.big.mat <- ifelse(
+                matrix(rep(focalSs$logdbh, nrow(neighbours)), nrow=nrow(focalSs)) <
+                    matrix(rep(neighbours$logdbh, each=nrow(focalSs)), nrow=nrow(focalSs))
+                , 1, 0)
+            S.pairs.to.count <- Ss.in.r * S.big.mat
+            
+            S.raw.interS[seedlings.con$grid==i] <- Ss.in.r %*% (pi*(exp(neighbours$logdbh)/2)^2)
+            S.raw.interA[seedlings.con$grid==i] <- S.pairs.to.count %*% (pi*(exp(neighbours$logdbh)/2)^2)
+        }
+    }
+    
+    return(list(
+        # interS for adults [[1]] and seedlings [[2]]
+        T.raw.interS, S.raw.interS,
+        # interA for adults [[3]] and seedlings [[4]]
+        T.raw.interA, S.raw.interA
+    ))
+}
+
 #inter.calc(sceT, sceS, ppoT, ppoS, sp="Prunus.polystachya")
 #interS <- inter.calc(sceT, sceS, ppoT, ppoS, sp="Prunus.polystachya")[[2]]
 #interA <- inter.calc(sceT, sceS, ppoT, ppoS, sp="Prunus.polystachya")[[4]]
@@ -537,8 +599,11 @@ intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
                 as.matrix(focal[,c("x","y")]), 
                 as.matrix(neighbours[,c("x","y")])
             )
+            # remove diagonals and distant competition by making very large value 
             dist.mat[which(dist.mat > r)] <- 1e10
             diag(dist.mat) <- 1e10
+            # for overlapping stems, make distance = 10cm
+            dist.mat[which(dist.mat==0)] <- 0.1
             dist.mat <- dist.mat^-1        
             raw.intraS.dist[which(trees$grid==i)] <- dist.mat %*% exp(neighbours$logdbh)
         } 
@@ -564,6 +629,33 @@ inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
     dists <- dists^-1
     raw.interS.dist <- matrix(dbh, nrow=1) %*% dists
     return(as.vector(raw.interS.dist))
+}
+
+# new inter.dist.calc
+inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
+    raw.interS.dist <- rep(NA, nrow(trees.con))
+    for(i in 1:length(nssf.100)){
+        focal <- trees.con[trees.con$grid==i,]
+        neighbours <- rbind(
+            trees.hetero[trees.hetero$grid==i,],
+            trees.hetero[trees.hetero$grid %in% grid.neighbours[[i]],]
+        )
+        if(nrow(focal)>0 & nrow(neighbours)>0){
+            dist.mat <- spDists(
+                as.matrix(focal[,c("x","y")]), 
+                as.matrix(neighbours[,c("x","y")])
+            )
+            # remove distant competition by making very large value 
+            dist.mat[which(dist.mat > r)] <- 1e10
+            # for overlapping stems, make distance = 10cm
+            dist.mat[which(dist.mat==0)] <- 0.1
+            dist.mat <- dist.mat^-1       
+            raw.interS.dist[which(trees.con$grid==i)] <- dist.mat %*% exp(neighbours$logdbh)
+        } else if(nrow(focal)>0 & nrow(neighbours)==0) {
+            raw.interS.dist[which(trees.con$grid==i)] <- 0
+        } 
+    }
+    return(raw.interS.dist)
 }
 #inter.dist.calc(sceT, ppoT)
 #hist(interS <- inter.dist.calc(sceT, ppoT))
