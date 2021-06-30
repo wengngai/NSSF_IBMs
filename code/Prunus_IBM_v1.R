@@ -137,10 +137,12 @@ while (time < maxTime) {
       angles <- runif(length(distances), min=0, max=360)
       x <- parent.loc.ppo[i,1] + (distances * cos(angles))
       y <- parent.loc.ppo[i,2] + (distances * sin(angles))
+      grid <- extract(nssf.100, cbind(x,y))
       logheight <- c_0h1(length(distances), "Prunus.polystachya")
-      ppoS <- rbind(ppoS, cbind(x, y, logheight))
+      ppoS <- rbind(ppoS, cbind(x, y, logheight, grid))
     }
   }
+  
   # SCE ("Strombosia.ceylanica")
   if(length(prod.vec.sce) > 0){
     for(i in 1:length(prod.vec.sce)){
@@ -148,8 +150,9 @@ while (time < maxTime) {
       angles <- runif(length(distances), min=0, max=360)
       x <- parent.loc.sce[i,1] + (distances * cos(angles))
       y <- parent.loc.sce[i,2] + (distances * sin(angles))
+      grid <- extract(nssf.100, cbind(x,y))
       logheight <- c_0h1(length(distances), "Strombosia.ceylanica")
-      sceS <- rbind(sceS, cbind(x, y, logheight))
+      sceS <- rbind(sceS, cbind(x, y, logheight, grid))
     }
   }
   

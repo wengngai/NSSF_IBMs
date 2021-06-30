@@ -210,14 +210,13 @@ T_z1h1 <- function(trees, seedlings, sp)
     h1 <- seedlings[,"logheight"]
     
     # compute logdbh from logheight
-    mu <- (m.par["tran.int", sp] + m.par["tran.h", sp] * h1)
+    z1 <- (m.par["tran.int", sp] + m.par["tran.h", sp] * h1)
     
     # only initiate transitions if there is at least one seedling larger than 1cm DBH
-    if(sum(mu>0) > 0){
-        tran.index <- which(mu > 0) # mu > 0 because log(1) = 0
-        tran.loc <- seedlings[tran.index,c("x","y")]
+    if(sum(z1>0) > 0){
+        tran.index <- which(z1 > 0) # z1 > 0 because log(1) = 0
         # add sapling to tree df
-        newsaplings <- cbind(tran.loc, mu[tran.index])
+        newsaplings <- cbind(seedlings[tran.index, c("x","y")], z1[tran.index], seedlings[tran.index, "grid"])
         names(newsaplings) <- names(trees)
         trees <-  rbind(trees, newsaplings)
         # remove seedling from seedling stack
@@ -261,12 +260,12 @@ twoDT.sample <- function(n, sp, max_dist = 100) {
 # CAE is sum BA of all adult stems in 20x20 plot
 # we want to convert this 400m^2 into a circle about each focal seedling
 # 400 = pi*r^2
-CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
+#CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
     # spDists returns distance matrix with rows as trees and cols as seedlings
-    Ts.in.r <- ifelse(spDists(as.matrix(trees), as.matrix(seedlings)) < r, 1, 0)
-    raw.CAE <- as.vector(pi*(exp(trees$logdbh)/2)^2) %*% Ts.in.r
-    return(as.vector(raw.CAE))
-}
+#    Ts.in.r <- ifelse(spDists(as.matrix(trees), as.matrix(seedlings)) < r, 1, 0)
+#    raw.CAE <- as.vector(pi*(exp(trees$logdbh)/2)^2) %*% Ts.in.r
+#    return(as.vector(raw.CAE))
+#}
 #CAE.calc(ppoT, ppoS)
 
 # new CAE.calc
@@ -296,28 +295,16 @@ CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
     return(raw.CAE)
 }
 
-
-## CHECKING --     
-ppoS$CAE.new <- CAE.calc(ppoT, ppoS)
-plot(log(CAE.orig+1) ~ log(CAE.new+1), data=ppoS)
-# two data points don't have the same old/new CAE values!
-
-# but these points don't seem to have any predictable location
-plot(nssf.100)
-points(ppoT$x, ppoT$y, cex=3)
-points(ppoS$x, ppoS$y, pch=4)
-points(ppoS[which(CAE.orig != CAE.new), c("x","y")], pch=4, cex=4, lwd=4)
-
 ## Heterospecific adult density around seedlings (HAE)
 # HAE is sum BA of all non focal species adult stems in 20x20 plot
 # we want to convert this 400m^2 into a circle about each focal seedling
 # 400 = pi*r^2
-HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
+#HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
     # spDists returns distance matrix with rows as trees and cols as seedlings
-    Ts.in.r <- ifelse(spDists(as.matrix(trees.hetero), as.matrix(seedlings.con)) < r, 1, 0)
-    raw.HAE <- as.vector(pi*(exp(trees.hetero$logdbh)/2)^2) %*% Ts.in.r
-    return(as.vector(raw.HAE))
-}
+#    Ts.in.r <- ifelse(spDists(as.matrix(trees.hetero), as.matrix(seedlings.con)) < r, 1, 0)
+#    raw.HAE <- as.vector(pi*(exp(trees.hetero$logdbh)/2)^2) %*% Ts.in.r
+#    return(as.vector(raw.HAE))
+#}
 #HAE.calc(sceT, ppoS)
 
 # new HAE.calc
@@ -352,33 +339,33 @@ HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
 # almost same as above, except includes seedlings
 # returns intraS (symmetric) for adults [[1]] and seedlings [[2]]
 # and intraA (asymmetric) for adults [[3]] and seedlings [[4]]
-intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
+#intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
     # convert seedling heights to dbh
-    h <- seedlings$logheight
-    z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
+#    h <- seedlings$logheight
+#    z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
     # concatenate adult and seedling zs
-    z <- c(trees$logdbh, z)
+#    z <- c(trees$logdbh, z)
     
     # rbind coordinates of trees and seedlings
-    ALL <- as.matrix(rbind(trees[,1:2], seedlings[,1:2]))
+#    ALL <- as.matrix(rbind(trees[,1:2], seedlings[,1:2]))
     # calc distance and find all within 400m2 radius of focal
-    dists <- spDists(ALL)
-    Ts.in.r <- ifelse(dists < sqrt(400/pi), 1, 0)
-    diag(Ts.in.r) <- 0
+#    dists <- spDists(ALL)
+#    Ts.in.r <- ifelse(dists < sqrt(400/pi), 1, 0)
+#    diag(Ts.in.r) <- 0
     # for asymmetric competition, we only want pairs in which focal is the larger of the two, so need to compute another matrix
-    zz <- matrix(rep(z, each=length(z)), ncol=length(z))
-    big.mat <- ifelse(t(zz)>zz, 1, 0)
-    pairs.to.count <- Ts.in.r * big.mat
+#    zz <- matrix(rep(z, each=length(z)), ncol=length(z))
+#    big.mat <- ifelse(t(zz)>zz, 1, 0)
+#    pairs.to.count <- Ts.in.r * big.mat
     # use matrix multiplication to obtain summed intra for each individual
-    raw.intraS <- pi*(exp(z)/2)^2 %*% Ts.in.r
-    raw.intraA <- pi*(exp(z)/2)^2 %*% pairs.to.count
-    return(list(
+#    raw.intraS <- pi*(exp(z)/2)^2 %*% Ts.in.r
+#    raw.intraA <- pi*(exp(z)/2)^2 %*% pairs.to.count
+#    return(list(
         # intraS for adults [[1]] and seedlings [[2]]
-        as.vector(raw.intraS)[1:nrow(trees)], as.vector(raw.intraS)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))],
+#        as.vector(raw.intraS)[1:nrow(trees)], as.vector(raw.intraS)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))],
         # intraA for adults [[3]] and seedlings [[4]]
-        as.vector(raw.intraA)[1:nrow(trees)], as.vector(raw.intraA)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))]
-    ))
-}
+#        as.vector(raw.intraA)[1:nrow(trees)], as.vector(raw.intraA)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))]
+#    ))
+#}
 
 # New intra.calc
 intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
@@ -459,44 +446,44 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
 # note: trees.hetero must include all non-focal species rbinded tgt in a 3 column matrix: [,1:2] = coordinates; [,3] = logdbh
 # returns interS for adults [[1]] and seedlings [[2]]
 # and interA for adults [[3]] and seedlings [[4]]
-inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con, sp, r = sqrt(400/pi)){
+#inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con, sp, r = sqrt(400/pi)){
     
     # convert conspecific (i.e., focal species) seedling heights to dbh, combine with adult logdbh
-    h <- seedlings.con$logheight
-    z <- c(
-        (tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]),
-        trees.con$logdbh)
+#    h <- seedlings.con$logheight
+#    z <- c(
+#        (tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]),
+#        trees.con$logdbh)
     
     # convert heterospecific (i.e., competitor species) seedling heights to dbh, combine with adult logdbh
-    h.hetero <- seedlings.hetero$logheight
-    z.hetero <- c(
-        (tran.parm["tran.int","All.other.spp"] + h.hetero*tran.parm["tran.h","All.other.spp"]),
-        trees.hetero$logdbh)
+#    h.hetero <- seedlings.hetero$logheight
+#    z.hetero <- c(
+#        (tran.parm["tran.int","All.other.spp"] + h.hetero*tran.parm["tran.h","All.other.spp"]),
+#        trees.hetero$logdbh)
     
     # rbind coordinates of conspecific (i.e., focal species) and heterospecific (i.e., competitor) trees and seedlings
-    con.ALL <- as.matrix(rbind(trees.con[,1:2], seedlings.con[,1:2]))
-    hetero.ALL <- as.matrix(rbind(trees.hetero[,1:2], seedlings.hetero[,1:2]))
+#    con.ALL <- as.matrix(rbind(trees.con[,1:2], seedlings.con[,1:2]))
+#    hetero.ALL <- as.matrix(rbind(trees.hetero[,1:2], seedlings.hetero[,1:2]))
     
     # calc distance between heterospecific competitors and focal species individuals, find all within 400m2 radius of focal
-    dists <- spDists(hetero.ALL, con.ALL)
-    Ts.in.r <- ifelse(dists < sqrt(400/pi), 1, 0)
+#    dists <- spDists(hetero.ALL, con.ALL)
+#    Ts.in.r <- ifelse(dists < sqrt(400/pi), 1, 0)
     
     # for asymmetric competition, we only want pairs in which focal is the larger of the two, so need to compute another matrix
-    z.con.mat <- matrix(rep(z, each=length(z.hetero)), ncol=length(z))
-    z.hetero.mat <- matrix(rep(z.hetero, length(z)), ncol=length(z))
-    big.mat <- ifelse(z.hetero.mat > z.con.mat, 1, 0)
-    pairs.to.count <- Ts.in.r * big.mat
+#    z.con.mat <- matrix(rep(z, each=length(z.hetero)), ncol=length(z))
+#    z.hetero.mat <- matrix(rep(z.hetero, length(z)), ncol=length(z))
+#    big.mat <- ifelse(z.hetero.mat > z.con.mat, 1, 0)
+#    pairs.to.count <- Ts.in.r * big.mat
     # use matrix multiplication to obtain summed inter for each individual
-    raw.interS <- pi*(exp(z.hetero)/2)^2 %*% Ts.in.r
-    raw.interA <- pi*(exp(z.hetero)/2)^2 %*% pairs.to.count
+#    raw.interS <- pi*(exp(z.hetero)/2)^2 %*% Ts.in.r
+#    raw.interA <- pi*(exp(z.hetero)/2)^2 %*% pairs.to.count
     
-    return(list(
+#    return(list(
         # interS for adults [[1]] and seedlings [[2]]
-        as.vector(raw.interS)[1:nrow(trees.con)], as.vector(raw.interS)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))],
+#        as.vector(raw.interS)[1:nrow(trees.con)], as.vector(raw.interS)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))],
         # and interA for adults [[3]] and seedlings [[4]]
-        as.vector(raw.interA)[1:nrow(trees.con)], as.vector(raw.interA)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))]
-    ))
-}
+#        as.vector(raw.interA)[1:nrow(trees.con)], as.vector(raw.interA)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))]
+#    ))
+#}
 
 # New inter.calc
 inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con, sp, r = sqrt(400/pi)){
@@ -570,19 +557,19 @@ inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con,
 
 ## Distance-explicit asymmetric intraspecific competition (intraA.dist)
 # almost same as above, except only for adult trees, and more spatially sensitive
-intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
+#intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
     # calc distance
-    dists <- spDists(trees)
-    dbh <- exp(trees$logdbh)
+#    dists <- spDists(trees)
+#    dbh <- exp(trees$logdbh)
     # diagonal elements and trees which are > sqrt(400/pi) m from focal should not be computed (note: 1600m2 is the area of a 40x40m plot)
     # to get rid simply set to a very large value
-    dists[which(dists > r)] <- 1e10
-    diag(dists) <- 1e10
-    dists <- dists^-1
-    raw.intraS.dist <- (dists %*% dbh)
+#    dists[which(dists > r)] <- 1e10
+#    diag(dists) <- 1e10
+#    dists <- dists^-1
+#    raw.intraS.dist <- (dists %*% dbh)
     # intraA is simply intraS divided by dbh
-    return(raw.intraS.dist/dbh)
-}
+#    return(raw.intraS.dist/dbh)
+#}
 
 # new intra.dist.calc
 intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
@@ -618,18 +605,18 @@ intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
 
 ## Distance-explicit symmetric interspecific competition (interS.dist)
 # almost same as above, except only for adult trees, and more spatially sensitive
-inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
+#inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
     # calc distance
-    dists <- spDists(as.matrix(trees.hetero[,1:2]), as.matrix(trees.con[,1:2]))
-    dbh <- exp(trees.hetero$logdbh)
+#    dists <- spDists(as.matrix(trees.hetero[,1:2]), as.matrix(trees.con[,1:2]))
+#    dbh <- exp(trees.hetero$logdbh)
     # diagonal elements and trees which are > sqrt(400/pi) m from focal should not be computed (note: 1600m2 is the area of a 40x40m plot)
     # to get rid simply set to a very large value
-    dists[which(dists > r)] <- 1e10
-    diag(dists) <- 1e10
-    dists <- dists^-1
-    raw.interS.dist <- matrix(dbh, nrow=1) %*% dists
-    return(as.vector(raw.interS.dist))
-}
+#    dists[which(dists > r)] <- 1e10
+#    diag(dists) <- 1e10
+#    dists <- dists^-1
+#    raw.interS.dist <- matrix(dbh, nrow=1) %*% dists
+#    return(as.vector(raw.interS.dist))
+#}
 
 # new inter.dist.calc
 inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
