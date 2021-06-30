@@ -6,6 +6,17 @@ nssf.m <- raster("data/basemap 10m-res.tif")
 nssf.m <- crop(nssf.m, extent(nssf.m, 220, 260, 120, 160))
 plot(nssf.m)
 
+# read in hydrological model predictions (here, only 9 years from 2010-2018)
+mike <- list()
+# reset values to 0/1 (resampling issues)
+for(i in 1:9){
+    mike[[i]] <- raster("data/MIKE baseline pred.tif", band=i)
+    values(mike[[i]]) <- ifelse(values(mike[[i]]) < 0.5, 0, 1)
+}
+
+par(mfrow=c(3,3))
+for(i in 1:9) plot(mike[[i]], main=2009+i, legend=F)
+
 ## initialize PPO
 init.ppo.n <- 400
 
