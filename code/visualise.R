@@ -83,3 +83,6 @@ hist(out$h.sceS, col=col.t[2], add=T)
 hist(out$z.ppoT, col=col.t[1], main="", xlab="Adult DBH (log-transformed)")
 hist(out$z.sceT, col=col.t[2], add=T)
 legend('topright', fill=col.t[1:2], legend=c("Prunus", "Strombosia"), title="Species", bty="n")
+
+plot(out$ba.ppoT)
+plot(out$ba.sceT)
