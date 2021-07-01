@@ -6,15 +6,15 @@ library(poweRlaw)
 # GROWTH PARAMS #
 #################
 
-(grow.T.parm <- t(read.csv("data/tree growth parameters Apr21.csv", header=T, row.names=1)))
-(grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", header=T, row.names=1))
-(grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1))
-(surv.parm <- t(read.csv("data/surv params Jun21.csv", header=T, row.names=1)))
-(surv.parm.unscale <- read.csv("data/survival model unscale params.csv", header=T, row.names=1))
-(fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1))
-(tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1))
-(rec.parm <- t(read.csv("data/dispersal kernel parameters Apr21.csv", header=T, row.names=1)))
-(HM.parm <- t(read.csv("data/HM values.csv", header=T, row.names=1)))
+grow.T.parm <- t(read.csv("data/tree growth parameters Apr21.csv", header=T, row.names=1))
+grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", header=T, row.names=1)
+grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1)
+surv.parm <- t(read.csv("data/surv params Jun21.csv", header=T, row.names=1))
+surv.parm.unscale <- read.csv("data/survival model unscale params.csv", header=T, row.names=1)
+fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1)
+tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
+rec.parm <- t(read.csv("data/dispersal kernel parameters Apr21.csv", header=T, row.names=1))
+HM.parm <- t(read.csv("data/HM values.csv", header=T, row.names=1))
 
 # standardize some spp names
 colnames(surv.parm) <- gsub(" ", ".", colnames(surv.parm))
@@ -48,17 +48,17 @@ ppoS.init <- ppoS
 sceT.init <- sceT
 sceS.init <- sceS
 
-(n.ppoT <- nrow(ppoT))
-(n.ppoS <- nrow(ppoS))
+n.ppoT <- nrow(ppoT)
+n.ppoS <- nrow(ppoS)
 
-(n.sceT <- nrow(sceT))
-(n.sceS <- nrow(sceS))
+n.sceT <- nrow(sceT)
+n.sceS <- nrow(sceS)
 
-(z.ppoT <- mean(ppoT$logdbh))
-(h.ppoS <- mean(ppoS$logheight))
+z.ppoT <- mean(ppoT$logdbh)
+h.ppoS <- mean(ppoS$logheight)
 
-(z.sceT <- mean(sceT$logdbh))
-(h.sceS <- mean(sceS$logheight))
+z.sceT <- mean(sceT$logdbh)
+h.sceS <- mean(sceS$logheight)
 
 # progress bar
 pb <- txtProgressBar(min = 0, max = maxTime, style = 3)
@@ -202,11 +202,11 @@ close(pb)
 
 # output to be saved
 out <- 
-  list(nssf.m, 
-       ppoT.init, sceT.init,
-       ppoT, sceT, aosT,
-       n.ppoT, n.sceT,
-       n.ppoS, n.sceS,
-       z.ppoT, z.sceT,
-       h.ppoS, h.sceS)
+  list(nssf.m = nssf.m, 
+       ppoT.init = ppoT.init, sceT.init = sceT.init,
+       ppoT = ppoT, sceT = sceT, aosT = aosT,
+       n.ppoT = n.ppoT, n.sceT = n.sceT,
+       n.ppoS = n.ppoS, n.sceS = n.sceS,
+       z.ppoT = z.ppoT, z.sceT = z.sceT,
+       h.ppoS = h.ppoS, h.sceS = h.ppoS)
 saveRDS(out, file = "out/sim_out.rds")

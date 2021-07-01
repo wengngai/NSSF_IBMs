@@ -30,7 +30,7 @@ LD_LIBRARY_PATH=/share/apps/gcc-8.3/lib64:$LD_LIBRARY_PATH
 #$ -t 1
 
 # Number of cores
-##$ -pe mpi_16_tasks_per_node 16
+##$ -pe mpi_16_tasks_per_node 16 -l h_vmem=100G 
 
 # End SGE Settings
 ###############################
