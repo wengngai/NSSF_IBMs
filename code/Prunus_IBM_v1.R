@@ -60,6 +60,9 @@ h.ppoS <- mean(ppoS$logheight)
 z.sceT <- mean(sceT$logdbh)
 h.sceS <- mean(sceS$logheight)
 
+ba.ppoT <- sum(pi * (exp(ppoT$logdbh) / 2)^2)
+ba.sceT <- sum(pi * (exp(sceT$logdbh) / 2)^2)
+
 # progress bar
 pb <- txtProgressBar(min = 0, max = maxTime, style = 3)
 while (time < maxTime) {
@@ -191,6 +194,11 @@ while (time < maxTime) {
   z.sceT <- c(z.sceT, mean(sceT$logdbh))
   h.sceS <- c(h.sceS, mean(sceS$logheight))
   
+  # calculate total basal areas of adults 
+  # not doing saplings for now, because they only have height (can convert later?)
+  ba.ppoT <- c(ba.ppoT, sum(pi * (exp(ppoT$logdbh) / 2)^2))
+  ba.sceT <- c(ba.sceT, sum(pi * (exp(sceT$logdbh) / 2)^2))
+  
   # move to next time point
   time <- time + 1
   
@@ -204,9 +212,12 @@ close(pb)
 out <- 
   list(nssf.m = nssf.m, 
        ppoT.init = ppoT.init, sceT.init = sceT.init,
-       ppoT = ppoT, sceT = sceT, aosT = aosT,
+       ppoS.init = ppoS.init, sceS.init = sceS.init,
+       ppoT = ppoT, sceT = sceT,
+       ppoS = ppoS, sceS = sceS,
        n.ppoT = n.ppoT, n.sceT = n.sceT,
        n.ppoS = n.ppoS, n.sceS = n.sceS,
        z.ppoT = z.ppoT, z.sceT = z.sceT,
-       h.ppoS = h.ppoS, h.sceS = h.ppoS)
+       h.ppoS = h.ppoS, h.sceS = h.ppoS,
+       ba.ppoT = ba.ppoT, ba.sceT = ba.sceT)
 saveRDS(out, file = "out/sim_out.rds")
