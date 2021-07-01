@@ -218,6 +218,6 @@ out <-
        n.ppoT = n.ppoT, n.sceT = n.sceT,
        n.ppoS = n.ppoS, n.sceS = n.sceS,
        z.ppoT = z.ppoT, z.sceT = z.sceT,
-       h.ppoS = h.ppoS, h.sceS = h.ppoS,
+       h.ppoS = h.ppoS, h.sceS = h.sceS,
        ba.ppoT = ba.ppoT, ba.sceT = ba.sceT)
 saveRDS(out, file = "out/sim_out.rds")
