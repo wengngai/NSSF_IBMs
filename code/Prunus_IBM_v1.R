@@ -143,10 +143,14 @@ while (time < maxTime) {
       grid <- extract(nssf.100, cbind(x,y))
       logheight <- c_0h1(length(distances), "Prunus.polystachya")
       recruits <- cbind(x, y, logheight, grid)
-      # use overlap function to filter out recruits which fail because they land on spots already occuppied by trees/seedlings
-      recruits.success <- rm.overlap(recruits, trees=rbind(ppoT, sceT, aosT), seedlings=rbind(ppoS, sceS, aosS))
-      # if there are still successfully recruiting seedlings, rbind them to existing seedlings
-      if(nrow(recruits.success) > 0) ppoS <- rbind(ppoS, recruits.success)
+      # use overlap function to filter out recruits which fail because they land on spots already occupied by trees/seedlings
+      if (nrow(recruits) > 0) {
+        recruits.success <- rm.overlap(recruits, 
+                                       trees=rbind(ppoT, sceT, aosT), 
+                                       seedlings=rbind(ppoS, sceS, aosS))
+        # if there are still successfully recruiting seedlings, rbind them to existing seedlings
+        if(nrow(recruits.success) > 0) ppoS <- rbind(ppoS, recruits.success)
+      }
     }
   }
   
@@ -160,8 +164,10 @@ while (time < maxTime) {
       grid <- extract(nssf.100, cbind(x,y))
       logheight <- c_0h1(length(distances), "Strombosia.ceylanica")
       recruits <- cbind(x, y, logheight, grid)
-      recruits.success <- rm.overlap(recruits, trees=rbind(ppoT, sceT, aosT), seedlings=rbind(ppoS, sceS, aosS))
-      if(nrow(recruits.success) > 0) ppoS <- rbind(sceS, recruits.success)
+      if (nrow(recruits) > 0) {
+        recruits.success <- rm.overlap(recruits, trees=rbind(ppoT, sceT, aosT), seedlings=rbind(ppoS, sceS, aosS))
+        if(nrow(recruits.success) > 0) ppoS <- rbind(sceS, recruits.success)
+      }
     }
   }
   
