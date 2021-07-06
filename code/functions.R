@@ -672,6 +672,6 @@ rm.overlap <- function(recruits, trees, seedlings){
             sum(tree.dists < exp(tree.neighbours$logdbh)/2) == 0
         ){sel <- c(sel, i)}
     }
-    return(recruits[sel,])
+    return(recruits[sel, , drop = FALSE])
 }
 #rm.overlap(sceS[1:10,c("x","y","grid")], ppoT, ppoS)
