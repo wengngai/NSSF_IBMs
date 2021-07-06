@@ -663,8 +663,8 @@ rm.overlap <- function(recruits, trees, seedlings){
         rgrid <- recruits[, "grid"][i]
         tree.neighbours <- trees[trees$grid %in% c(rgrid, grid.neighbours[[rgrid]]),]
         seedling.neighbours <- seedlings[seedlings$grid %in% c(rgrid, grid.neighbours[[rgrid]]),]
-        tree.dists <- spDists(as.matrix(recruits[i, c("x","y")]), as.matrix(tree.neighbours[,c("x","y")]))
-        seedling.dists <- spDists(as.matrix(recruits[i, c("x","y")]), as.matrix(seedling.neighbours[,c("x","y")]))
+        tree.dists <- spDists(recruits[i, c("x","y"), drop = FALSE], as.matrix(tree.neighbours[,c("x","y")]))
+        seedling.dists <- spDists(recruits[i, c("x","y"), drop = FALSE], as.matrix(seedling.neighbours[,c("x","y")]))
         if(
             # seedling is only allowed to recruit if it is not found within 10cm of existing seedlings
             min(seedling.dists) > 0.1 &
