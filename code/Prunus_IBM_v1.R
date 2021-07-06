@@ -64,6 +64,9 @@ sceS.init <- sceS
 pb <- txtProgressBar(min = 0, max = maxTime, style = 3)
 while (time < maxTime) {
   
+  # Choose landscape based on scenario and time (beyond 22 years, just use the last time point (=2042))
+  nssf.m <- nssf.usual[[ifelse(time>22, 22, time)]]
+  
   # Recruitment: initiate fruiting, but don't add new recruits to ppoS yet (let them grow/die first)
   # PPO ("Prunus.polystachya")
   fruiting.index.ppo <- which(p_bz(nssf.m, ppoT, "Prunus.polystachya")==1)
@@ -139,7 +142,11 @@ while (time < maxTime) {
       y <- parent.loc.ppo[i,2] + (distances * sin(angles))
       grid <- extract(nssf.100, cbind(x,y))
       logheight <- c_0h1(length(distances), "Prunus.polystachya")
-      ppoS <- rbind(ppoS, cbind(x, y, logheight, grid))
+      recruits <- cbind(x, y, logheight, grid)
+      # use overlap function to filter out recruits which fail because they land on spots already occuppied by trees/seedlings
+      recruits.success <- rm.overlap(recruits, trees=rbind(ppoT, sceT, aosT), seedlings=rbind(ppoS, sceS, aosS))
+      # if there are still successfully recruiting seedlings, rbind them to existing seedlings
+      if(nrow(recruits.success) > 0) ppoS <- rbind(ppoS, recruits.success)
     }
   }
   
@@ -152,15 +159,17 @@ while (time < maxTime) {
       y <- parent.loc.sce[i,2] + (distances * sin(angles))
       grid <- extract(nssf.100, cbind(x,y))
       logheight <- c_0h1(length(distances), "Strombosia.ceylanica")
-      sceS <- rbind(sceS, cbind(x, y, logheight, grid))
+      recruits <- cbind(x, y, logheight, grid)
+      recruits.success <- rm.overlap(recruits, trees=rbind(ppoT, sceT, aosT), seedlings=rbind(ppoS, sceS, aosS))
+      if(nrow(recruits.success) > 0) ppoS <- rbind(sceS, recruits.success)
     }
   }
   
-  # Kill off 50% of all recruits that are located < 20cm from each other
+  # Kill off 50% of all recruits that are located < 10cm from each other
   # PPO ("Prunus.polystachya")
   inter.rec.dists <- spDists(ppoS[(n.old.ppoS+1):nrow(ppoS),])
   diag(inter.rec.dists) <- NA
-  clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.2)), rownames(ppoS))
+  clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), rownames(ppoS))
   if(length(clustered.recs >0)){
     dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
     ppoS <- ppoS[-dying.recs,]
@@ -168,7 +177,7 @@ while (time < maxTime) {
   # SCE ("Strombosia.ceylanica")
   inter.rec.dists <- spDists(sceS[(n.old.sceS+1):nrow(sceS),])
   diag(inter.rec.dists) <- NA
-  clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.2)), rownames(sceS))
+  clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), rownames(sceS))
   if(length(clustered.recs >0)){
     dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
     sceS <- sceS[-dying.recs,]
