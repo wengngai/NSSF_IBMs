@@ -660,7 +660,7 @@ rm.overlap <- function(recruits, trees, seedlings){
     # define a selection vector
     sel <- c()
     for(i in 1:nrow(recruits)){
-        rgrid <- recruits$grid[i]
+        rgrid <- recruits[, "grid"][i]
         tree.neighbours <- trees[trees$grid %in% c(rgrid, grid.neighbours[[rgrid]]),]
         seedling.neighbours <- seedlings[seedlings$grid %in% c(rgrid, grid.neighbours[[rgrid]]),]
         tree.dists <- spDists(as.matrix(recruits[i, c("x","y")]), as.matrix(tree.neighbours[,c("x","y")]))
