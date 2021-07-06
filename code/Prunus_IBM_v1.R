@@ -39,7 +39,7 @@ source("code/setup_map.R")
 # COMMENCE SIMULATION #
 #######################
 
-time <- 0
+time <- 1
 maxTime <- 100
 
 ppoT.init <- ppoT
