@@ -647,3 +647,31 @@ inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
 #inter.dist.calc(sceT, ppoT)
 #hist(interS <- inter.dist.calc(sceT, ppoT))
 #hist((log(interS) - grow.T.parm.unscale["grow.interS.unscale.mu",]) / grow.T.parm.unscale["grow.interS.unscale.sigma",])
+
+###############################################
+# FUNCTION FOR PREVENTING RECRUITMENT OVERLAP #
+###############################################
+
+# This function takes in locations (x, y, grid) of new recruits (that haven't entered landscape yet)
+# compares them against locations of existing trees/seedlings
+# and removes recruits which are recruiting in the physical space of existing trees/seedlings
+
+rm.overlap <- function(recruits, trees, seedlings){
+    # define a selection vector
+    sel <- c()
+    for(i in 1:nrow(recruits)){
+        rgrid <- recruits$grid[i]
+        tree.neighbours <- trees[trees$grid %in% c(rgrid, grid.neighbours[[rgrid]]),]
+        seedling.neighbours <- seedlings[seedlings$grid %in% c(rgrid, grid.neighbours[[rgrid]]),]
+        tree.dists <- spDists(as.matrix(recruits[i, c("x","y")]), as.matrix(tree.neighbours[,c("x","y")]))
+        seedling.dists <- spDists(as.matrix(recruits[i, c("x","y")]), as.matrix(seedling.neighbours[,c("x","y")]))
+        if(
+            # seedling is only allowed to recruit if it is not found within 10cm of existing seedlings
+            min(seedling.dists) > 0.1 &
+            # and not found within the DBH radii of existing trees
+            sum(tree.dists < exp(tree.neighbours$logdbh)/2) == 0
+        ){sel <- c(sel, i)}
+    }
+    return(recruits[sel,])
+}
+#rm.overlap(sceS[1:10,c("x","y","grid")], ppoT, ppoS)
