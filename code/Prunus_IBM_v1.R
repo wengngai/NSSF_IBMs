@@ -46,7 +46,7 @@ source("code/setup_map.R")
 #######################
 
 time <- 1
-maxTime <- 100
+maxTime <- 20
 
 ppoT.init <- ppoT
 ppoS.init <- ppoS
@@ -65,6 +65,9 @@ h.ppoS <- mean(ppoS$logheight)
 
 z.sceT <- mean(sceT$logdbh)
 h.sceS <- mean(sceS$logheight)
+
+ba.ppoT <- sum(pi * (exp(ppoT$logdbh) / 2)^2)
+ba.sceT <- sum(pi * (exp(sceT$logdbh) / 2)^2)
 
 # progress bar
 pb <- txtProgressBar(min = 1, max = maxTime, style = 3)
@@ -94,10 +97,10 @@ while (time < maxTime) {
   # SCE ("Strombosia.ceylanica")
   inter.on.SCE <- inter.calc(rbind(ppoT, aosT), rbind(ppoS, aosS), sceT, sceS, sp="Strombosia.ceylanica")
   intra.on.SCE <- intra.calc(sceT, sceS, sp="Strombosia.ceylanica")
-  CAE.on.sceS <- CAE.calc(sceT, sceS)
-  HAE.on.sceS <- HAE.calc(rbind(ppoT, aosT), sceS)
-  intra.dist.on.SCE <- intra.dist.calc(sceT)
-  inter.dist.on.SCE <- inter.dist.calc(rbind(ppoT, aosT), sceT)
+  CAE.on.sceS <- CAE.calc(sceT, sceS, grid.neighbours = grid.neighbours)
+  HAE.on.sceS <- HAE.calc(rbind(ppoT, aosT), sceS, grid.neighbours = grid.neighbours)
+  intra.dist.on.SCE <- intra.dist.calc(sceT, grid.neighbours = grid.neighbours)
+  inter.dist.on.SCE <- inter.dist.calc(rbind(ppoT, aosT), sceT, grid.neighbours = grid.neighbours)
   
   # Seedling growth and survival
   # PPO ("Prunus.polystachya")
@@ -161,7 +164,6 @@ while (time < maxTime) {
     }
   }
   
-  tic()
   # SCE ("Strombosia.ceylanica")
   if(length(prod.vec.sce) > 0){
     for(i in 1:length(prod.vec.sce)){
@@ -181,8 +183,7 @@ while (time < maxTime) {
       }
     }
   }
-  toc()
-  
+
   # Kill off 50% of all recruits that are located < 10cm from each other
   # PPO ("Prunus.polystachya")
   inter.rec.dists <- spDists(ppoS[(n.old.ppoS+1):nrow(ppoS),])
@@ -224,6 +225,11 @@ while (time < maxTime) {
   # move to next time point
   time <- time + 1
   
+  # calculate total basal areas of adults 
+  # not doing saplings for now, because they only have height (can convert later?)
+  ba.ppoT <- c(ba.ppoT, sum(pi * (exp(ppoT$logdbh) / 2)^2))
+  ba.sceT <- c(ba.sceT, sum(pi * (exp(sceT$logdbh) / 2)^2))
+  
   # update progress bar
   setTxtProgressBar(pb, time)
 }
@@ -232,11 +238,14 @@ close(pb)
 
 # output to be saved
 out <- 
-  list(nssf.m, 
-       ppoT.init, sceT.init,
-       ppoT, sceT, aosT,
-       n.ppoT, n.sceT,
-       n.ppoS, n.sceS,
-       z.ppoT, z.sceT,
-       h.ppoS, h.sceS)
+  list(nssf.m = nssf.m, 
+       ppoT.init = ppoT.init, sceT.init = sceT.init,
+       ppoS.init = ppoS.init, sceS.init = sceS.init,
+       ppoT = ppoT, sceT = sceT,
+       ppoS = ppoS, sceS = sceS,
+       n.ppoT = n.ppoT, n.sceT = n.sceT,
+       n.ppoS = n.ppoS, n.sceS = n.sceS,
+       z.ppoT = z.ppoT, z.sceT = z.sceT,
+       h.ppoS = h.ppoS, h.sceS = h.sceS,
+       ba.ppoT = ba.ppoT, ba.sceT = ba.sceT)
 saveRDS(out, file = "out/sim_out.rds")
