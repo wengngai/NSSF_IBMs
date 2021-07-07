@@ -67,7 +67,7 @@ z.sceT <- mean(sceT$logdbh)
 h.sceS <- mean(sceS$logheight)
 
 # progress bar
-pb <- txtProgressBar(min = 0, max = maxTime, style = 3)
+pb <- txtProgressBar(min = 1, max = maxTime, style = 3)
 while (time < maxTime) {
   
   # Choose landscape based on scenario and time (beyond 22 years, just use the last time point (=2042))

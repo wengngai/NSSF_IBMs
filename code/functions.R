@@ -260,40 +260,65 @@ twoDT.sample <- function(n, sp, max_dist = 100) {
 # CAE is sum BA of all adult stems in 20x20 plot
 # we want to convert this 400m^2 into a circle about each focal seedling
 # 400 = pi*r^2
-#CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
-    # spDists returns distance matrix with rows as trees and cols as seedlings
+# CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
+#     # spDists returns distance matrix with rows as trees and cols as seedlings
 #    Ts.in.r <- ifelse(spDists(as.matrix(trees), as.matrix(seedlings)) < r, 1, 0)
 #    raw.CAE <- as.vector(pi*(exp(trees$logdbh)/2)^2) %*% Ts.in.r
 #    return(as.vector(raw.CAE))
-#}
+# }
+
+# parallerised CAE.calc based on old function
+CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
+    raw.CAE <- 
+        foreach(i = 1:nrow(seedlings),
+                .combine = "c") %dopar% {
+                    # the grid that the seedling is in
+                    focal.grid <- seedlings$grid[i]
+                    # retrieve trees in the same grid as the seedling
+                    neighbours <- trees[trees$grid == focal.grid, ]
+                    # compute distance matrix only if there are neighbours
+                    if (nrow(neighbours)>0) {
+                        dist.mat <- spDists(
+                            as.matrix(neighbours[, c("x","y")]),
+                            as.matrix(seedlings[i, c("x","y")])
+                        )
+                        Ts.in.r <- ifelse(dist.mat < r, 1, 0)
+                        out <- as.vector(pi*(exp(neighbours$logdbh)/2)^2) %*% Ts.in.r
+                    } else {
+                        # assign zero is a seedling has no neighbour
+                        out <- 0
+                    }
+                }
+    return(raw.CAE)
+}
 #CAE.calc(ppoT, ppoS)
 
 # new CAE.calc
-CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
-    raw.CAE <- rep(NA, nrow(seedlings))
-    for(i in 1:length(nssf.100)){
-        # seedlings in grid i
-        focal <- seedlings[seedlings$grid==i,]
-        # trees in neighbouring grids
-        neighbours <- rbind(
-            trees[trees$grid==i,],
-            trees[trees$grid %in% grid.neighbours[[i]],]
-        )
-        # compute distance matrix only if there are both seedlings and trees in the grids
-        if(nrow(focal)>0 & nrow(neighbours)>0){
-            dist.mat <- spDists(
-                as.matrix(focal[,c("x","y")]), 
-                as.matrix(neighbours[,c("x","y")])
-            )
-            Ts.in.r <- ifelse(dist.mat < r, 1, 0)
-            raw.CAE[which(seedlings$grid==i)] <-  Ts.in.r %*% as.vector(pi*(exp(neighbours$logdbh)/2)^2)
-            # if only have seedlings (but no trees), assign zero CAE. if not, ignore
-        } else if (nrow(focal)>0 & nrow(neighbours)==0) {
-            raw.CAE[which(seedlings$grid==i)] <- 0
-        }
-    }
-    return(raw.CAE)
-}
+# CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
+#     raw.CAE <- rep(NA, nrow(seedlings))
+#     for(i in 1:length(nssf.100)){
+#         # seedlings in grid i
+#         focal <- seedlings[seedlings$grid==i,]
+#         # trees in neighbouring grids
+#         neighbours <- rbind(
+#             trees[trees$grid==i,],
+#             trees[trees$grid %in% grid.neighbours[[i]],]
+#         )
+#         # compute distance matrix only if there are both seedlings and trees in the grids
+#         if(nrow(focal)>0 & nrow(neighbours)>0){
+#             dist.mat <- spDists(
+#                 as.matrix(focal[,c("x","y")]), 
+#                 as.matrix(neighbours[,c("x","y")])
+#             )
+#             Ts.in.r <- ifelse(dist.mat < r, 1, 0)
+#             raw.CAE[which(seedlings$grid==i)] <-  Ts.in.r %*% as.vector(pi*(exp(neighbours$logdbh)/2)^2)
+#             # if only have seedlings (but no trees), assign zero CAE. if not, ignore
+#         } else if (nrow(focal)>0 & nrow(neighbours)==0) {
+#             raw.CAE[which(seedlings$grid==i)] <- 0
+#         }
+#     }
+#     return(raw.CAE)
+# }
 
 ## Heterospecific adult density around seedlings (HAE)
 # HAE is sum BA of all non focal species adult stems in 20x20 plot
@@ -305,6 +330,31 @@ CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
 #    raw.HAE <- as.vector(pi*(exp(trees.hetero$logdbh)/2)^2) %*% Ts.in.r
 #    return(as.vector(raw.HAE))
 #}
+
+# parallerised HAE.calc based on old function
+HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
+    raw.HAE <- 
+        foreach(i = 1:nrow(seedlings.con),
+                .combine = "c") %dopar% {
+                    # the grid that the seedling is in
+                    focal.grid <- seedlings.con$grid[i]
+                    # retrieve trees in the same grid as the seedling
+                    neighbours <- trees.hetero[trees.hetero$grid == focal.grid, ]
+                    # compute distance matrix only if there are neighbours
+                    if (nrow(neighbours)>0) {
+                        dist.mat <- spDists(
+                            as.matrix(neighbours[, c("x","y")]),
+                            as.matrix(seedlings.con[i, c("x","y")])
+                        )
+                        Ts.in.r <- ifelse(dist.mat < r, 1, 0)
+                        out <- as.vector(pi*(exp(neighbours$logdbh)/2)^2) %*% Ts.in.r
+                    } else {
+                        # assign zero is a seedling has no neighbour
+                        out <- 0
+                    }
+                }
+    return(raw.HAE)
+}
 #HAE.calc(sceT, ppoS)
 
 # new HAE.calc
