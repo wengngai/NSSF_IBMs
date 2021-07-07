@@ -1,6 +1,15 @@
 library(raster)
 library(sp)
 library(poweRlaw)
+# library(doMC)
+library(doParallel)
+library(parallel)
+library(foreach)
+
+
+# Settings for parallerisation
+registerDoParallel(cores = 8)
+
 
 #################
 # GROWTH PARAMS #
@@ -145,15 +154,17 @@ while (time < maxTime) {
       recruits <- cbind(x, y, logheight, grid)
       # use overlap function to filter out recruits which fail because they land on spots already occupied by trees/seedlings
       if (nrow(recruits) > 0) {
-        recruits.success <- rm.overlap(recruits, 
+        recruits.success <- rm.overlap(recruits=recruits, 
                                        trees=rbind(ppoT, sceT, aosT), 
-                                       seedlings=rbind(ppoS, sceS, aosS))
+                                       seedlings=rbind(ppoS, sceS, aosS),
+                                       grid.neighbours=grid.neighbours)
         # if there are still successfully recruiting seedlings, rbind them to existing seedlings
         if(nrow(recruits.success) > 0) ppoS <- rbind(ppoS, recruits.success)
       }
     }
   }
   
+  tic()
   # SCE ("Strombosia.ceylanica")
   if(length(prod.vec.sce) > 0){
     for(i in 1:length(prod.vec.sce)){
@@ -165,11 +176,15 @@ while (time < maxTime) {
       logheight <- c_0h1(length(distances), "Strombosia.ceylanica")
       recruits <- cbind(x, y, logheight, grid)
       if (nrow(recruits) > 0) {
-        recruits.success <- rm.overlap(recruits, trees=rbind(ppoT, sceT, aosT), seedlings=rbind(ppoS, sceS, aosS))
+        recruits.success <- rm.overlap(recruits, 
+                                       trees=rbind(ppoT, sceT, aosT), 
+                                       seedlings=rbind(ppoS, sceS, aosS),
+                                       grid.neighbours=grid.neighbours)
         if(nrow(recruits.success) > 0) ppoS <- rbind(sceS, recruits.success)
       }
     }
   }
+  toc()
   
   # Kill off 50% of all recruits that are located < 10cm from each other
   # PPO ("Prunus.polystachya")
