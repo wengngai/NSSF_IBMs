@@ -221,15 +221,15 @@ while (time < maxTime) {
   # SCE ("Strombosia.ceylanica")
   z.sceT <- c(z.sceT, mean(sceT$logdbh))
   h.sceS <- c(h.sceS, mean(sceS$logheight))
-  
-  # move to next time point
-  time <- time + 1
-  
+
   # calculate total basal areas of adults 
   # not doing saplings for now, because they only have height (can convert later?)
   ba.ppoT <- c(ba.ppoT, sum(pi * (exp(ppoT$logdbh) / 2)^2))
   ba.sceT <- c(ba.sceT, sum(pi * (exp(sceT$logdbh) / 2)^2))
   
+  # move to next time point
+  time <- time + 1
+
   # update progress bar
   setTxtProgressBar(pb, time)
 }
