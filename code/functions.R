@@ -268,14 +268,19 @@ twoDT.sample <- function(n, sp, max_dist = 100) {
 # }
 
 # parallerised CAE.calc based on old function
-CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
+CAE.calc <- function(trees, seedlings, grid.neighbours, r = sqrt(400/pi)){
     raw.CAE <- 
         foreach(i = 1:nrow(seedlings),
-                .combine = "c") %dopar% {
+                .combine = "c", 
+                .packages = "raster") %dopar% {
                     # the grid that the seedling is in
                     focal.grid <- seedlings$grid[i]
-                    # retrieve trees in the same grid as the seedling
-                    neighbours <- trees[trees$grid == focal.grid, ]
+                    # retrieve trees in the corresponding grid.neighbours 
+                    # as the seedling
+                    neighbours <- rbind(
+                        trees[trees$grid==focal.grid,],
+                        trees[trees$grid %in% grid.neighbours[[focal.grid]],]
+                    )
                     # compute distance matrix only if there are neighbours
                     if (nrow(neighbours)>0) {
                         dist.mat <- spDists(
@@ -332,14 +337,19 @@ CAE.calc <- function(trees, seedlings, r = sqrt(400/pi)){
 #}
 
 # parallerised HAE.calc based on old function
-HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
+HAE.calc <- function(trees.hetero, seedlings.con, grid.neighbours, r = sqrt(400/pi)){
     raw.HAE <- 
         foreach(i = 1:nrow(seedlings.con),
-                .combine = "c") %dopar% {
+                .combine = "c", 
+                .packages = "raster") %dopar% {
                     # the grid that the seedling is in
                     focal.grid <- seedlings.con$grid[i]
-                    # retrieve trees in the same grid as the seedling
-                    neighbours <- trees.hetero[trees.hetero$grid == focal.grid, ]
+                    # retrieve trees in the corresponding grid.neighbours 
+                    # as the seedling
+                    neighbours <- rbind(
+                        trees.hetero[trees.hetero$grid==focal.grid,],
+                        trees.hetero[trees.hetero$grid %in% grid.neighbours[[focal.grid]],]
+                    )
                     # compute distance matrix only if there are neighbours
                     if (nrow(neighbours)>0) {
                         dist.mat <- spDists(
@@ -358,31 +368,31 @@ HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
 #HAE.calc(sceT, ppoS)
 
 # new HAE.calc
-HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
-    raw.HAE <- rep(NA, nrow(seedlings.con))
-    for(i in 1:length(nssf.100)){
-        # seedlings in grid i
-        focal <- seedlings.con[seedlings.con$grid==i,]
-        # trees in neighbouring grids
-        neighbours <- rbind(
-            trees.hetero[trees.hetero$grid==i,],
-            trees.hetero[trees.hetero$grid %in% grid.neighbours[[i]],]
-        )
-        # compute distance matrix only if there are both seedlings and trees in the grids
-        if(nrow(focal)>0 & nrow(neighbours)>0){
-            dist.mat <- spDists(
-                as.matrix(focal[,c("x","y")]), 
-                as.matrix(neighbours[,c("x","y")])
-            )
-            Ts.in.r <- ifelse(dist.mat < r, 1, 0)
-            raw.HAE[which(seedlings.con$grid==i)] <-  Ts.in.r %*% as.vector(pi*(exp(neighbours$logdbh)/2)^2)
-            # if only have seedlings (but no trees), assign zero CAE. if not, ignore
-        } else if (nrow(focal)>0 & nrow(neighbours)==0) {
-            raw.HAE[which(seedlings.con$grid==i)] <- 0
-        }
-    }
-    return(raw.HAE)
-}
+# HAE.calc <- function(trees.hetero, seedlings.con, r = sqrt(400/pi)){
+#     raw.HAE <- rep(NA, nrow(seedlings.con))
+#     for(i in 1:length(nssf.100)){
+#         # seedlings in grid i
+#         focal <- seedlings.con[seedlings.con$grid==i,]
+#         # trees in neighbouring grids
+#         neighbours <- rbind(
+#             trees.hetero[trees.hetero$grid==i,],
+#             trees.hetero[trees.hetero$grid %in% grid.neighbours[[i]],]
+#         )
+#         # compute distance matrix only if there are both seedlings and trees in the grids
+#         if(nrow(focal)>0 & nrow(neighbours)>0){
+#             dist.mat <- spDists(
+#                 as.matrix(focal[,c("x","y")]), 
+#                 as.matrix(neighbours[,c("x","y")])
+#             )
+#             Ts.in.r <- ifelse(dist.mat < r, 1, 0)
+#             raw.HAE[which(seedlings.con$grid==i)] <-  Ts.in.r %*% as.vector(pi*(exp(neighbours$logdbh)/2)^2)
+#             # if only have seedlings (but no trees), assign zero CAE. if not, ignore
+#         } else if (nrow(focal)>0 & nrow(neighbours)==0) {
+#             raw.HAE[which(seedlings.con$grid==i)] <- 0
+#         }
+#     }
+#     return(raw.HAE)
+# }
 #HAE.calc(sceT, ppoS)
 
 ## Intraspecific competition (intra)
@@ -621,33 +631,62 @@ inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con,
 #    return(raw.intraS.dist/dbh)
 #}
 
-# new intra.dist.calc
-intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
-    raw.intraS.dist <- rep(NA, nrow(trees))
-    for(i in 1:length(nssf.100)){
-        focal <- trees[trees$grid==i,]
-        neighbours <- rbind(
-            trees[trees$grid==i,],
-            trees[trees$grid %in% grid.neighbours[[i]],]
-        )
-        # compute distance matrix only if there are both focals and neighbours in the grids
-        if(nrow(focal)>0){
-            dist.mat <- spDists(
-                as.matrix(focal[,c("x","y")]), 
-                as.matrix(neighbours[,c("x","y")])
-            )
-            # remove diagonals and distant competition by making very large value 
-            dist.mat[which(dist.mat > r)] <- 1e10
-            diag(dist.mat) <- 1e10
-            # for overlapping stems, make distance = 10cm
-            dist.mat[which(dist.mat==0)] <- 0.1
-            dist.mat <- dist.mat^-1        
-            raw.intraS.dist[which(trees$grid==i)] <- dist.mat %*% exp(neighbours$logdbh)
-        } 
-    }
+# parallerised intra.dist.calc
+intra.dist.calc <- function(trees, r=sqrt(1600/pi), grid.neighbours) {
+    intraS <- 
+        foreach(i = 1:nrow(trees),
+                .combine = "c", 
+                .packages = "raster") %dopar% {
+                    # the grid that the focal tree is in
+                    focal.grid <- trees$grid[i]
+                    # retrieve trees in the corresponding grid.neighbours 
+                    # as the seedling
+                    neighbours <- rbind(
+                        trees[trees$grid==focal.grid,],
+                        trees[trees$grid %in% grid.neighbours[[focal.grid]],]
+                    )
+                    dists <- spDists(
+                        as.matrix(neighbours[, c("x","y")]),
+                        as.matrix(trees[i, c("x","y")])
+                    )
+                    dists[which(dists > r)] <- 1e10
+                    dists[dists == 0] <- 1e10   # convert distance to self to large number
+                    dists <- dists^-1
+                    dbh <- exp(neighbours$logdbh)
+                    out <- t(dbh) %*% dists
+                    return(out)
+                }
     # intraA is simply intraS divided by dbh
-    return(raw.intraS.dist/exp(trees$logdbh))
+    return(intraS / exp(trees$logdbh))
 }
+
+# new intra.dist.calc
+# intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
+#     raw.intraS.dist <- rep(NA, nrow(trees))
+#     for(i in 1:length(nssf.100)){
+#         focal <- trees[trees$grid==i,]
+#         neighbours <- rbind(
+#             trees[trees$grid==i,],
+#             trees[trees$grid %in% grid.neighbours[[i]],]
+#         )
+#         # compute distance matrix only if there are both focals and neighbours in the grids
+#         if(nrow(focal)>0){
+#             dist.mat <- spDists(
+#                 as.matrix(focal[,c("x","y")]), 
+#                 as.matrix(neighbours[,c("x","y")])
+#             )
+#             # remove diagonals and distant competition by making very large value 
+#             dist.mat[which(dist.mat > r)] <- 1e10
+#             diag(dist.mat) <- 1e10
+#             # for overlapping stems, make distance = 10cm
+#             dist.mat[which(dist.mat==0)] <- 0.1
+#             dist.mat <- dist.mat^-1        
+#             raw.intraS.dist[which(trees$grid==i)] <- dist.mat %*% exp(neighbours$logdbh)
+#         } 
+#     }
+#     # intraA is simply intraS divided by dbh
+#     return(raw.intraS.dist/exp(trees$logdbh))
+# }
 #intra.dist.calc(ppoT)
 #hist(intraA <- intra.dist.calc(ppoT))
 #hist((log(intraA + grow.T.parm.unscale["grow.intraA.unscale.logoffset",]) -
@@ -668,32 +707,67 @@ intra.dist.calc <- function(trees, r=sqrt(1600/pi)){
 #    return(as.vector(raw.interS.dist))
 #}
 
-# new inter.dist.calc
-inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
-    raw.interS.dist <- rep(NA, nrow(trees.con))
-    for(i in 1:length(nssf.100)){
-        focal <- trees.con[trees.con$grid==i,]
-        neighbours <- rbind(
-            trees.hetero[trees.hetero$grid==i,],
-            trees.hetero[trees.hetero$grid %in% grid.neighbours[[i]],]
-        )
-        if(nrow(focal)>0 & nrow(neighbours)>0){
-            dist.mat <- spDists(
-                as.matrix(focal[,c("x","y")]), 
-                as.matrix(neighbours[,c("x","y")])
-            )
-            # remove distant competition by making very large value 
-            dist.mat[which(dist.mat > r)] <- 1e10
-            # for overlapping stems, make distance = 10cm
-            dist.mat[which(dist.mat==0)] <- 0.1
-            dist.mat <- dist.mat^-1       
-            raw.interS.dist[which(trees.con$grid==i)] <- dist.mat %*% exp(neighbours$logdbh)
-        } else if(nrow(focal)>0 & nrow(neighbours)==0) {
-            raw.interS.dist[which(trees.con$grid==i)] <- 0
-        } 
-    }
+# parallerised inter.dist.calc
+inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi), 
+                            grid.neighbours) {
+    raw.interS.dist <- 
+        foreach(i = 1:nrow(trees.con),
+                .combine = "c", 
+                .packages = "raster") %dopar% {
+                    # the grid that the focal tree is in
+                    focal.grid <- trees.con$grid[i]
+                    # retrieve trees in the corresponding grid.neighbours 
+                    # as the seedling
+                    neighbours <- rbind(
+                        trees.hetero[trees.hetero$grid==focal.grid,],
+                        trees.hetero[trees.hetero$grid %in% grid.neighbours[[focal.grid]],]
+                    )
+                    if(nrow(neighbours) > 0) {
+                        dists <- spDists(
+                            as.matrix(neighbours[, c("x","y")]),
+                            as.matrix(trees.con[i, c("x","y")])
+                        )
+                        # remove distant competition by making very large value 
+                        dists[which(dists > r)] <- 1e10
+                        # for overlapping stems, make distance = 10cm
+                        dists[dists == 0] <- 0.1  
+                        dists <- dists^-1
+                        dbh <- exp(neighbours$logdbh)
+                        out <- t(dbh) %*% dists
+                    } else {
+                        out <- 0
+                    }
+                    return(out)
+                }
     return(raw.interS.dist)
 }
+
+# new inter.dist.calc
+# inter.dist.calc <- function(trees.hetero, trees.con, r=sqrt(1600/pi)){
+#     raw.interS.dist <- rep(NA, nrow(trees.con))
+#     for(i in 1:length(nssf.100)){
+#         focal <- trees.con[trees.con$grid==i,]
+#         neighbours <- rbind(
+#             trees.hetero[trees.hetero$grid==i,],
+#             trees.hetero[trees.hetero$grid %in% grid.neighbours[[i]],]
+#         )
+#         if(nrow(focal)>0 & nrow(neighbours)>0){
+#             dist.mat <- spDists(
+#                 as.matrix(focal[,c("x","y")]), 
+#                 as.matrix(neighbours[,c("x","y")])
+#             )
+#             # remove distant competition by making very large value 
+#             dist.mat[which(dist.mat > r)] <- 1e10
+#             # for overlapping stems, make distance = 10cm
+#             dist.mat[which(dist.mat==0)] <- 0.1
+#             dist.mat <- dist.mat^-1       
+#             raw.interS.dist[which(trees.con$grid==i)] <- dist.mat %*% exp(neighbours$logdbh)
+#         } else if(nrow(focal)>0 & nrow(neighbours)==0) {
+#             raw.interS.dist[which(trees.con$grid==i)] <- 0
+#         } 
+#     }
+#     return(raw.interS.dist)
+# }
 #inter.dist.calc(sceT, ppoT)
 #hist(interS <- inter.dist.calc(sceT, ppoT))
 #hist((log(interS) - grow.T.parm.unscale["grow.interS.unscale.mu",]) / grow.T.parm.unscale["grow.interS.unscale.sigma",])
