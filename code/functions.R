@@ -443,7 +443,9 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
         focalSs <- seedlings[seedlings$grid==i,]
         # neighbours can be rbind-ed
         neighbours <- rbind(
+            trees[trees$grid==i, c("x","y","logdbh")],
             trees[trees$grid %in% grid.neighbours[[i]], c("x","y","logdbh")],
+            seedlings[seedlings$grid==i, c("x","y","logdbh")],
             seedlings[seedlings$grid %in% grid.neighbours[[i]], c("x","y","logdbh")]
         )
         # compute the distance matrices
@@ -521,8 +523,8 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
 #        trees.hetero$logdbh)
     
     # rbind coordinates of conspecific (i.e., focal species) and heterospecific (i.e., competitor) trees and seedlings
-#    con.ALL <- as.matrix(rbind(trees.con[,1:2], seedlings.con[,1:2]))
-#    hetero.ALL <- as.matrix(rbind(trees.hetero[,1:2], seedlings.hetero[,1:2]))
+#    con.ALL <- as.matrix(rbind(seedlings.con[,1:2], trees.con[,1:2]))
+#    hetero.ALL <- as.matrix(rbind(seedlings.hetero[,1:2], trees.hetero[,1:2]))
     
     # calc distance between heterospecific competitors and focal species individuals, find all within 400m2 radius of focal
 #    dists <- spDists(hetero.ALL, con.ALL)
@@ -539,9 +541,9 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
     
 #    return(list(
         # interS for adults [[1]] and seedlings [[2]]
-#        as.vector(raw.interS)[1:nrow(trees.con)], as.vector(raw.interS)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))],
+#        as.vector(raw.interS)[(nrow(seedlings.con)+1):(nrow(seedlings.con)+nrow(trees.con))], as.vector(raw.interS)[1:nrow(seedlings.con)], 
         # and interA for adults [[3]] and seedlings [[4]]
-#        as.vector(raw.interA)[1:nrow(trees.con)], as.vector(raw.interA)[(nrow(trees.con)+1):(nrow(trees.con)+nrow(seedlings.con))]
+#        as.vector(raw.interA)[(nrow(seedlings.con)+1):(nrow(seedlings.con)+nrow(trees.con))], as.vector(raw.interA)[1:nrow(seedlings.con)]
 #    ))
 #}
 
@@ -562,7 +564,9 @@ inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con,
         focalSs <- seedlings.con[seedlings.con$grid==i,]
         # neighbours are all heterospecific Ts and Ss from both focal grid and neighbouring grids
         neighbours <- rbind(
+            trees.hetero[trees.hetero$grid==i, c("x","y","logdbh")],
             trees.hetero[trees.hetero$grid %in% grid.neighbours[[i]], c("x","y","logdbh")],
+            seedlings.hetero[seedlings.hetero$grid==i, c("x","y","logdbh")],
             seedlings.hetero[seedlings.hetero$grid %in% grid.neighbours[[i]], c("x","y","logdbh")]
         )
         # compute the distance matrices
@@ -609,6 +613,7 @@ inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con,
 #inter.calc(sceT, sceS, ppoT, ppoS, sp="Prunus.polystachya")
 #interS <- inter.calc(sceT, sceS, ppoT, ppoS, sp="Prunus.polystachya")[[2]]
 #interA <- inter.calc(sceT, sceS, ppoT, ppoS, sp="Prunus.polystachya")[[4]]
+#plot(interA ~ interA.old)
 #plot(log(interS+0.01) ~ log(interA+0.01))
 #hist((log(interS) -
 #      surv.parm.unscale["surv.interS.unscale.mu",]) / surv.parm.unscale["surv.interS.unscale.sigma",])
