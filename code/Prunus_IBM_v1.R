@@ -46,7 +46,7 @@ source("code/setup_map.R")
 #######################
 
 time <- 1
-maxTime <- 20
+maxTime <- 50
 
 ppoT.init <- ppoT
 ppoS.init <- ppoS
@@ -186,20 +186,27 @@ while (time < maxTime) {
 
   # Kill off 50% of all recruits that are located < 10cm from each other
   # PPO ("Prunus.polystachya")
-  inter.rec.dists <- spDists(ppoS[(n.old.ppoS+1):nrow(ppoS),])
-  diag(inter.rec.dists) <- NA
-  clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), rownames(ppoS))
-  if(length(clustered.recs >0)){
-    dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
-    ppoS <- ppoS[-dying.recs,]
+  ppo.rec <- na.omit(ppoS[(n.old.ppoS+1):nrow(ppoS),])
+  if(nrow(ppo.rec)>1){
+    inter.rec.dists <- spDists(ppo.rec)
+    diag(inter.rec.dists) <- NA
+    clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), rownames(ppoS))
+    if(length(clustered.recs) > 0){
+      dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
+      ppoS <- ppoS[-dying.recs,]
+    }
   }
+  
   # SCE ("Strombosia.ceylanica")
-  inter.rec.dists <- spDists(sceS[(n.old.sceS+1):nrow(sceS),])
-  diag(inter.rec.dists) <- NA
-  clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), rownames(sceS))
-  if(length(clustered.recs >0)){
-    dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
-    sceS <- sceS[-dying.recs,]
+  sce.rec <- na.omit(sceS[(n.old.sceS+1):nrow(sceS),])
+  if(nrow(sce.rec)>1){
+    inter.rec.dists <- spDists(sce.rec)
+    diag(inter.rec.dists) <- NA
+    clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), rownames(sceS))
+    if(length(clustered.recs >0)){
+      dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
+      sceS <- sceS[-dying.recs,]
+    }
   }
   
   # Take stock of all individuals
@@ -249,3 +256,5 @@ out <-
        h.ppoS = h.ppoS, h.sceS = h.sceS,
        ba.ppoT = ba.ppoT, ba.sceT = ba.sceT)
 saveRDS(out, file = "out/sim_out.rds")
+#saveRDS(out, file = "D:\\National University of Singapore\\Chong Kwek Yan - CRSF\\Data\\IBM\\out\\Extreme3 scenario 50 years.rds")
+

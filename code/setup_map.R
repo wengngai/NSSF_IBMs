@@ -36,7 +36,7 @@ for(i in 1:22){
 #plot(nssf.high[[22]], main="High rainfall", legend=F)
 
 ## initialize PPO
-init.ppo.n <- 4000
+init.ppo.n <- 1000
 
 # 20cm seedling height is the size of newly germinated seedling. calculate the theoretical DBH of this
 ppo.minlogdbh <- tran.parm["tran.int","Prunus.polystachya"] + tran.parm["tran.h","Prunus.polystachya"] * log(20)
@@ -64,7 +64,7 @@ ppoS <- data.frame(rasterToPoints(ppoS.ras, spatial=F))
 names(ppoS) <- c("x", "y", "logheight")
 
 ## initialize SCE
-init.sce.n <- 6000
+init.sce.n <- 1000
 
 # 10cm seedling height is the size of newly germinated seedling. calculate the theoretical DBH of this
 sce.minlogdbh <- tran.parm["tran.int","Strombosia.ceylanica"] + tran.parm["tran.h","Strombosia.ceylanica"] * log(10)
@@ -92,7 +92,7 @@ sceS <- data.frame(rasterToPoints(sceS.ras, spatial=F))
 names(sceS) <- c("x", "y", "logheight")
 
 ## initialize "All other species" for background interspecific competition
-init.aos.n <- 20000
+init.aos.n <- 2500
 
 # Use 60cm min seedling height for all other spp. (just need competition effect, and young seedlings contribute little)
 aos.minlogdbh <- tran.parm["tran.int","All.other.spp"] + tran.parm["tran.h","All.other.spp"] * log(60)
