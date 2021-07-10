@@ -46,7 +46,7 @@ source("code/setup_map.R")
 #######################
 
 time <- 1
-maxTime <- 50
+maxTime <- 400
 
 ppoT.init <- ppoT
 ppoS.init <- ppoS
@@ -74,7 +74,7 @@ pb <- txtProgressBar(min = 1, max = maxTime, style = 3)
 while (time < maxTime) {
   
   # Choose landscape based on scenario and time (beyond 22 years, just use the last time point (=2042))
-  nssf.m <- nssf.usual[[ifelse(time>22, 22, time)]]
+  nssf.m <- nssf.extreme[[ifelse(time>22, 22, time)]]
   
   # Recruitment: initiate fruiting, but don't add new recruits to ppoS yet (let them grow/die first)
   # PPO ("Prunus.polystachya")
@@ -256,5 +256,5 @@ out <-
        h.ppoS = h.ppoS, h.sceS = h.sceS,
        ba.ppoT = ba.ppoT, ba.sceT = ba.sceT)
 saveRDS(out, file = "out/sim_out.rds")
-#saveRDS(out, file = "D:\\National University of Singapore\\Chong Kwek Yan - CRSF\\Data\\IBM\\out\\Usual3 scenario 400 years.rds")
+#saveRDS(out, file = "D:\\National University of Singapore\\Chong Kwek Yan - CRSF\\Data\\IBM\\out\\Extreme3 scenario 50 years.rds")
 
