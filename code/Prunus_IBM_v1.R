@@ -5,7 +5,7 @@ library(doParallel)
 
 
 # Settings for parallerisation
-registerDoParallel(cores = 64)
+registerDoParallel(cores = 8)
 
 
 #################
@@ -179,7 +179,7 @@ while (time < maxTime) {
                                        trees=rbind(ppoT, sceT, aosT), 
                                        seedlings=rbind(ppoS, sceS, aosS),
                                        grid.neighbours=grid.neighbours)
-        if(nrow(recruits.success) > 0) ppoS <- rbind(sceS, recruits.success)
+        if(nrow(recruits.success) > 0) sceS <- rbind(sceS, recruits.success)
       }
     }
   }
@@ -256,5 +256,5 @@ out <-
        h.ppoS = h.ppoS, h.sceS = h.sceS,
        ba.ppoT = ba.ppoT, ba.sceT = ba.sceT)
 saveRDS(out, file = "out/sim_out.rds")
-#saveRDS(out, file = "D:\\National University of Singapore\\Chong Kwek Yan - CRSF\\Data\\IBM\\out\\Extreme3 scenario 50 years.rds")
+#saveRDS(out, file = "D:\\National University of Singapore\\Chong Kwek Yan - CRSF\\Data\\IBM\\out\\Usual3 scenario 400 years.rds")
 
