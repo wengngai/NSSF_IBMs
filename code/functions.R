@@ -399,7 +399,36 @@ HAE.calc <- function(trees.hetero, seedlings.con, grid.neighbours, r = sqrt(400/
 # almost same as above, except includes seedlings
 # returns intraS (symmetric) for adults [[1]] and seedlings [[2]]
 # and intraA (asymmetric) for adults [[3]] and seedlings [[4]]
-intra.calc.old <- function(trees, seedlings, sp, r = sqrt(400/pi)){
+# intra.calc.old <- function(trees, seedlings, sp, r = sqrt(400/pi)){
+#     # convert seedling heights to dbh
+#     h <- seedlings$logheight
+#     z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
+#     # concatenate adult and seedling zs
+#     z <- c(trees$logdbh, z)
+#     
+#     # rbind coordinates of trees and seedlings
+#     ALL <- as.matrix(rbind(trees[,1:2], seedlings[,1:2]))
+#     # calc distance and find all within 400m2 radius of focal
+#     dists <- spDists(ALL)
+#     Ts.in.r <- ifelse(dists < r, 1, 0)
+#     diag(Ts.in.r) <- 0
+#     # for asymmetric competition, we only want pairs in which focal is the larger of the two, so need to compute another matrix
+#     zz <- matrix(rep(z, each=length(z)), ncol=length(z))
+#     big.mat <- ifelse(t(zz)>zz, 1, 0)
+#     pairs.to.count <- Ts.in.r * big.mat
+#     # use matrix multiplication to obtain summed intra for each individual
+#     raw.intraS <- pi*(exp(z)/2)^2 %*% Ts.in.r
+#     raw.intraA <- pi*(exp(z)/2)^2 %*% pairs.to.count
+#     return(list(
+#         # intraS for adults [[1]] and seedlings [[2]]
+#         as.vector(raw.intraS)[1:nrow(trees)], as.vector(raw.intraS)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))],
+#         # intraA for adults [[3]] and seedlings [[4]]
+#         as.vector(raw.intraA)[1:nrow(trees)], as.vector(raw.intraA)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))]
+#     ))
+# }
+
+# parallerised intra.calc
+intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
     # convert seedling heights to dbh
     h <- seedlings$logheight
     z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
