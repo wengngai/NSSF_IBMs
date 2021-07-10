@@ -412,7 +412,7 @@ HAE.calc <- function(trees.hetero, seedlings.con, grid.neighbours, r = sqrt(400/
 #     dists <- spDists(ALL)
 #     Ts.in.r <- ifelse(dists < r, 1, 0)
 #     diag(Ts.in.r) <- 0
-#     # for asymmetric competition, we only want pairs in which focal is the larger of the two, so need to compute another matrix
+#     # for asymmetric competition, we only want pairs in which focal is the smaller of the two, so need to compute another matrix
 #     zz <- matrix(rep(z, each=length(z)), ncol=length(z))
 #     big.mat <- ifelse(t(zz)>zz, 1, 0)
 #     pairs.to.count <- Ts.in.r * big.mat
@@ -428,7 +428,7 @@ HAE.calc <- function(trees.hetero, seedlings.con, grid.neighbours, r = sqrt(400/
 # }
 
 # parallerised intra.calc
-intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
+intra.calc <- function(trees, seedlings, sp, grid.neighbours, r = sqrt(400/pi)){
     # convert seedling heights to dbh
     h <- seedlings$logheight
     z <- tran.parm["tran.int",sp] + h*tran.parm["tran.h",sp]
@@ -436,91 +436,114 @@ intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
     z <- c(trees$logdbh, z)
     
     # rbind coordinates of trees and seedlings
-    ALL <- as.matrix(rbind(trees[,1:2], seedlings[,1:2]))
+    ALL <- as.matrix(rbind(trees[,c(1:2,4)], seedlings[,c(1:2,4)]))
+    ALL <- cbind(ALL, z) 
     # calc distance and find all within 400m2 radius of focal
-    dists <- spDists(ALL)
-    Ts.in.r <- ifelse(dists < r, 1, 0)
-    diag(Ts.in.r) <- 0
-    # for asymmetric competition, we only want pairs in which focal is the larger of the two, so need to compute another matrix
-    zz <- matrix(rep(z, each=length(z)), ncol=length(z))
-    big.mat <- ifelse(t(zz)>zz, 1, 0)
-    pairs.to.count <- Ts.in.r * big.mat
-    # use matrix multiplication to obtain summed intra for each individual
-    raw.intraS <- pi*(exp(z)/2)^2 %*% Ts.in.r
-    raw.intraA <- pi*(exp(z)/2)^2 %*% pairs.to.count
+    raw.intra <- foreach(i = 1:nrow(ALL),
+            .combine = "comb", 
+            # .multicombine=TRUE,
+            # .init=list(list(), list()),
+            .packages = "raster") %dopar% { 
+                # the grid that the individual is in
+                focal.grid <- ALL[i, "grid"]
+                # retrieve trees in the corresponding grid.neighbours 
+                # as the individual
+                neighbours <- rbind(
+                    ALL[ALL[, "grid"]==focal.grid,],
+                    ALL[ALL[, "grid"] %in% grid.neighbours[[focal.grid]],]
+                )
+                dists <- spDists(ALL[i, c("x","y"), drop = FALSE], 
+                                 neighbours[, c("x","y"), drop = FALSE])
+                Ts.in.r <- ifelse(dists < r, 1, 0)
+                self.id <- apply(neighbours, 1, function(x) identical(x, ALL[i,]))
+                Ts.in.r[self.id] <- 0  # self has zero 
+                # for asymmetric competition, we only want pairs in which focal is the 
+                # smaller of the two, so need to compute another matrix
+                larger.focal <- as.numeric(ALL[i, "z"] < neighbours[, "z"])
+                pairs.to.count <- Ts.in.r * larger.focal
+                # use matrix multiplication to obtain summed intra for each individual
+                raw.intraS <- pi*(exp(neighbours[, "z"])/2)^2 %*% t(Ts.in.r)
+                raw.intraA <- pi*(exp(neighbours[, "z"])/2)^2 %*% t(pairs.to.count)
+                
+                return(list(raw.intraS, raw.intraA))
+            }
+    raw.intra <- lapply(raw.intra, unlist)
+
     return(list(
         # intraS for adults [[1]] and seedlings [[2]]
-        as.vector(raw.intraS)[1:nrow(trees)], as.vector(raw.intraS)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))],
+        as.vector(raw.intra[[1]])[1:nrow(trees)], 
+        as.vector(raw.intra[[1]])[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))],
         # intraA for adults [[3]] and seedlings [[4]]
-        as.vector(raw.intraA)[1:nrow(trees)], as.vector(raw.intraA)[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))]
+        as.vector(raw.intra[[2]])[1:nrow(trees)], 
+        as.vector(raw.intra[[2]])[(nrow(trees)+1):(nrow(trees)+nrow(seedlings))]
     ))
 }
 
 # New intra.calc
-intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
-    # convert seedling heights to dbh
-    seedlings$logdbh <- tran.parm["tran.int",sp] + seedlings$logheight*tran.parm["tran.h",sp]
-    
-    T.raw.intraS <- rep(NA, nrow(trees))
-    T.raw.intraA <- rep(NA, nrow(trees))
-    S.raw.intraS <- rep(NA, nrow(seedlings))
-    S.raw.intraA <- rep(NA, nrow(seedlings))
-    
-    for(i in 1:length(nssf.100)){
-        # need to separate focal trees from focal seedlings so that matching back is easier
-        focalTs <- trees[trees$grid==i,]
-        focalSs <- seedlings[seedlings$grid==i,]
-        # neighbours can be rbind-ed--don't include those in the focal grid yet
-        neighbours <- rbind(
-            trees[trees$grid %in% grid.neighbours[[i]], c("x","y","logdbh")],
-            seedlings[seedlings$grid %in% grid.neighbours[[i]], c("x","y","logdbh")]
-        )
-        # compute the distance matrices
-        if(nrow(focalTs) > 0){
-            # neighbours to trees: first elements must be focal trees themselves (form the diagonal of the spDists matrix)
-            # then, seedlings within the focal grid, then everything else in neighbouring grids
-            Tneighbours <- rbind(focalTs[, c("x","y","logdbh")], focalSs[,c("x","y","logdbh")], neighbours)
-            dist.Ts <- spDists(as.matrix(focalTs[,1:2]), as.matrix(Tneighbours[,1:2]))
-            Ts.in.r <- ifelse(dist.Ts < r, 1, 0)
-            diag(Ts.in.r) <- 0
-            
-            # for asymmetric competition, we only want pairs in which focal is the smaller of the two, so need to compute another matrix
-            T.big.mat <- ifelse(
-                matrix(rep(focalTs$logdbh, nrow(Tneighbours)), nrow=nrow(focalTs)) <
-                    matrix(rep(Tneighbours$logdbh, each=nrow(focalTs)), nrow=nrow(focalTs))
-                , 1, 0)
-            T.pairs.to.count <- Ts.in.r * T.big.mat
-            
-            # use matrix multiplication to obtain summed intra for each individual
-            T.raw.intraS[trees$grid==i] <- Ts.in.r %*% (pi*(exp(Tneighbours$logdbh)/2)^2)
-            T.raw.intraA[trees$grid==i] <- T.pairs.to.count %*% (pi*(exp(Tneighbours$logdbh)/2)^2) 
-        }
-        if(nrow(focalSs) > 0){
-            # Sneighbours to seedlings: first elements must be focal seedlings themselves (form the diagonal of the spDists matrix)
-            # then, trees within the focal grid, then everything else in neighbouring grids
-            Sneighbours <- rbind(focalSs[, c("x","y","logdbh")], focalTs[,c("x","y","logdbh")], neighbours)
-            dist.Ss <- spDists(as.matrix(focalSs[,1:2]), as.matrix(Sneighbours[,1:2]))
-            Ss.in.r <- ifelse(dist.Ss < sqrt(400/pi), 1, 0)
-            diag(Ss.in.r) <- 0
-            
-            S.big.mat <- ifelse(
-                matrix(rep(focalSs$logdbh, nrow(Sneighbours)), nrow=nrow(focalSs)) <
-                    matrix(rep(Sneighbours$logdbh, each=nrow(focalSs)), nrow=nrow(focalSs))
-                , 1, 0)
-            S.pairs.to.count <- Ss.in.r * S.big.mat
-            
-            S.raw.intraS[seedlings$grid==i] <- Ss.in.r %*% (pi*(exp(Sneighbours$logdbh)/2)^2)
-            S.raw.intraA[seedlings$grid==i] <- S.pairs.to.count %*% (pi*(exp(Sneighbours$logdbh)/2)^2)
-        }
-    }
-    
-    return(list(
-        # intraS for adults [[1]] and seedlings [[2]]
-        T.raw.intraS, S.raw.intraS,
-        # intraA for adults [[3]] and seedlings [[4]]
-        T.raw.intraA, S.raw.intraA
-    ))
-}
+# intra.calc <- function(trees, seedlings, sp, r = sqrt(400/pi)){
+#     # convert seedling heights to dbh
+#     seedlings$logdbh <- tran.parm["tran.int",sp] + seedlings$logheight*tran.parm["tran.h",sp]
+#     
+#     T.raw.intraS <- rep(NA, nrow(trees))
+#     T.raw.intraA <- rep(NA, nrow(trees))
+#     S.raw.intraS <- rep(NA, nrow(seedlings))
+#     S.raw.intraA <- rep(NA, nrow(seedlings))
+#     
+#     for(i in 1:length(nssf.100)){
+#         # need to separate focal trees from focal seedlings so that matching back is easier
+#         focalTs <- trees[trees$grid==i,]
+#         focalSs <- seedlings[seedlings$grid==i,]
+#         # neighbours can be rbind-ed--don't include those in the focal grid yet
+#         neighbours <- rbind(
+#             trees[trees$grid %in% grid.neighbours[[i]], c("x","y","logdbh")],
+#             seedlings[seedlings$grid %in% grid.neighbours[[i]], c("x","y","logdbh")]
+#         )
+#         # compute the distance matrices
+#         if(nrow(focalTs) > 0){
+#             # neighbours to trees: first elements must be focal trees themselves (form the diagonal of the spDists matrix)
+#             # then, seedlings within the focal grid, then everything else in neighbouring grids
+#             Tneighbours <- rbind(focalTs[, c("x","y","logdbh")], focalSs[,c("x","y","logdbh")], neighbours)
+#             dist.Ts <- spDists(as.matrix(focalTs[,1:2]), as.matrix(Tneighbours[,1:2]))
+#             Ts.in.r <- ifelse(dist.Ts < r, 1, 0)
+#             diag(Ts.in.r) <- 0
+#             
+#             # for asymmetric competition, we only want pairs in which focal is the smaller of the two, so need to compute another matrix
+#             T.big.mat <- ifelse(
+#                 matrix(rep(focalTs$logdbh, nrow(Tneighbours)), nrow=nrow(focalTs)) <
+#                     matrix(rep(Tneighbours$logdbh, each=nrow(focalTs)), nrow=nrow(focalTs))
+#                 , 1, 0)
+#             T.pairs.to.count <- Ts.in.r * T.big.mat
+#             
+#             # use matrix multiplication to obtain summed intra for each individual
+#             T.raw.intraS[trees$grid==i] <- Ts.in.r %*% (pi*(exp(Tneighbours$logdbh)/2)^2)
+#             T.raw.intraA[trees$grid==i] <- T.pairs.to.count %*% (pi*(exp(Tneighbours$logdbh)/2)^2) 
+#         }
+#         if(nrow(focalSs) > 0){
+#             # Sneighbours to seedlings: first elements must be focal seedlings themselves (form the diagonal of the spDists matrix)
+#             # then, trees within the focal grid, then everything else in neighbouring grids
+#             Sneighbours <- rbind(focalSs[, c("x","y","logdbh")], focalTs[,c("x","y","logdbh")], neighbours)
+#             dist.Ss <- spDists(as.matrix(focalSs[,1:2]), as.matrix(Sneighbours[,1:2]))
+#             Ss.in.r <- ifelse(dist.Ss < r, 1, 0)
+#             diag(Ss.in.r) <- 0
+#             
+#             S.big.mat <- ifelse(
+#                 matrix(rep(focalSs$logdbh, nrow(Sneighbours)), nrow=nrow(focalSs)) <
+#                     matrix(rep(Sneighbours$logdbh, each=nrow(focalSs)), nrow=nrow(focalSs))
+#                 , 1, 0)
+#             S.pairs.to.count <- Ss.in.r * S.big.mat
+#             
+#             S.raw.intraS[seedlings$grid==i] <- Ss.in.r %*% (pi*(exp(Sneighbours$logdbh)/2)^2)
+#             S.raw.intraA[seedlings$grid==i] <- S.pairs.to.count %*% (pi*(exp(Sneighbours$logdbh)/2)^2)
+#         }
+#     }
+#     
+#     return(list(
+#         # intraS for adults [[1]] and seedlings [[2]]
+#         T.raw.intraS, S.raw.intraS,
+#         # intraA for adults [[3]] and seedlings [[4]]
+#         T.raw.intraA, S.raw.intraA
+#     ))
+# }
 
 
 #old <- intra.calc.old(ppoT, ppoS, sp="Prunus.polystachya")
@@ -602,7 +625,7 @@ inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con,
         # compute the distance matrices
         if(nrow(focalTs > 0)){
             dist.Ts <- spDists(as.matrix(focalTs[,1:2]), as.matrix(neighbours[,1:2]))
-            Ts.in.r <- ifelse(dist.Ts < sqrt(400/pi), 1, 0)
+            Ts.in.r <- ifelse(dist.Ts < r, 1, 0)
             
             # for asymmetric competition, we only want pairs in which focal is the smaller of the two, so need to compute another matrix
             T.big.mat <- ifelse(
