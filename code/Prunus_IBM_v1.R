@@ -191,11 +191,11 @@ while (time < maxTime) {
 
   # Kill off 50% of all recruits that are located < 10cm from each other
   # PPO ("Prunus.polystachya")
-  ppo.killed <- kill.rec.old(ppoS, n.old.ppoS)
+  ppo.killed <- kill.rec(ppoS, n.old.ppoS)
   ppoS <- ppoS[-ppo.killed,]
 
   # SCE ("Strombosia.ceylanica")
-  sce.killed <- kill.rec.old(sceS, n.old.sceS)
+  sce.killed <- kill.rec(sceS, n.old.sceS)
   sceS <- sceS[-sce.killed,]
   
   # Take stock of all individuals

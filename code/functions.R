@@ -957,3 +957,30 @@ kill.rec.old <- function(S, oldS) {
     
 }
 
+# new function that is slower but should conserve much more memory
+kill.rec <- function(S, oldS) {
+    rec <- na.omit(S[(oldS+1):nrow(S),])
+    # instead of calculating ALL pairwise distances,
+    # we loop over individual recruits and just denote whether there is a 
+    # neighbour within 10 cm. Then we just randomly kill off these recruits with
+    # nearby neighbour (I think this should be the same or at least a close 
+    # approximation of what kill.rec.old tries to do)
+    is.crowded <- foreach(i = 1:nrow(rec), 
+            .combine = "c",
+            .packages = "raster") %dopar% {
+                rgrid  <- rec[, "grid"][i]
+                rneigh <- rec[rec$grid %in% c(rgrid, grid.neighbours[[rgrid]]), ]
+                inter.rec.dists <- 
+                    spDists(as.matrix(rec[i, c("x", "y"), drop = FALSE]),
+                            as.matrix(rneigh[, c("x", "y"), drop = FALSE]))
+                self.id <- apply(as.matrix(rneigh), 1, function(x) {
+                    identical(x, drop(as.matrix(rec[i, ])))
+                })
+                return(any(inter.rec.dists[, !self.id] < 0.1))
+            }
+    clustered.recs <- match(rownames(rec)[is.crowded], rownames(S))
+    if(length(clustered.recs) > 0){
+        dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
+    }
+    return(dying.recs)
+}
