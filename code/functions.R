@@ -951,9 +951,12 @@ kill.rec.old <- function(S, oldS) {
                   rownames(S))
         if(length(clustered.recs) > 0){
             dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
+            S <- S[-dying.recs, ]
+        } else {
+            S <- S
         }
     }
-    return(dying.recs)
+    return(S)
     
 }
 
@@ -981,6 +984,9 @@ kill.rec <- function(S, oldS) {
     clustered.recs <- match(rownames(rec)[is.crowded], rownames(S))
     if(length(clustered.recs) > 0){
         dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
+        S <- S[-dying.recs, ]
+    } else {
+        S <- S
     }
-    return(dying.recs)
+    return(S)
 }
