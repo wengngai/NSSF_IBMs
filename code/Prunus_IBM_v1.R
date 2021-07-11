@@ -88,15 +88,17 @@ while (time < maxTime) {
   
   # Extract competition measures
   # PPO ("Prunus.polystachya")
-  inter.on.PPO <- inter.calc(rbind(sceT, aosT), rbind(sceS, aosS), ppoT, ppoS, sp="Prunus.polystachya")
-  intra.on.PPO <- intra.calc(ppoT, ppoS, sp="Prunus.polystachya")
+  inter.on.PPO <- inter.calc(rbind(sceT, aosT), rbind(sceS, aosS), ppoT, ppoS, 
+                             sp="Prunus.polystachya", grid.neighbours = grid.neighbours)
+  intra.on.PPO <- intra.calc(ppoT, ppoS, sp="Prunus.polystachya", grid.neighbours = grid.neighbours)
   CAE.on.ppoS <- CAE.calc(ppoT, ppoS, grid.neighbours = grid.neighbours)
   HAE.on.ppoS <- HAE.calc(rbind(sceT, aosT), ppoS, grid.neighbours = grid.neighbours)
   intra.dist.on.PPO <- intra.dist.calc(ppoT, grid.neighbours = grid.neighbours)
   inter.dist.on.PPO <- inter.dist.calc(rbind(sceT, aosT), ppoT, grid.neighbours = grid.neighbours)
   # SCE ("Strombosia.ceylanica")
-  inter.on.SCE <- inter.calc(rbind(ppoT, aosT), rbind(ppoS, aosS), sceT, sceS, sp="Strombosia.ceylanica")
-  intra.on.SCE <- intra.calc(sceT, sceS, sp="Strombosia.ceylanica")
+  inter.on.SCE <- inter.calc(rbind(ppoT, aosT), rbind(ppoS, aosS), sceT, sceS, 
+                             sp="Strombosia.ceylanica", grid.neighbours = grid.neighbours)
+  intra.on.SCE <- intra.calc(sceT, sceS, sp="Strombosia.ceylanica", grid.neighbours = grid.neighbours)
   CAE.on.sceS <- CAE.calc(sceT, sceS, grid.neighbours = grid.neighbours)
   HAE.on.sceS <- HAE.calc(rbind(ppoT, aosT), sceS, grid.neighbours = grid.neighbours)
   intra.dist.on.SCE <- intra.dist.calc(sceT, grid.neighbours = grid.neighbours)
