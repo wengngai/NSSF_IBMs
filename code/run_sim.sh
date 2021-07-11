@@ -39,4 +39,4 @@ LD_LIBRARY_PATH=/share/apps/gcc-8.3/lib64:$LD_LIBRARY_PATH
 /share/apps/R/R-3.6.2/bin/Rscript code/Prunus_IBM_v1.R $SGE_TASK_ID
 
 
-# run: qsub -S /bin/bash -pe smp 48 code/run_sim.sh
+# run: qsub -S /bin/bash -pe smp 16 code/run_sim.sh
