@@ -193,7 +193,7 @@ while (time < maxTime) {
   # PPO ("Prunus.polystachya")
   ppo.rec <- na.omit(ppoS[(n.old.ppoS+1):nrow(ppoS),])
   if(nrow(ppo.rec)>1){
-    inter.rec.dists <- spDists(ppo.rec)
+    inter.rec.dists <- spDists(as.matrix(ppo.rec[, c("x", "y"), drop = FALSE]))
     diag(inter.rec.dists) <- NA
     clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), rownames(ppoS))
     if(length(clustered.recs) > 0){
@@ -206,7 +206,7 @@ while (time < maxTime) {
   # SCE ("Strombosia.ceylanica")
   sce.rec <- na.omit(sceS[(n.old.sceS+1):nrow(sceS),])
   if(nrow(sce.rec)>1){
-    inter.rec.dists <- spDists(sce.rec)
+    inter.rec.dists <- spDists(as.matrix(sce.rec[, c("x", "y"), drop = FALSE]))
     diag(inter.rec.dists) <- NA
     clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), rownames(sceS))
     if(length(clustered.recs >0)){
