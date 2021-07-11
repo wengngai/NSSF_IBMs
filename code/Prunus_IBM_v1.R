@@ -5,7 +5,7 @@ library(doParallel)
 
 
 # Settings for parallerisation
-registerDoParallel(cores = 16)
+registerDoParallel(cores = 48)
 
 
 #################
