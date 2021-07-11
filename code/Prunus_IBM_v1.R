@@ -191,30 +191,12 @@ while (time < maxTime) {
 
   # Kill off 50% of all recruits that are located < 10cm from each other
   # PPO ("Prunus.polystachya")
-  ppo.rec <- na.omit(ppoS[(n.old.ppoS+1):nrow(ppoS),])
-  if(nrow(ppo.rec)>1){
-    inter.rec.dists <- spDists(as.matrix(ppo.rec[, c("x", "y"), drop = FALSE]))
-    diag(inter.rec.dists) <- NA
-    clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), rownames(ppoS))
-    if(length(clustered.recs) > 0){
-      dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
-      ppoS <- ppoS[-dying.recs,]
-    }
-  }
-  rm(inter.rec.dists)
-  
+  ppo.killed <- kill.rec.old(ppoS, n.old.ppoS)
+  ppoS <- ppoS[-ppo.killed,]
+
   # SCE ("Strombosia.ceylanica")
-  sce.rec <- na.omit(sceS[(n.old.sceS+1):nrow(sceS),])
-  if(nrow(sce.rec)>1){
-    inter.rec.dists <- spDists(as.matrix(sce.rec[, c("x", "y"), drop = FALSE]))
-    diag(inter.rec.dists) <- NA
-    clustered.recs <- match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), rownames(sceS))
-    if(length(clustered.recs >0)){
-      dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
-      sceS <- sceS[-dying.recs,]
-    }
-  }
-  rm(inter.rec.dists)
+  sce.killed <- kill.rec.old(sceS, n.old.sceS)
+  sceS <- sceS[-sce.killed,]
   
   # Take stock of all individuals
   # PPO ("Prunus.polystachya")

@@ -935,3 +935,25 @@ rm.overlap <- function(recruits, trees, seedlings, grid.neighbours){
     return(recruits[sel, , drop = FALSE])
 }
 #rm.overlap(sceS[1:10,c("x","y","grid")], ppoT, ppoS, grid.neighbours)
+
+
+###############################################
+# FUNCTION TO KILL CROWDED SEEDLINGS #
+###############################################
+kill.rec.old <- function(S, oldS) {
+    
+    rec <- na.omit(S[(oldS+1):nrow(S),])
+    if(nrow(rec)>1){
+        inter.rec.dists <- spDists(as.matrix(rec[, c("x", "y"), drop = FALSE]))
+        diag(inter.rec.dists) <- NA
+        clustered.recs <- 
+            match(names(which(apply(inter.rec.dists, 1, min, na.rm=T) < 0.1)), 
+                  rownames(S))
+        if(length(clustered.recs) > 0){
+            dying.recs <- sample(clustered.recs, size=round(length(clustered.recs)*0.5,0), replace=F)
+        }
+    }
+    return(dying.recs)
+    
+}
+
