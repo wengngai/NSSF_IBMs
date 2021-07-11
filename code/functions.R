@@ -428,6 +428,10 @@ HAE.calc <- function(trees.hetero, seedlings.con, grid.neighbours, r = sqrt(400/
 # }
 
 # parallerised intra.calc
+comb <- function(x, ...) {
+    lapply(seq_along(x),
+           function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
+}
 intra.calc <- function(trees, seedlings, sp, grid.neighbours, r = sqrt(400/pi)){
     # convert seedling heights to dbh
     h <- seedlings$logheight
@@ -441,8 +445,8 @@ intra.calc <- function(trees, seedlings, sp, grid.neighbours, r = sqrt(400/pi)){
     # calc distance and find all within 400m2 radius of focal
     raw.intra <- foreach(i = 1:nrow(ALL),
             .combine = "comb", 
-            # .multicombine=TRUE,
-            # .init=list(list(), list()),
+            .multicombine=TRUE,
+            .init=list(list(), list()),
             .packages = "raster") %dopar% { 
                 # the grid that the individual is in
                 focal.grid <- ALL[i, "grid"]
@@ -626,8 +630,8 @@ inter.calc <- function(trees.hetero, seedlings.hetero, trees.con, seedlings.con,
     # calc distance and find all within 400m2 radius of focal
     raw.intra <- foreach(i = 1:nrow(con.ALL),
                          .combine = "comb", 
-                         # .multicombine=TRUE,
-                         # .init=list(list(), list()),
+                         .multicombine=TRUE,
+                         .init=list(list(), list()),
                          .packages = "raster") %dopar% { 
                              # the grid that the individual is in
                              focal.grid <- con.ALL[i, "grid"]
