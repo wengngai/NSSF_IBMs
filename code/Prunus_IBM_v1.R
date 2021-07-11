@@ -125,17 +125,20 @@ while (time < maxTime) {
   if(sum(sceT$logdbh==0) > 0)  sceT <- sceT[-which(sceT$logdbh==0),]
   
   # Conserve memory by deleting competition indices (don't need anymore)
-  #rm()
+  rm(inter.on.PPO, intra.on.PPO, CAE.on.ppoS, HAE.on.ppoS, intra.dist.on.PPO, inter.dist.on.PPO,
+     inter.on.SCE, intra.on.SCE, CAE.on.sceS, HAE.on.sceS, intra.dist.on.SCE, inter.dist.on.SCE)
   
   # Seedling-sapling transition
   # PPO ("Prunus.polystachya")
   ppoTS <- T_z1h1(ppoT, ppoS, "Prunus.polystachya")
   ppoT <- ppoTS[[1]]
   ppoS <- ppoTS[[2]]
+  rm(ppoTS)
   # SCE ("Strombosia.ceylanica")
   sceTS <- T_z1h1(sceT, sceS, "Strombosia.ceylanica")
   sceT <- sceTS[[1]]
   sceS <- sceTS[[2]]
+  rm(sceTS)
   
   # This is the current number of seedlings:
   # PPO ("Prunus.polystachya")
@@ -198,6 +201,7 @@ while (time < maxTime) {
       ppoS <- ppoS[-dying.recs,]
     }
   }
+  rm(inter.rec.dists)
   
   # SCE ("Strombosia.ceylanica")
   sce.rec <- na.omit(sceS[(n.old.sceS+1):nrow(sceS),])
@@ -210,6 +214,7 @@ while (time < maxTime) {
       sceS <- sceS[-dying.recs,]
     }
   }
+  rm(inter.rec.dists)
   
   # Take stock of all individuals
   # PPO ("Prunus.polystachya")
