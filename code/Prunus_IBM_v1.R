@@ -220,13 +220,13 @@ while (time < maxTime) {
   # not doing saplings for now, because they only have height (can convert later?)
   ba.ppoT <- c(ba.ppoT, sum(pi * (exp(ppoT$logdbh) / 2)^2))
   ba.sceT <- c(ba.sceT, sum(pi * (exp(sceT$logdbh) / 2)^2))
-  
+
+  # print message to check status during runs
+  message(paste(n1.ppoT + n1.ppoS + n1.sceT + n1.sceS, "stems at year", time, "  "),
+          appendLF = TRUE)
+    
   # move to next time point
   time <- time + 1
-  
-  # print message to check status during runs
-  message(paste(n.ppoT + n.sceT, "stems at year", time))
-
   # update progress bar
   setTxtProgressBar(pb, time)
 }
