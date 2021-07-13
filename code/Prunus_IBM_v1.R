@@ -5,7 +5,7 @@ library(doParallel)
 
 
 # Settings for parallerisation
-registerDoParallel(cores = 48)
+registerDoParallel(cores = 24)
 
 
 #################
@@ -46,7 +46,7 @@ source("code/setup_map.R")
 #######################
 
 time <- 1
-maxTime <- 400
+maxTime <- 100
 
 ppoT.init <- ppoT
 ppoS.init <- ppoS
@@ -223,6 +223,9 @@ while (time < maxTime) {
   
   # move to next time point
   time <- time + 1
+  
+  # print message to check status during runs
+  message(paste(n.ppoT + n.sceT, "stems at year", time))
 
   # update progress bar
   setTxtProgressBar(pb, time)
