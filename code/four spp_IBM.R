@@ -2,10 +2,10 @@ library(raster)
 library(sp)
 library(poweRlaw)
 library(doParallel)
-
+library(rgdal)
 
 # Settings for parallerisation
-registerDoParallel(cores = 24)
+registerDoParallel(cores = 8)
 
 
 #################
@@ -38,7 +38,7 @@ source("code/functions.R")
 #################
 # SETUP BASEMAP #
 #################
-source("code/setup_map.R")
+source("code/setup_map_four spp.R")
 
 
 #######################
@@ -46,7 +46,7 @@ source("code/setup_map.R")
 #######################
 
 time <- 1
-maxTime <- 100
+maxTime <- 3
 
 # take a snapshot of initial conditions
 ppoT.init <- ppoT
