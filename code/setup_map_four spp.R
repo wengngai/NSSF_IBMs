@@ -76,7 +76,7 @@ swamp.poly <- rasterToPolygons(nssf.usual[[1]], fun=function(x){x==1})
 nonswamp.poly <- rasterToPolygons(nssf.usual[[1]], fun=function(x){x==0})
 
 # abbreviated species names for for loop
-tran.parm[4,] <- c("AAN", "AFR", "ALU", "ACL","BBR", "BPA", "CRU", "CSQ", "CBR", 
+tran.abbrev <- c("AAN", "AFR", "ALU", "ACL","BBR", "BPA", "CRU", "CSQ", "CBR", 
                    "EMA", "GPA", "GNE", "GWA", "GAX", "KMA", "MBA", "PAX", "PPI", "PPO", 
                    "PCO", "PEC", "SCE", "SPA", "TFL", "TWA", "XFL", "AOS")
 for(i in 1:4){
@@ -125,7 +125,7 @@ for(i in 1:4){
         data.frame(
             rbind(coordinates(swamp.pts.S), coordinates(nonswamp.pts.S)),
             # transformation of logDBH to logheight
-            logheight = (z - as.numeric(tran.parm["tran.int",which(tran.parm[4,]==sp)])) / as.numeric(tran.parm["tran.h",which(tran.parm[4,]==sp)])
+            logheight = (z - tran.parm["tran.int",which(tran.abbrev==sp)]) / tran.parm["tran.h",which(tran.abbrev==sp)]
         )
     ))
     
