@@ -5,7 +5,7 @@ library(doParallel)
 library(rgdal)
 
 # Settings for parallerisation
-registerDoParallel(cores = 8)
+registerDoParallel(cores = 24)
 
 
 #################
@@ -46,7 +46,7 @@ source("code/setup_map_four spp.R")
 #######################
 
 time <- 1
-maxTime <- 100
+maxTime <- 23
 
 # take a snapshot of initial conditions
 ppoT.init <- ppoT
