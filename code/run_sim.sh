@@ -36,8 +36,8 @@ LD_LIBRARY_PATH=/share/apps/gcc-8.3/lib64:$LD_LIBRARY_PATH
 ###############################
 #you can put your scripts here
 
-# /share/apps/R/R-3.6.2/bin/Rscript code/Prunus_IBM_v1.R $SGE_TASK_ID
-/share/apps/R/R-3.6.2/bin/Rscript code/four_spp_IBM.R $SGE_TASK_ID
+/share/apps/R/R-3.6.2/bin/Rscript code/Prunus_IBM_v1.R $SGE_TASK_ID
+# /share/apps/R/R-3.6.2/bin/Rscript code/four_spp_IBM.R $SGE_TASK_ID
 
 
-# run: qsub -S /bin/bash -pe smp 48 code/run_sim.sh
+# run: qsub -S /bin/bash -pe smp 24 code/run_sim.sh
