@@ -5,7 +5,7 @@ library(doParallel)
 library(rgdal)
 
 # Settings for parallerisation
-registerDoParallel(cores = 24)
+registerDoParallel(cores = 48)
 
 
 #################
