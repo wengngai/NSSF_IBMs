@@ -182,23 +182,23 @@ aosT$grid <- extract(nssf.100, aosT[,c("x","y")])
 # Visualize #
 #############
 
-# Define a colour palette
-col.pal <- c("#E3C16F", "#946846", "#FAFF70", "#6D213C", "#65DEF1", "#F3F5F6", "#BAAB68", "#CBC5EA")
-col.t <- adjustcolor(col.pal, alpha.f=0.6)
-
-plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)])
-# PPO
-points(ppoT, cex=ppoT$logdbh/2, col=col.t[1], pch=16)
-#points(data.frame(ppoS), col=col.t[1], pch=4, cex=0.1)
-# SCE
-points(sceT, cex=sceT$logdbh/2, col=col.t[2], pch=16)
-#points(data.frame(sceS), col=col.t[2], pch=4, cex=0.1)
-# PPI
-points(ppiT, cex=ppiT$logdbh/2, col=col.t[4], pch=16)
-#points(data.frame(ppiS), col=col.t[3], pch=4, cex=0.1)
-# GNE
-points(gneT, cex=gneT$logdbh/2, col=col.t[3], pch=16)
-#points(data.frame(gneS), col=col.t[4], pch=4, cex=0.1)
-# All other species (static--just for a background interspecific competition pressure)
-#points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
-scalebar(500, xy=c(368500, 151650), type="bar", lonlat=F, below="metres", divs=2)
+# # Define a colour palette
+# col.pal <- c("#E3C16F", "#946846", "#FAFF70", "#6D213C", "#65DEF1", "#F3F5F6", "#BAAB68", "#CBC5EA")
+# col.t <- adjustcolor(col.pal, alpha.f=0.6)
+# 
+# plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)])
+# # PPO
+# points(ppoT, cex=ppoT$logdbh/2, col=col.t[1], pch=16)
+# #points(data.frame(ppoS), col=col.t[1], pch=4, cex=0.1)
+# # SCE
+# points(sceT, cex=sceT$logdbh/2, col=col.t[2], pch=16)
+# #points(data.frame(sceS), col=col.t[2], pch=4, cex=0.1)
+# # PPI
+# points(ppiT, cex=ppiT$logdbh/2, col=col.t[4], pch=16)
+# #points(data.frame(ppiS), col=col.t[3], pch=4, cex=0.1)
+# # GNE
+# points(gneT, cex=gneT$logdbh/2, col=col.t[3], pch=16)
+# #points(data.frame(gneS), col=col.t[4], pch=4, cex=0.1)
+# # All other species (static--just for a background interspecific competition pressure)
+# #points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
+# scalebar(500, xy=c(368500, 151650), type="bar", lonlat=F, below="metres", divs=2)
