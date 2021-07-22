@@ -46,7 +46,7 @@ source("code/setup_map_four spp.R")
 #######################
 
 time <- 1
-maxTime <- 3
+maxTime <- 100
 
 # take a snapshot of initial conditions
 ppoT.init <- ppoT
@@ -350,7 +350,7 @@ while (time < maxTime) {
           
           
   # print message to check status during runs
-  message(paste(n1.ppoT + n1.ppoS + n1.sceT + n1.sceS, "stems at year", time, "  "),
+  message(paste(n1.ppoT + n1.ppoS + n1.sceT + n1.sceS + n1.ppiT + n1.ppiS + n1.gneT + n1.gneS , "stems at year", time, "  "),
           appendLF = TRUE)
     
   # move to next time point
