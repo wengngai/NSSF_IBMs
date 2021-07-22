@@ -1,5 +1,3 @@
-install.packages("rgdal", repos = "https://cloud.r-project.org")
-
 library(raster)
 library(sp)
 library(poweRlaw)
