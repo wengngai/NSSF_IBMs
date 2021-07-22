@@ -1,9 +1,10 @@
+install.packages("rgdal", repos = "https://cloud.r-project.org")
+
 library(raster)
 library(sp)
 library(poweRlaw)
 library(doParallel)
 library(rgdal)
-library(here)
 
 # Settings for parallerisation
 registerDoParallel(cores = 24)
@@ -13,15 +14,15 @@ registerDoParallel(cores = 24)
 # GROWTH PARAMS #
 #################
 
-grow.T.parm <- t(read.csv(here("data/tree growth parameters Apr21.csv"), header=T, row.names=1))
-grow.T.parm.unscale <- read.csv(here("data/tree growth model unscale params.csv"), header=T, row.names=1)
-grow.S.parm <- read.csv(here("data/seedling lmer growth params CAA Apr21.csv"), header=T, row.names=1)
-surv.parm <- t(read.csv(here("data/surv params Jun21.csv"), header=T, row.names=1))
-surv.parm.unscale <- read.csv(here("data/survival model unscale params.csv"), header=T, row.names=1)
-fruit.parm <- read.csv(here("data/fruiting parameters Apr21.csv"), header=T, row.names=1)
-tran.parm <- read.csv(here("data/transition params CAA Jun21.csv"), header=T, row.names=1)
-rec.parm <- t(read.csv(here("data/dispersal kernel parameters Apr21.csv"), header=T, row.names=1))
-HM.parm <- t(read.csv(here("data/HM values.csv"), header=T, row.names=1))
+grow.T.parm <- t(read.csv("data/tree growth parameters Apr21.csv", header=T, row.names=1))
+grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", header=T, row.names=1)
+grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1)
+surv.parm <- t(read.csv("data/surv params Jun21.csv", header=T, row.names=1))
+surv.parm.unscale <- read.csv("data/survival model unscale params.csv", header=T, row.names=1)
+fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1)
+tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
+rec.parm <- t(read.csv("data/dispersal kernel parameters Apr21.csv", header=T, row.names=1))
+HM.parm <- t(read.csv("data/HM values.csv", header=T, row.names=1))
 
 # standardize some spp names
 colnames(surv.parm) <- gsub(" ", ".", colnames(surv.parm))
@@ -33,13 +34,13 @@ colnames(HM.parm) <- gsub(" ", ".", colnames(HM.parm))
 ##################
 # LOAD FUNCTIONS #
 ##################
-source(here("code/functions.R"))
+source("code/functions.R")
 
 
 #################
 # SETUP BASEMAP #
 #################
-source(here("code/setup_map_four spp.R"))
+source("code/setup_map_four spp.R")
 
 
 #######################
@@ -374,6 +375,6 @@ out <-
        z.ppoT = z.ppoT, z.sceT = z.sceT, z.ppiT = z.ppiT, z.gneT = z.gneT,
        h.ppoS = h.ppoS, h.sceS = h.sceS, h.ppiS = h.ppiS, h.gneS = h.gneS,
        ba.ppoT = ba.ppoT, ba.sceT = ba.sceT, ba.ppiT = ba.ppiT, ba.gneT = ba.gneT)
-saveRDS(out, file = here("out/sim_out.rds"))
+saveRDS(out, file = "out/sim_out.rds")
 #saveRDS(out, file = "D:\\National University of Singapore\\Chong Kwek Yan - CRSF\\Data\\IBM\\out\\Extreme3 scenario 50 years.rds")
 
