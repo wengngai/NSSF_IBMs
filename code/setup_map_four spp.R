@@ -64,7 +64,7 @@ prop.ns <- 1-prop.swamp
 n.total <- 20000000
 # but 20 million stems is still a bit too much to estimate
 # introduce a dilution factor
-dilution <- 10000
+dilution <- 100
 n.init <- round(BA.plots.prop * matrix(rep(c(prop.ns, prop.swamp), each=4), 4, 2) * n.total/dilution, 0)
 n.init[1,1] <- 100 # cannot have zeroes
 
@@ -136,7 +136,7 @@ for(i in 1:4){
 ## initialize "All other species" for background interspecific competition
 
 # Approx. number of all other species stems (ADULTS ONLY--using 1:3:20 adults to saplings to seedlings ratio)
-init.aos.n <- 4/20 * (n.total - sum(n.init))
+init.aos.n <- 4/20 * (n.total/dilution - sum(n.init))
 
 # Use power law with 1cm min DBH for all other spp. Note that seedlings not modelled
 init.aos.dbh <- rplcon(init.aos.n, 1, 2.2)
@@ -194,11 +194,11 @@ points(ppoT, cex=ppoT$logdbh/2, col=col.t[1], pch=16)
 points(sceT, cex=sceT$logdbh/2, col=col.t[2], pch=16)
 #points(data.frame(sceS), col=col.t[2], pch=4, cex=0.1)
 # PPI
-points(ppiT, cex=ppiT$logdbh/2, col=col.t[3], pch=16)
+points(ppiT, cex=ppiT$logdbh/2, col=col.t[4], pch=16)
 #points(data.frame(ppiS), col=col.t[3], pch=4, cex=0.1)
 # GNE
-points(gneT, cex=gneT$logdbh/2, col=col.t[4], pch=16)
+points(gneT, cex=gneT$logdbh/2, col=col.t[3], pch=16)
 #points(data.frame(gneS), col=col.t[4], pch=4, cex=0.1)
 # All other species (static--just for a background interspecific competition pressure)
-points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
-scalebar(500, xy=c(368500, 152000), type="bar", lonlat=F, below="metres", divs=2)
+#points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
+scalebar(500, xy=c(368500, 151650), type="bar", lonlat=F, below="metres", divs=2)
