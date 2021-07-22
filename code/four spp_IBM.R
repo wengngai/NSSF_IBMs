@@ -89,7 +89,7 @@ pb <- txtProgressBar(min = 1, max = maxTime, style = 3)
 while (time < maxTime) {
   
   # Choose landscape based on scenario and time (beyond 22 years, just use the last time point (=2042))
-  nssf.m <- nssf.extreme[[ifelse(time>22, 22, time)]]
+  nssf.m <- nssf.usual[[ifelse(time>22, 22, time)]]
   
   # Recruitment: initiate fruiting, but don't add new recruits to seedling dfs yet (let them grow/die first)
   # PPO ("Prunus.polystachya")
@@ -119,7 +119,7 @@ while (time < maxTime) {
   intra.dist.on.PPO <- intra.dist.calc(ppoT, grid.neighbours = grid.neighbours)
   inter.dist.on.PPO <- inter.dist.calc(rbind(sceT, ppiT, gneT, aosT), ppoT, grid.neighbours = grid.neighbours)
   # SCE ("Strombosia.ceylanica")
-  inter.on.SCE <- inter.calc(rbind(ppoT, ppiT, gneT, aosT), rbind(ppoS, ppiT, gneT), sceT, sceS, 
+  inter.on.SCE <- inter.calc(rbind(ppoT, ppiT, gneT, aosT), rbind(ppoS, ppiS, gneS), sceT, sceS, 
                              sp="Strombosia.ceylanica", grid.neighbours = grid.neighbours)
   intra.on.SCE <- intra.calc(sceT, sceS, sp="Strombosia.ceylanica", grid.neighbours = grid.neighbours)
   CAE.on.sceS <- CAE.calc(sceT, sceS, grid.neighbours = grid.neighbours)
@@ -135,7 +135,7 @@ while (time < maxTime) {
   intra.dist.on.PPI <- intra.dist.calc(ppiT, grid.neighbours = grid.neighbours)
   inter.dist.on.PPI <- inter.dist.calc(rbind(sceT, ppoT, gneT, aosT), ppiT, grid.neighbours = grid.neighbours)
   # GNE ("Gironniera.nervosa")
-  inter.on.GNE <- inter.calc(rbind(ppoT, ppiT, sceT, aosT), rbind(ppoS, ppiT, sceT), gneT, gneS, 
+  inter.on.GNE <- inter.calc(rbind(ppoT, ppiT, sceT, aosT), rbind(ppoS, ppiS, sceS), gneT, gneS, 
                              sp="Gironniera.nervosa", grid.neighbours = grid.neighbours)
   intra.on.GNE <- intra.calc(gneT, gneS, sp="Gironniera.nervosa", grid.neighbours = grid.neighbours)
   CAE.on.gneS <- CAE.calc(gneT, gneS, grid.neighbours = grid.neighbours)
