@@ -147,37 +147,37 @@ while (time < maxTime) {
   # PPO ("Prunus.polystachya")
   ppoS$logheight <- sS_h(nssf.m, ppoS, "Prunus.polystachya", intra.on.PPO[[4]], inter.on.PPO[[4]]) * 
     GS_h1h(nssf.m, ppoS, "Prunus.polystachya", CAE.on.ppoS, HAE.on.ppoS)
-  if(sum(ppoS$logheight==0) > 0)  ppoS <- ppoS[-which(ppoS$logheight==0),]
+  if(sum(ppoS$logheight==0, na.rm = TRUE) > 0)  ppoS <- ppoS[-which(ppoS$logheight==0),]
   # SCE ("Strombosia.ceylanica")
   sceS$logheight <- sS_h(nssf.m, sceS, "Strombosia.ceylanica", intra.on.SCE[[4]], inter.on.SCE[[4]]) * 
     GS_h1h(nssf.m, sceS, "Strombosia.ceylanica", CAE.on.sceS, HAE.on.sceS)
-  if(sum(sceS$logheight==0) > 0)  sceS <- sceS[-which(sceS$logheight==0),]
+  if(sum(sceS$logheight==0, na.rm = TRUE) > 0)  sceS <- sceS[-which(sceS$logheight==0),]
   # PPI ("Pometia.pinnata")
   ppiS$logheight <- sS_h(nssf.m, ppiS, "Pometia.pinnata", intra.on.PPI[[4]], inter.on.PPI[[4]]) * 
     GS_h1h(nssf.m, ppiS, "Pometia.pinnata", CAE.on.ppiS, HAE.on.ppiS)
-  if(sum(ppiS$logheight==0) > 0)  ppiS <- ppiS[-which(ppiS$logheight==0),]
+  if(sum(ppiS$logheight==0, na.rm = TRUE) > 0)  ppiS <- ppiS[-which(ppiS$logheight==0),]
   # GNE ("Gironniera.nervosa")
   gneS$logheight <- sS_h(nssf.m, gneS, "Gironniera.nervosa", intra.on.GNE[[4]], inter.on.GNE[[4]]) * 
     GS_h1h(nssf.m, gneS, "Gironniera.nervosa", CAE.on.gneS, HAE.on.gneS)
-  if(sum(gneS$logheight==0) > 0)  gneS <- gneS[-which(gneS$logheight==0),]
+  if(sum(gneS$logheight==0, na.rm = TRUE) > 0)  gneS <- gneS[-which(gneS$logheight==0),]
   
   # Tree growth and survival
   # PPO ("Prunus.polystachya")
   ppoT$logdbh <- sT_z(nssf.m, ppoT, "Prunus.polystachya", intra.on.PPO[[1]], intra.on.PPO[[3]], inter.on.PPO[[1]], inter.on.PPO[[3]]) * 
     GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intra.dist.on.PPO, inter.dist.on.PPO)
-  if(sum(ppoT$logdbh==0) > 0)  ppoT <- ppoT[-which(ppoT$logdbh==0),]
+  if(sum(ppoT$logdbh==0, na.rm = TRUE) > 0)  ppoT <- ppoT[-which(ppoT$logdbh==0),]
   # SCE ("Strombosia.ceylanica")
   sceT$logdbh <- sT_z(nssf.m, sceT, "Strombosia.ceylanica", intra.on.SCE[[1]], intra.on.SCE[[3]], inter.on.SCE[[1]], inter.on.SCE[[3]]) * 
     GT_z1z(nssf.m, sceT, "Strombosia.ceylanica", intra.dist.on.SCE, inter.dist.on.SCE)
-  if(sum(sceT$logdbh==0) > 0)  sceT <- sceT[-which(sceT$logdbh==0),]
+  if(sum(sceT$logdbh==0, na.rm = TRUE) > 0)  sceT <- sceT[-which(sceT$logdbh==0),]
   # PPI ("Pometia.pinnata")
   ppiT$logdbh <- sT_z(nssf.m, ppiT, "Pometia.pinnata", intra.on.PPI[[1]], intra.on.PPI[[3]], inter.on.PPI[[1]], inter.on.PPI[[3]]) * 
     GT_z1z(nssf.m, ppiT, "Pometia.pinnata", intra.dist.on.PPI, inter.dist.on.PPI)
-  if(sum(ppiT$logdbh==0) > 0)  ppiT <- ppiT[-which(ppiT$logdbh==0),]
+  if(sum(ppiT$logdbh==0, na.rm = TRUE) > 0)  ppiT <- ppiT[-which(ppiT$logdbh==0),]
   # GNE ("Gironniera.nervosa")
   gneT$logdbh <- sT_z(nssf.m, gneT, "Gironniera.nervosa", intra.on.GNE[[1]], intra.on.GNE[[3]], inter.on.GNE[[1]], inter.on.GNE[[3]]) * 
     GT_z1z(nssf.m, gneT, "Gironniera.nervosa", intra.dist.on.GNE, inter.dist.on.GNE)
-  if(sum(gneT$logdbh==0) > 0)  gneT <- gneT[-which(gneT$logdbh==0),]
+  if(sum(gneT$logdbh==0, na.rm = TRUE) > 0)  gneT <- gneT[-which(gneT$logdbh==0),]
   
   # Conserve memory by deleting competition indices (don't need anymore)
   rm(inter.on.PPO, intra.on.PPO, CAE.on.ppoS, HAE.on.ppoS, intra.dist.on.PPO, inter.dist.on.PPO,
