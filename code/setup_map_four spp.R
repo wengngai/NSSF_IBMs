@@ -64,7 +64,7 @@ prop.ns <- 1-prop.swamp
 n.total <- 20000000
 # but 20 million stems is still a bit too much to estimate
 # introduce a dilution factor
-dilution <- 10000
+dilution <- 10
 n.init <- round(BA.plots.prop * matrix(rep(c(prop.ns, prop.swamp), each=4), 4, 2) * n.total/dilution, 0)
 n.init[1,1] <- 100 # cannot have zeroes
 
