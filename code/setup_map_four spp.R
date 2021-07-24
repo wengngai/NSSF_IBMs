@@ -64,7 +64,7 @@ prop.ns <- 1-prop.swamp
 n.total <- 20000000
 # but 20 million stems is still a bit too much to estimate
 # introduce a dilution factor
-dilution <- 10
+dilution <- 10000
 n.init <- round(BA.plots.prop * matrix(rep(c(prop.ns, prop.swamp), each=4), 4, 2) * n.total/dilution, 0)
 n.init[1,1] <- 100 # cannot have zeroes
 
@@ -91,6 +91,17 @@ for(i in 1:4){
     n.nonswamp.adults <- round(1/20 * n.init[i,"non-swamp"], 0)
     n.nonswamp.saplings <- round(3/20 * n.init[i,"non-swamp"], 0)
     n.nonswamp.seedlings <- n.init[i,"non-swamp"] - n.nonswamp.adults - n.nonswamp.saplings
+    
+    stopifnot(
+        "Some populations have zero count! spsample wil fail. Check if dilution is too high?" = all(
+            n.swamp.adults > 0,
+            n.swamp.saplings > 0,
+            n.swamp.seedlings > 0,
+            n.nonswamp.adults > 0,
+            n.nonswamp.saplings > 0,
+            n.nonswamp.seedlings > 0
+        )
+    )
     
     # sample swamp/non-swamp areas according to adults (adults + saplings) and seedling groups
     swamp.pts.T <- spsample(swamp.poly, n.swamp.adults+n.swamp.saplings, type = 'random')
