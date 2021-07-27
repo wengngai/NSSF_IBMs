@@ -86,7 +86,7 @@ ba.gneT <- data.frame(time=seq(time, maxTime, 1), swamp=NA, nonswamp=NA, landsca
 
 # progress bar
 pb <- txtProgressBar(min = 1, max = maxTime, style = 3)
-while (time < maxTime) {
+while (time <= maxTime) {
   
   # Choose landscape based on scenario and time (beyond 22 years, just use the last time point (=2042))
   nssf.m <- nssf.usual[[ifelse(time>22, 22, time)]]
