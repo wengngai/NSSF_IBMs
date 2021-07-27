@@ -51,7 +51,7 @@ BA.plots <- matrix(c(0, 7373.44, 5820.82, 2408.03, 11833.72, 1147.71, 362.58, 25
 BA.plots.prop <- BA.plots / matrix(rep(c(207239.22, 244171.15), each=4), 4, 2)
 
 # proportion of the landscape that is swamp/non-swamp:
-prop.swamp <- sum(values(nssf.usual[[1]]), na.rm=T)/length(na.omit(values(nssf.usual[[1]])))
+prop.swamp <- sum(values(nssf.extreme[[1]]), na.rm=T)/length(na.omit(values(nssf.extreme[[1]])))
 prop.ns <- 1-prop.swamp
 
 # total no. of stems across NSSF estimated from raw data:
@@ -72,8 +72,8 @@ n.init[1,1] <- 100 # cannot have zeroes
 # Generating random initial locations
 
 # convert baselayer from raster to polygons for random point generation
-swamp.poly <- rasterToPolygons(nssf.usual[[1]], fun=function(x){x==1})
-nonswamp.poly <- rasterToPolygons(nssf.usual[[1]], fun=function(x){x==0})
+swamp.poly <- rasterToPolygons(nssf.extreme[[1]], fun=function(x){x==1})
+nonswamp.poly <- rasterToPolygons(nssf.extreme[[1]], fun=function(x){x==0})
 
 # abbreviated species names for for loop
 tran.abbrev <- c("AAN", "AFR", "ALU", "ACL","BBR", "BPA", "CRU", "CSQ", "CBR", 
@@ -166,7 +166,7 @@ aosT <- data.frame(coordinates(aos.loc), logdbh = aosT.logdbh)
 ###################################
 
 # create low resolution raster (100 x 100m)
-nssf.100 <- aggregate(nssf.usual[[1]], fact=5)
+nssf.100 <- aggregate(nssf.extreme[[1]], fact=5)
 res(nssf.100)
 # assign cell values = index
 nssf.100 <- setValues(nssf.100, 1:length(nssf.100))

@@ -79,17 +79,17 @@ z.gneT <- mean(gneT$logdbh)
 h.gneS <- mean(gneS$logheight)
 
 # create table for total BA in swamp vs non-swamp
-ba.ppoT <- data.frame(time=seq(time, maxTime, 1), swamp=NA, nonswamp=NA, landscape.swamp.prop=NA)
-ba.sceT <- data.frame(time=seq(time, maxTime, 1), swamp=NA, nonswamp=NA, landscape.swamp.prop=NA)
-ba.ppiT <- data.frame(time=seq(time, maxTime, 1), swamp=NA, nonswamp=NA, landscape.swamp.prop=NA)
-ba.gneT <- data.frame(time=seq(time, maxTime, 1), swamp=NA, nonswamp=NA, landscape.swamp.prop=NA)
+ba.ppoT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
+ba.sceT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
+ba.ppiT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
+ba.gneT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
 
 # progress bar
 pb <- txtProgressBar(min = 1, max = maxTime, style = 3)
 while (time <= maxTime) {
   
   # Choose landscape based on scenario and time (beyond 22 years, just use the last time point (=2042))
-  nssf.m <- nssf.usual[[ifelse(time>22, 22, time)]]
+  nssf.m <- nssf.extreme[[ifelse(time>22, 22, time)]]
   
   # Recruitment: initiate fruiting, but don't add new recruits to seedling dfs yet (let them grow/die first)
   # PPO ("Prunus.polystachya")
@@ -362,7 +362,7 @@ while (time <= maxTime) {
 close(pb)
 
 # output to be saved
-out <- 
+out.extreme <- 
   list(nssf.m = nssf.m, 
        ppoT.init = ppoT.init, sceT.init = sceT.init, ppiT.init = ppiT.init, gneT.init = gneT.init,
        ppoS.init = ppoS.init, sceS.init = sceS.init, ppiS.init = ppiS.init, gneS.init = gneS.init,
@@ -373,6 +373,6 @@ out <-
        z.ppoT = z.ppoT, z.sceT = z.sceT, z.ppiT = z.ppiT, z.gneT = z.gneT,
        h.ppoS = h.ppoS, h.sceS = h.sceS, h.ppiS = h.ppiS, h.gneS = h.gneS,
        ba.ppoT = ba.ppoT, ba.sceT = ba.sceT, ba.ppiT = ba.ppiT, ba.gneT = ba.gneT)
-saveRDS(out, file = "out/sim_out.rds")
+saveRDS(out.extreme, file = "out/sim_out_extreme.rds")
 #saveRDS(out, file = "D:\\National University of Singapore\\Chong Kwek Yan - CRSF\\Data\\IBM\\out\\Extreme3 scenario 50 years.rds")
 
