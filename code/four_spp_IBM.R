@@ -27,7 +27,9 @@ colnames(surv.parm) <- gsub(" ", ".", colnames(surv.parm))
 colnames(grow.T.parm) <- gsub(" ", ".", colnames(grow.T.parm))
 colnames(HM.parm) <- gsub(" ", ".", colnames(HM.parm))
 
-
+# add a "min size" row to rec.parm
+rec.parm <- rbind(rec.parm, rec.parm["rcsz",] - 2*rec.parm["rcsd",])
+rownames(rec.parm)[5] <- "minsize"
 
 ##################
 # LOAD FUNCTIONS #
@@ -147,19 +149,23 @@ while (time <= maxTime) {
   # PPO ("Prunus.polystachya")
   ppoS$logheight <- sS_h(nssf.m, ppoS, "Prunus.polystachya", intra.on.PPO[[4]], inter.on.PPO[[4]]) * 
     GS_h1h(nssf.m, ppoS, "Prunus.polystachya", CAE.on.ppoS, HAE.on.ppoS)
-  if(sum(ppoS$logheight==0, na.rm = TRUE) > 0)  ppoS <- ppoS[-which(ppoS$logheight==0),]
+  if(sum(ppoS$logheight < rec.parm["minsize", "Prunus.polystachya"], na.rm = TRUE) > 0){
+    ppoS <- ppoS[-which(ppoS$logheight < rec.parm["minsize", "Prunus.polystachya"]),] }
   # SCE ("Strombosia.ceylanica")
   sceS$logheight <- sS_h(nssf.m, sceS, "Strombosia.ceylanica", intra.on.SCE[[4]], inter.on.SCE[[4]]) * 
     GS_h1h(nssf.m, sceS, "Strombosia.ceylanica", CAE.on.sceS, HAE.on.sceS)
-  if(sum(sceS$logheight==0, na.rm = TRUE) > 0)  sceS <- sceS[-which(sceS$logheight==0),]
+  if(sum(sceS$logheight < rec.parm["minsize", "Strombosia.ceylanica"], na.rm = TRUE) > 0){
+    sceS <- sceS[-which(sceS$logheight < rec.parm["minsize", "Strombosia.ceylanica"]),] }
   # PPI ("Pometia.pinnata")
   ppiS$logheight <- sS_h(nssf.m, ppiS, "Pometia.pinnata", intra.on.PPI[[4]], inter.on.PPI[[4]]) * 
     GS_h1h(nssf.m, ppiS, "Pometia.pinnata", CAE.on.ppiS, HAE.on.ppiS)
-  if(sum(ppiS$logheight==0, na.rm = TRUE) > 0)  ppiS <- ppiS[-which(ppiS$logheight==0),]
+  if(sum(ppiS$logheight < rec.parm["minsize", "Pometia.pinnata"], na.rm = TRUE) > 0){
+    ppiS <- ppiS[-which(ppiS$logheight < rec.parm["minsize", "Pometia.pinnata"]),] }
   # GNE ("Gironniera.nervosa")
   gneS$logheight <- sS_h(nssf.m, gneS, "Gironniera.nervosa", intra.on.GNE[[4]], inter.on.GNE[[4]]) * 
     GS_h1h(nssf.m, gneS, "Gironniera.nervosa", CAE.on.gneS, HAE.on.gneS)
-  if(sum(gneS$logheight==0, na.rm = TRUE) > 0)  gneS <- gneS[-which(gneS$logheight==0),]
+  if(sum(gneS$logheight < rec.parm["minsize", "Gironniera.nervosa"], na.rm = TRUE) > 0){
+    gneS <- gneS[-which(gneS$logheight < rec.parm["minsize", "Gironniera.nervosa"]),] }
   
   # Tree growth and survival
   # PPO ("Prunus.polystachya")

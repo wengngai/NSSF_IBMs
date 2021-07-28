@@ -148,16 +148,45 @@ dev.off()
 
 
 
+# significant number of impossibly small seedlings
+# probably the result of negative growth caused by strong inter/intraspecific but they haven't had the chance to die yet (next year)
+usual$ppoS$logheight[which(usual$ppoS$logheight < 0)]
+usual$gneS$logheight[which(usual$gneS$logheight < 0)]
+usual$ppoS$logheight[which(usual$ppoS$logheight < 0)] <- NA
+usual$gneS$logheight[which(usual$gneS$logheight < 0)] <- NA
+
+
+# sample the height/dbh distributions instead of plotting all
+n=500
+
+# calculate average transition size of seedling (DBH=1cm)
+tran.parm["transition.height",] <- (log(1) - tran.parm["tran.int",]) / tran.parm["tran.h",]
+
+#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\size distributions Jul21.pdf", width=16, height=9)
+par(mfrow=c(1,2), mar=c(5,5,2,2))
+hist(sample(usual$ppoS$logheight, n), col=col.t[2], main="", xlab="Seedling height (log-transformed)",
+     xlim=c(0,6), breaks=seq(0,8,0.5))
+hist(sample(usual$gneS$logheight, n), col=col.t[4], add=T, breaks=seq(0,8,0.5))
+hist(sample(usual$sceS$logheight, n), col=col.t[1], add=T, breaks=seq(0,8,0.5))
+hist(sample(usual$ppiS$logheight, n), col=col.t[3], add=T, breaks=seq(0,8,0.5))
+abline(v=tran.parm["transition.height", c("Gironniera.nervosa", "Prunus.polystachya", "Strombosia.ceylanica", "Pometia.pinnata")],
+       col=col.pal[c(4,2,1,3)], lwd=3, lty=2)
+abline(v=rec.parm["rcsz", c("Gironniera.nervosa", "Prunus.polystachya", "Strombosia.ceylanica", "Pometia.pinnata")],
+       col=col.pal[c(4,2,1,3)], lwd=3)
+legend('topleft', bty="n", lwd=3, lty=c(1,2), legend=c("average recruitment size", "average transition size"))
+hist(sample(usual$ppiT$logdbh, n), col=col.t[3], main="", xlab="Adult DBH (log-transformed)", 
+     xlim=c(0,6), breaks=seq(0,8,0.5))
+hist(sample(usual$gneT$logdbh, n), col=col.t[4], add=T, breaks=seq(0,8,0.5))
+hist(sample(usual$sceT$logdbh, n), col=col.t[1], add=T, breaks=seq(0,8,0.5))
+hist(sample(usual$ppoT$logdbh, n), col=col.t[2], add=T, breaks=seq(0,8,0.5))
+legend('topright', fill=col.t[c(4,2,1,3)], title="Species", bty="n",
+       legend=c(
+               "G. nervosa (non-swamp specialist)",
+               "P. polystachya (non-swamp generalist)",
+               "S. ceylanica (swamp generalist)",
+               "P. pinnata (swamp specialist)"
+       ))
+dev.off()
 
 
 
-par(mfrow=c(1,2))
-hist(usual$ppoS$logheight, col=col.t[2], main="", xlab="Seedling height (log-transformed)")
-hist(usual$sceS$logheight, col=col.t[1], add=T)
-hist(usual$gneS$logheight, col=col.t[4], add=T)
-hist(usual$ppiS$logheight, col=col.t[3], add=T)
-hist(usual$ppoT$logdbh, col=col.t[2], main="", xlab="Adult DBH (log-transformed)")
-hist(usual$sceT$logdbh, col=col.t[1], add=T)
-hist(usual$ppiT$logdbh, col=col.t[3], add=T)
-hist(usual$gneT$logdbh, col=col.t[4], add=T)
-legend('topright', fill=col.t[1:2], legend=c("Prunus", "Strombosia"), title="Species", bty="n")
