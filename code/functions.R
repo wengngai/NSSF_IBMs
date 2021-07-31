@@ -919,16 +919,31 @@ rm.overlap <- function(recruits, trees, seedlings, grid.neighbours){
         rgrid <- recruits[, "grid"][i]
         tree.neighbours <- trees[trees$grid %in% c(rgrid, grid.neighbours[[rgrid]]),]
         seedling.neighbours <- seedlings[seedlings$grid %in% c(rgrid, grid.neighbours[[rgrid]]),]
-        tree.dists <- spDists(recruits[i, c("x","y"), drop = FALSE], as.matrix(tree.neighbours[,c("x","y")]))
-        seedling.dists <- spDists(recruits[i, c("x","y"), drop = FALSE], as.matrix(seedling.neighbours[,c("x","y")]))
-        # existing tree radii (in metres). set to a minimum of 10cm (ie cannot recruit within 10 cm of saplings)
-        radii <- exp(tree.neighbours$logdbh)/200
-        radii[which(radii < 0.1)] <- 0.1
+        
+        # determine if not found within the DBH radii of existing trees (or 10cm of existing small trees)
+        if (nrow(tree.neighbours) > 0) {
+            tree.dists <- spDists(recruits[i, c("x","y"), drop = FALSE], 
+                                  as.matrix(tree.neighbours[,c("x","y")]))
+            # existing tree radii (in metres);
+            # set to a minimum of 10cm (ie cannot recruit within 10 cm of saplings)
+            radii <- exp(tree.neighbours$logdbh)/200
+            radii[which(radii < 0.1)] <- 0.1  # HR: do we need this line?
+            not.overlapping.w.sapling <- sum(tree.dists < radii) == 0
+        } else {
+            not.overlapping.w.sapling <- TRUE
+        }
+        
+        # determine if not found within 10cm of existing seedlings
+        if (nrow(seedling.neighbours) > 0) {
+            seedling.dists <- spDists(recruits[i, c("x","y"), drop = FALSE], 
+                                      as.matrix(seedling.neighbours[,c("x","y")]))
+            not.overlapping.w.seedling <- min(seedling.dists) > 0.1
+        } else {
+            not.overlapping.w.seedling <- TRUE
+        }
+
         return(
-            # seedling is only allowed to recruit if it is not found within 10cm of existing seedlings
-            min(seedling.dists) > 0.1 &
-            # and not found within the DBH radii of existing trees (or 10cm of existing small trees)
-            sum(tree.dists < radii) == 0
+            not.overlapping.w.sapling & not.overlapping.w.seedling
         )
     }
     
