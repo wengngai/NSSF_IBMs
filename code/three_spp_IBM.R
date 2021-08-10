@@ -5,17 +5,17 @@ library(doParallel)
 library(rgdal)
 
 # Settings for parallerisation
-registerDoParallel(cores = 64)
+registerDoParallel(cores = 8)
 
 
 #################
 # GROWTH PARAMS #
 #################
 
-grow.T.parm <- t(read.csv("data/tree growth parameters Apr21.csv", header=T, row.names=1))
+grow.T.parm <- t(read.csv("data/tree growth parameters Aug21.csv", header=T, row.names=1))
 grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", header=T, row.names=1)
 grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1)
-surv.parm <- t(read.csv("data/surv params Jun21.csv", header=T, row.names=1))
+surv.parm <- t(read.csv("data/surv params Aug21.csv", header=T, row.names=1))
 surv.parm.unscale <- read.csv("data/survival model unscale params.csv", header=T, row.names=1)
 fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1)
 tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
@@ -57,6 +57,7 @@ sceT.init <- sceT
 sceS.init <- sceS
 ppiT.init <- ppiT
 ppiS.init <- ppiS
+aosT.init <- aosT
 
 # record population sizes
 n.ppoT <- nrow(ppoT)
@@ -65,6 +66,7 @@ n.sceT <- nrow(sceT)
 n.sceS <- nrow(sceS)
 n.ppiT <- nrow(ppiT)
 n.ppiS <- nrow(ppiS)
+n.aosT <- nrow(aosT)
 
 # record mean sizes
 z.ppoT <- mean(ppoT$logdbh)
@@ -73,14 +75,17 @@ z.sceT <- mean(sceT$logdbh)
 h.sceS <- mean(sceS$logheight)
 z.ppiT <- mean(ppiT$logdbh)
 h.ppiS <- mean(ppiS$logheight)
+z.aosT <- mean(aosT$logdbh)
 
 # create table for total BA in swamp vs non-swamp
 ba.ppoT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
 ba.sceT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
 ba.ppiT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
+ba.aosT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
 
 # progress bar
 pb <- txtProgressBar(min = 1, max = maxTime, style = 3)
+
 while (time <= maxTime) {
   
   # Choose landscape based on scenario and time (beyond 22 years, just use the last time point (=2042))
@@ -125,6 +130,12 @@ while (time <= maxTime) {
   HAE.on.ppiS <- HAE.calc(rbind(sceT, ppoT, aosT), ppiS, grid.neighbours = grid.neighbours)
   intra.dist.on.PPI <- intra.dist.calc(ppiT, grid.neighbours = grid.neighbours)
   inter.dist.on.PPI <- inter.dist.calc(rbind(sceT, ppoT, aosT), ppiT, grid.neighbours = grid.neighbours)
+  # AOS ("population")
+  inter.on.AOS <- inter.calc(rbind(ppoT, sceT, ppiT), rbind(ppoS, sceS, ppiS), aosT, aosS, 
+                             sp="population", grid.neighbours = grid.neighbours)
+  #intra.on.AOS <- intra.calc(aosT, aosS, sp="population", grid.neighbours = grid.neighbours)
+  #intra.dist.on.AOS <- intra.dist.calc(aosT, grid.neighbours = grid.neighbours)
+  inter.dist.on.AOS <- inter.dist.calc(rbind(ppoT, sceT, ppiT), aosT, grid.neighbours = grid.neighbours)
   
   # Seedling growth and survival
   # PPO ("Prunus.polystachya")
@@ -157,10 +168,22 @@ while (time <= maxTime) {
     GT_z1z(nssf.m, ppiT, "Pometia.pinnata", intra.dist.on.PPI, inter.dist.on.PPI)
   if(sum(ppiT$logdbh==0, na.rm = TRUE) > 0)  ppiT <- ppiT[-which(ppiT$logdbh==0),]
   
+  # AOS growth, survival and recruitment
+  # 0.003544643 AOS stems recruit per m2 per year (rate excludes the rate of the 3 focal spp.)
+  # use a fixed, small value for intra
+  aosT$logdbh <- sT_z(nssf.m, aosT, "population", intra.on.PPI[[1]], intra.on.PPI[[3]], inter.on.PPI[[1]], inter.on.PPI[[3]]) * 
+    GT_z1z(nssf.m, aosT, "population", intra.dist.on.PPI, inter.dist.on.PPI)
+  if(sum(aosT$logdbh==0, na.rm = TRUE) > 0)  aosT <- aosT[-which(aosT$logdbh==0),]
+  n.aos.rec <- round(crop.area * 0.003544643, 0) / dilution
+  aos.loc.rec <- spsample(crop.poly, n.aos.rec, type = 'random')
+  aos.grid.rec <- extract(nssf.100, aos.loc.rec)
+  aosT <- rbind(aosT, data.frame(coordinates(aos.loc.rec), logdbh = log(5), grid = aos.grid.rec))
+  
   # Conserve memory by deleting competition indices (don't need anymore)
   rm(inter.on.PPO, intra.on.PPO, CAE.on.ppoS, HAE.on.ppoS, intra.dist.on.PPO, inter.dist.on.PPO,
      inter.on.SCE, intra.on.SCE, CAE.on.sceS, HAE.on.sceS, intra.dist.on.SCE, inter.dist.on.SCE,
-     inter.on.PPI, intra.on.PPI, CAE.on.ppiS, HAE.on.ppiS, intra.dist.on.PPI, inter.dist.on.PPI)
+     inter.on.PPI, intra.on.PPI, CAE.on.ppiS, HAE.on.ppiS, intra.dist.on.PPI, inter.dist.on.PPI,
+     inter.on.AOS, inter.dist.on.AOS)
   
   # Seedling-sapling transition
   # PPO ("Prunus.polystachya")

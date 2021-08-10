@@ -35,6 +35,19 @@ for(i in 1:22){
 #plot(nssf.low[[22]], main="Low rainfall", legend=F)
 #plot(nssf.high[[22]], main="High rainfall", legend=F)
 
+# need to crop landscape to a central 500*500-m simulation range
+crop.extent <- extent(367000, 367500, 153000, 153500)
+crop.area <- 500*500
+#plot(nssf.usual[[1]])
+#rect(367000, 153000, 367500, 153500)
+
+for(i in 1:22){
+    nssf.usual[[i]] <- crop(nssf.usual[[i]], crop.extent)
+    nssf.extreme[[i]] <- crop(nssf.extreme[[i]], crop.extent)
+    nssf.low[[i]] <- crop(nssf.low[[i]], crop.extent)
+    nssf.high[[i]] <- crop(nssf.high[[i]], crop.extent)
+}
+
 ##################################
 # Estimate baseline stem numbers #
 #  for initializing populations  #
@@ -49,28 +62,34 @@ BA.plots <- matrix(c(0, 7373.44, 2408.03, 11833.72, 1147.71, 2552.13),
 
 # And the BA relative to total BA across all plots of that type
 BA.plots.prop <- BA.plots / matrix(rep(c(207239.22, 244171.15), each=3), 3, 2)
-# increase the proportion of the 3 focal spp.
-BA.plots.prop <- BA.plots.prop*2
 
 # proportion of the landscape that is swamp/non-swamp:
+# note: this step has to be changed depending on the scenario being modelled
 prop.swamp <- sum(values(nssf.usual[[1]]), na.rm=T)/length(na.omit(values(nssf.usual[[1]])))
 #prop.swamp <- sum(values(nssf.extreme[[1]]), na.rm=T)/length(na.omit(values(nssf.extreme[[1]])))
 prop.ns <- 1-prop.swamp
 
-# total no. of stems across NSSF estimated from raw data:
-# trees: 1,020,479
-# saplings: 3,171,812
-# seedlings: 33,424,301
-# total: ~37.6 million
+# density of stems across NSSF estimated from raw data (stems per square metres):
+# trees: 0.1351282
+# saplings: 0.4200
+# seedlings: 4.425926
 # seedlings are likely overestimated because seedling quadrats are not randomly placed (maybe 2x overestimated?)
-# therefore true ratio probably closer to 1:3:16, with a total of 20million stems
-n.total <- 20000000
-# but 20 million stems is still a bit too much to estimate
-# introduce a dilution factor
-dilution <- 10
-n.init <- round(BA.plots.prop * matrix(rep(c(prop.ns, prop.swamp), each=3), 3, 2) * n.total/dilution, 0)
-n.init[1,1] <- 100 # cannot have zeroes
+# therefore true density probably about 2.2 stems/m2
 
+# introduce a dilution factor
+dilution <- 1
+
+n.trees <- 0.1351282 * crop.area / dilution
+n.saplings <- 0.42 * crop.area / dilution
+n.seedlings <- 2.2 * crop.area / dilution
+
+n.init.trees <- round(BA.plots.prop * matrix(rep(c(prop.ns, prop.swamp), each=3), 3, 2) * n.trees, 0)
+n.init.saplings <- round(BA.plots.prop * matrix(rep(c(prop.ns, prop.swamp), each=3), 3, 2) * n.saplings, 0)
+n.init.seedlings <- round(BA.plots.prop * matrix(rep(c(prop.ns, prop.swamp), each=3), 3, 2) * n.seedlings, 0)
+# cannot have zeroes
+n.init.trees[1,1] <- 1 
+n.init.saplings[1,1] <- 1 
+n.init.seedlings[1,1] <- 1
 
 # Generating random initial locations
 
@@ -86,16 +105,14 @@ tran.abbrev <- c("AAN", "AFR", "ALU", "ACL","BBR", "BPA", "CRU", "CSQ", "CBR",
                    "PCO", "PEC", "SCE", "SPA", "TFL", "TWA", "XFL", "AOS")
 for(i in 1:3){
     # abbreviated sp name
-    sp <- rownames(n.init)[i]
+    sp <- rownames(n.init.trees)[i]
     
-    # breakdown population into adults (>5cm DBH), saplings (5>DBH>1cm) and seedlings (<1cm DBH) and swamp/non-swamp
-    # 1/20, 3/20, 16/20 are proportions of each demographic group to total number of stems
-    n.swamp.adults <- round(1/20 * n.init[i,"swamp"], 0)
-    n.swamp.saplings <- round(3/20 * n.init[i,"swamp"], 0)
-    n.swamp.seedlings <- n.init[i,"swamp"] - n.swamp.adults - n.swamp.saplings
-    n.nonswamp.adults <- round(1/20 * n.init[i,"non-swamp"], 0)
-    n.nonswamp.saplings <- round(3/20 * n.init[i,"non-swamp"], 0)
-    n.nonswamp.seedlings <- n.init[i,"non-swamp"] - n.nonswamp.adults - n.nonswamp.saplings
+    n.swamp.adults <- round(n.init.trees[i,"swamp"], 0)
+    n.swamp.saplings <- round(n.init.saplings[i,"swamp"], 0)
+    n.swamp.seedlings <- round(n.init.seedlings[i,"swamp"], 0)
+    n.nonswamp.adults <- round(n.init.trees[i,"non-swamp"], 0)
+    n.nonswamp.saplings <- round(n.init.saplings[i,"non-swamp"], 0)
+    n.nonswamp.seedlings <- round(n.init.seedlings[i,"non-swamp"], 0)
     
     stopifnot(
         "Some populations have zero count! spsample wil fail. Check if dilution is too high?" = all(
@@ -152,7 +169,7 @@ for(i in 1:3){
 ## initialize "All other species" for background interspecific competition
 
 # Approx. number of all other species stems (ADULTS ONLY--using 1:3:20 adults to saplings to seedlings ratio)
-init.aos.n <- round(4/20 * (n.total/dilution - sum(n.init)), 0)
+init.aos.n <- round(n.trees - sum(n.init.trees), 0)
 
 # Use power law with 1cm min DBH for all other spp. Note that seedlings not modelled
 init.aos.dbh <- rplcon(init.aos.n, 1, 2.2)
@@ -160,9 +177,12 @@ aosT.logdbh <- log(init.aos.dbh)
 #hist(aosT.logdbh)
 
 # create random points for aosT, assign them logdbh values
-NSSFpolygon <- readOGR("data/NSSF2_Catchment.shp")
-aos.loc <- spsample(NSSFpolygon, init.aos.n, type = 'random')
+crop.poly <- as(nssf.usual[[1]], 'SpatialPolygons')
+aos.loc <- spsample(crop.poly, init.aos.n, type = 'random')
 aosT <- data.frame(coordinates(aos.loc), logdbh = aosT.logdbh)
+aosS.loc <- spsample(crop.poly, 10, type = 'random')
+aosS <- data.frame(coordinates(aosS.loc), logheight = log(20))
+
 
 ###################################
 # Set up grid for reducing memory #
@@ -171,7 +191,7 @@ aosT <- data.frame(coordinates(aos.loc), logdbh = aosT.logdbh)
 ###################################
 
 # create low resolution raster (100 x 100m)
-nssf.100 <- aggregate(nssf.extreme[[1]], fact=5)
+nssf.100 <- aggregate(nssf.usual[[1]], fact=5)
 res(nssf.100)
 # assign cell values = index
 nssf.100 <- setValues(nssf.100, 1:length(nssf.100))
@@ -190,6 +210,7 @@ ppiT$grid <- extract(nssf.100, ppiT[,c("x","y")])
 ppiS$grid <- extract(nssf.100, ppiS[,c("x","y")])
 
 aosT$grid <- extract(nssf.100, aosT[,c("x","y")])
+aosS$grid <- extract(nssf.100, aosS[,c("x","y")])
 
 #############
 # Visualize #
@@ -202,16 +223,14 @@ aosT$grid <- extract(nssf.100, aosT[,c("x","y")])
 # plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)])
 # # PPO
 # points(ppoT, cex=ppoT$logdbh/2, col=col.t[2], pch=16)
-# #points(data.frame(ppoS), col=col.t[1], pch=4, cex=0.1)
+# #points(data.frame(ppoS), col=col.t[2], pch=4, cex=0.1)
 # # SCE
 # points(sceT, cex=sceT$logdbh/2, col=col.t[1], pch=16)
-# #points(data.frame(sceS), col=col.t[2], pch=4, cex=0.1)
+# #points(data.frame(sceS), col=col.t[1], pch=4, cex=0.1)
 # # PPI
 # points(ppiT, cex=ppiT$logdbh/2, col=col.t[3], pch=16)
 # #points(data.frame(ppiS), col=col.t[3], pch=4, cex=0.1)
-# # GNE
-# points(gneT, cex=gneT$logdbh/2, col=col.t[3], pch=16)
-# #points(data.frame(gneS), col=col.t[4], pch=4, cex=0.1)
 # # All other species (static--just for a background interspecific competition pressure)
-# #points(aosT, cex=aosT$logdbh/5,  pch=1, col="grey70")
+# #points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
+# scalebar(100, xy=c(367350, 153050), type="bar", lonlat=F, below="metres", divs=2)
 # scalebar(500, xy=c(368500, 151650), type="bar", lonlat=F, below="metres", divs=2)
