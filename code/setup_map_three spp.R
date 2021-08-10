@@ -49,6 +49,8 @@ BA.plots <- matrix(c(0, 7373.44, 2408.03, 11833.72, 1147.71, 2552.13),
 
 # And the BA relative to total BA across all plots of that type
 BA.plots.prop <- BA.plots / matrix(rep(c(207239.22, 244171.15), each=3), 3, 2)
+# increase the proportion of the 3 focal spp.
+BA.plots.prop <- BA.plots.prop*2
 
 # proportion of the landscape that is swamp/non-swamp:
 prop.swamp <- sum(values(nssf.usual[[1]]), na.rm=T)/length(na.omit(values(nssf.usual[[1]])))
@@ -153,7 +155,7 @@ for(i in 1:3){
 init.aos.n <- round(4/20 * (n.total/dilution - sum(n.init)), 0)
 
 # Use power law with 1cm min DBH for all other spp. Note that seedlings not modelled
-init.aos.dbh <- rplcon(init.aos.n, 1, 2)
+init.aos.dbh <- rplcon(init.aos.n, 1, 2.2)
 aosT.logdbh <- log(init.aos.dbh)
 #hist(aosT.logdbh)
 
