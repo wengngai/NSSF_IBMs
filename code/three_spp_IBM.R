@@ -5,7 +5,7 @@ library(doParallel)
 library(rgdal)
 
 # Settings for parallerisation
-registerDoParallel(cores = 8)
+registerDoParallel(cores = 64)
 
 
 #################
@@ -31,6 +31,9 @@ colnames(HM.parm) <- gsub(" ", ".", colnames(HM.parm))
 rec.parm <- rbind(rec.parm, rec.parm["rcsz",] - 2*rec.parm["rcsd",])
 rownames(rec.parm)[5] <- "minsize"
 
+# add "population" parameters to HM.parm
+HM.parm <- data.frame(HM.parm, population=c(0.5,0.5,0.5,0.5,0.5,0.5))
+
 ##################
 # LOAD FUNCTIONS #
 ##################
@@ -40,6 +43,11 @@ source("code/functions.R")
 #################
 # SETUP BASEMAP #
 #################
+
+# set scenario (usual or extreme)
+scenario <- "usual"
+#scenario <- "extreme"
+
 source("code/setup_map_three spp.R")
 
 
@@ -89,7 +97,8 @@ pb <- txtProgressBar(min = 1, max = maxTime, style = 3)
 while (time <= maxTime) {
   
   # Choose landscape based on scenario and time (beyond 22 years, just use the last time point (=2042))
-  nssf.m <- nssf.extreme[[ifelse(time>22, 22, time)]]
+  if(scenario=="usual")  nssf.m <- nssf.usual[[ifelse(time>22, 22, time)]]
+  if(scenario=="extreme")  nssf.m <- nssf.extreme[[ifelse(time>22, 22, time)]]
   
   # Recruitment: initiate fruiting, but don't add new recruits to seedling dfs yet (let them grow/die first)
   # PPO ("Prunus.polystachya")
@@ -132,7 +141,7 @@ while (time <= maxTime) {
   inter.dist.on.PPI <- inter.dist.calc(rbind(sceT, ppoT, aosT), ppiT, grid.neighbours = grid.neighbours)
   # AOS ("population")
   inter.on.AOS <- inter.calc(rbind(ppoT, sceT, ppiT), rbind(ppoS, sceS, ppiS), aosT, aosS, 
-                             sp="population", grid.neighbours = grid.neighbours)
+                             sp="All.other.spp", grid.neighbours = grid.neighbours)
   #intra.on.AOS <- intra.calc(aosT, aosS, sp="population", grid.neighbours = grid.neighbours)
   #intra.dist.on.AOS <- intra.dist.calc(aosT, grid.neighbours = grid.neighbours)
   inter.dist.on.AOS <- inter.dist.calc(rbind(ppoT, sceT, ppiT), aosT, grid.neighbours = grid.neighbours)
@@ -171,10 +180,10 @@ while (time <= maxTime) {
   # AOS growth, survival and recruitment
   # 0.003544643 AOS stems recruit per m2 per year (rate excludes the rate of the 3 focal spp.)
   # use a fixed, small value for intra
-  aosT$logdbh <- sT_z(nssf.m, aosT, "population", intra.on.PPI[[1]], intra.on.PPI[[3]], inter.on.PPI[[1]], inter.on.PPI[[3]]) * 
-    GT_z1z(nssf.m, aosT, "population", intra.dist.on.PPI, inter.dist.on.PPI)
+  aosT$logdbh <- sT_z(nssf.m, aosT, "population", 100, 100, inter.on.AOS[[1]], inter.on.AOS[[3]]) * 
+    GT_z1z(nssf.m, aosT, "population", 100, inter.dist.on.AOS)
   if(sum(aosT$logdbh==0, na.rm = TRUE) > 0)  aosT <- aosT[-which(aosT$logdbh==0),]
-  n.aos.rec <- round(crop.area * 0.003544643, 0) / dilution
+  n.aos.rec <- round(crop.area * rnorm(n=1, mean=0.003544643, sd=0.0005), 0) / dilution
   aos.loc.rec <- spsample(crop.poly, n.aos.rec, type = 'random')
   aos.grid.rec <- extract(nssf.100, aos.loc.rec)
   aosT <- rbind(aosT, data.frame(coordinates(aos.loc.rec), logdbh = log(5), grid = aos.grid.rec))
@@ -292,7 +301,11 @@ while (time <= maxTime) {
   n.ppiT <- c(n.ppiT, n1.ppiT) 
   n1.ppiS <- nrow(ppiS)
   n.ppiS <- c(n.ppiS, n1.ppiS) 
+  # AOS ("All.other.spp")
+  n1.aosT <- nrow(aosT)
+  n.aosT <- c(n.aosT, n1.aosT) 
   
+
   # calculate mean sizes of adults and saplings and add to string  
   # PPO ("Prunus.polystachya")
   z.ppoT <- c(z.ppoT, mean(ppoT$logdbh))
@@ -303,6 +316,8 @@ while (time <= maxTime) {
   # PPI ("Pometia.pinnata")
   z.ppiT <- c(z.ppiT, mean(ppiT$logdbh))
   h.ppiS <- c(h.ppiS, mean(ppiS$logheight))
+  # AOS ("All.other.spp")
+  z.aosT <- c(z.aosT, mean(aosT$logdbh))
   
   # record total basal areas of adults in swamp versus non-swamp areas
   ba.ppoT[which(ba.ppoT$time==time), 2:3] <- tapply(pi*(exp(ppoT[,"logdbh"])/2)^2, extract(nssf.m, ppoT[,1:2]), sum)

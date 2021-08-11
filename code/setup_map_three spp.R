@@ -64,9 +64,8 @@ BA.plots <- matrix(c(0, 7373.44, 2408.03, 11833.72, 1147.71, 2552.13),
 BA.plots.prop <- BA.plots / matrix(rep(c(207239.22, 244171.15), each=3), 3, 2)
 
 # proportion of the landscape that is swamp/non-swamp:
-# note: this step has to be changed depending on the scenario being modelled
-prop.swamp <- sum(values(nssf.usual[[1]]), na.rm=T)/length(na.omit(values(nssf.usual[[1]])))
-#prop.swamp <- sum(values(nssf.extreme[[1]]), na.rm=T)/length(na.omit(values(nssf.extreme[[1]])))
+if(scenario=="usual")  prop.swamp <- sum(values(nssf.usual[[1]]), na.rm=T)/length(na.omit(values(nssf.usual[[1]])))
+if(scenario=="extreme")  prop.swamp <- sum(values(nssf.extreme[[1]]), na.rm=T)/length(na.omit(values(nssf.extreme[[1]])))
 prop.ns <- 1-prop.swamp
 
 # density of stems across NSSF estimated from raw data (stems per square metres):
@@ -94,10 +93,14 @@ n.init.seedlings[1,1] <- 1
 # Generating random initial locations
 
 # convert baselayer from raster to polygons for random point generation
-swamp.poly <- rasterToPolygons(nssf.usual[[1]], fun=function(x){x==1})
-nonswamp.poly <- rasterToPolygons(nssf.usual[[1]], fun=function(x){x==0})
-#swamp.poly <- rasterToPolygons(nssf.extreme[[1]], fun=function(x){x==1})
-#nonswamp.poly <- rasterToPolygons(nssf.extreme[[1]], fun=function(x){x==0})
+if(scenario=="usual"){
+    swamp.poly <- rasterToPolygons(nssf.usual[[1]], fun=function(x){x==1})
+    nonswamp.poly <- rasterToPolygons(nssf.usual[[1]], fun=function(x){x==0})
+}
+if(scenario=="extreme"){
+    swamp.poly <- rasterToPolygons(nssf.extreme[[1]], fun=function(x){x==1})
+    nonswamp.poly <- rasterToPolygons(nssf.extreme[[1]], fun=function(x){x==0})
+}
 
 # abbreviated species names for for loop
 tran.abbrev <- c("AAN", "AFR", "ALU", "ACL","BBR", "BPA", "CRU", "CSQ", "CBR", 
