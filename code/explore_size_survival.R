@@ -72,4 +72,6 @@ n_t <- unlist(lapply(d_t, length))
 plot(c(time, max(time + t_step)), n_t, type = "l")
 
 # final size distribution
+par(mfrow = c(1, 2))
+hist(d_t[[length(d_t)]])
 hist(d_t[[length(d_t)]], breaks = 100)
