@@ -13,7 +13,7 @@ d0 <- poweRlaw::rplcon(n0, 1, 2)
 a_g <- 1
 b_g <- 0.5
 c_g <- 0.05
-e_g <- 0.05  # noise
+e_g <- 0.2  # noise
 growth_func <- function(d, t) {
     ( a_g * (d^b_g) * exp(-c_g * d) * exp(rnorm(1, 0, e_g)) ) * t
 }
@@ -58,7 +58,9 @@ for (t in seq_len(length(time))) {
     # diameter growth
     d_t[[t + 1]] <- d * (1 + growth_func(d, t_step))
     # survival
-    s <- mortality_func(d_t[[t + 1]], t_step)
+    s <- mortality_func(d_t[[t]], t_step)
+    alive <- sapply(s, function(p) rbinom(1, 1, p)) == 1
+    alive[d_t[[t]] <= 0] <- FALSE  # dead if size is non-positive
     d_t[[t + 1]] <- d_t[[t + 1]][sapply(s, function(p) rbinom(1, 1, p)) == 1]
 }
 
