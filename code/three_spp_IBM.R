@@ -279,6 +279,11 @@ while (time <= maxTime) {
     }
   }
   
+  # remove seedlings which recruit out of landscape boundary (temporary solution--need to torus-ize landscape eventually)
+  if(sum(is.na(ppoS$grid)) > 0)  ppoS <- ppoS[-which(is.na(ppoS$grid)),]
+  if(sum(is.na(sceS$grid)) > 0)  sceS <- sceS[-which(is.na(sceS$grid)),]
+  if(sum(is.na(ppiS$grid)) > 0)  ppiS <- ppiS[-which(is.na(ppiS$grid)),]
+  
   # Kill off 50% of all recruits that are located < 10cm from each other
   # temporarily omitted
   #ppoS <- kill.rec(ppoS, n.old.ppoS)
