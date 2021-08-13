@@ -28,6 +28,19 @@ for(i in 1:22){
         values(nssf.high[[i]]) <- ifelse(values(nssf.high[[i]]) < 0.5, 0, 1)
 }
 
+# need to crop landscape to a central 500*500-m simulation range
+crop.extent <- extent(367000, 367500, 153000, 153500)
+crop.area <- 500*500
+#plot(nssf.usual[[1]])
+#rect(367000, 153000, 367500, 153500)
+
+for(i in 1:22){
+        nssf.usual[[i]] <- crop(nssf.usual[[i]], crop.extent)
+        nssf.extreme[[i]] <- crop(nssf.extreme[[i]], crop.extent)
+        nssf.low[[i]] <- crop(nssf.low[[i]], crop.extent)
+        nssf.high[[i]] <- crop(nssf.high[[i]], crop.extent)
+}
+
 
 # Plot out 10% of population
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\distributions 3spp Aug21.pdf", width=16, height=9)
@@ -132,7 +145,7 @@ legend(x=1, y=0.8, col=col.pal[c(2,1,3)], lwd=3, lty=1, title="Species", bg="whi
 dev.off()
 
 # sample the height/dbh distributions instead of plotting all
-n=500
+n=50
 
 # calculate average transition size of seedling (DBH=1cm)
 tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
@@ -142,19 +155,19 @@ tran.parm["transition.height",] <- (log(1) - tran.parm["tran.int",]) / tran.parm
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\size distributions 3spp Aug21.pdf", width=16, height=9)
 par(mfrow=c(1,2), mar=c(5,5,2,2))
 hist(sample(usual$ppoS$logheight, n), col=col.t[2], main="", xlab="Seedling height (log-transformed)",
-     xlim=c(0,6), breaks=seq(0,8,0.5))
-hist(sample(usual$sceS$logheight, n), col=col.t[1], add=T, breaks=seq(0,8,0.5))
-hist(sample(usual$ppiS$logheight, n), col=col.t[3], add=T, breaks=seq(0,8,0.5))
+     xlim=c(0,6), breaks=seq(0,8,0.25))
+hist(sample(usual$sceS$logheight, n), col=col.t[1], add=T, breaks=seq(0,8,0.25))
+hist(sample(usual$ppiS$logheight, n), col=col.t[3], add=T, breaks=seq(0,8,0.25))
 abline(v=tran.parm["transition.height", c("Gironniera.nervosa", "Prunus.polystachya", "Strombosia.ceylanica", "Pometia.pinnata")],
        col=col.pal[c(4,2,1,3)], lwd=3, lty=2)
 abline(v=rec.parm["rcsz", c("Gironniera.nervosa", "Prunus.polystachya", "Strombosia.ceylanica", "Pometia.pinnata")],
        col=col.pal[c(4,2,1,3)], lwd=3)
 legend('topleft', bty="n", lwd=3, lty=c(1,2), legend=c("average recruitment size", "average transition size"))
 hist(sample(usual$ppiT$logdbh, n), col=col.t[3], main="", xlab="Adult DBH (log-transformed)", 
-     xlim=c(0,6), breaks=seq(0,8,0.5))
-hist(sample(usual$sceT$logdbh, n), col=col.t[1], add=T, breaks=seq(0,8,0.5))
-hist(sample(usual$ppoT$logdbh, n), col=col.t[2], add=T, breaks=seq(0,8,0.5))
-legend('topright', fill=col.t[c(4,2,1,3)], title="Species", bty="n",
+     xlim=c(0,6), breaks=seq(0,8,0.25))
+hist(sample(usual$sceT$logdbh, n), col=col.t[1], add=T, breaks=seq(0,8,0.25))
+hist(sample(usual$ppoT$logdbh, n), col=col.t[2], add=T, breaks=seq(0,8,0.25))
+legend('topright', fill=col.t[c(2,1,3)], title="Species", bty="n",
        legend=c(
                "P. polystachya (non-swamp generalist)",
                "S. ceylanica (swamp generalist)",

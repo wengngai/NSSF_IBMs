@@ -328,11 +328,13 @@ while (time <= maxTime) {
   ba.ppoT[which(ba.ppoT$time==time), 2:3] <- tapply(pi*(exp(ppoT[,"logdbh"])/2)^2, extract(nssf.m, ppoT[,1:2]), sum)
   ba.sceT[which(ba.sceT$time==time), 2:3] <- tapply(pi*(exp(sceT[,"logdbh"])/2)^2, extract(nssf.m, sceT[,1:2]), sum)
   ba.ppiT[which(ba.ppiT$time==time), 2:3] <- tapply(pi*(exp(ppiT[,"logdbh"])/2)^2, extract(nssf.m, ppiT[,1:2]), sum)
+  ba.aosT[which(ba.aosT$time==time), 2:3] <- tapply(pi*(exp(aosT[,"logdbh"])/2)^2, extract(nssf.m, ppiT[,1:2]), sum)
   # to calculate SSI need to know area of swamp versus non-swamp across landscape at that time point
   ba.ppoT[which(ba.ppoT$time==time), "landscape.swamp.prop"] <- sum(values(nssf.m), na.rm = T) / length(na.omit(values(nssf.m)))
   ba.sceT[which(ba.sceT$time==time), "landscape.swamp.prop"] <- sum(values(nssf.m), na.rm = T) / length(na.omit(values(nssf.m)))
   ba.ppiT[which(ba.ppiT$time==time), "landscape.swamp.prop"] <- sum(values(nssf.m), na.rm = T) / length(na.omit(values(nssf.m)))
-
+  ba.aosT[which(ba.aosT$time==time), "landscape.swamp.prop"] <- sum(values(nssf.m), na.rm = T) / length(na.omit(values(nssf.m)))
+  
   # print message to check status during runs
   message(paste(n1.ppoT + n1.ppoS + n1.sceT + n1.sceS + n1.ppiT + n1.ppiS, "stems at year", time, "  "),
           appendLF = TRUE)
@@ -356,7 +358,8 @@ out3.usual <-
        n.ppoS = n.ppoS, n.sceS = n.sceS, n.ppiS = n.ppiS,
        z.ppoT = z.ppoT, z.sceT = z.sceT, z.ppiT = z.ppiT,
        h.ppoS = h.ppoS, h.sceS = h.sceS, h.ppiS = h.ppiS,
-       ba.ppoT = ba.ppoT, ba.sceT = ba.sceT, ba.ppiT = ba.ppiT)
+       ba.ppoT = ba.ppoT, ba.sceT = ba.sceT, ba.ppiT = ba.ppiT,
+       aosT = aosT, n.aosT = n.aosT, z.aosT = z.aosT, ba.aosT = ba.aosT)
 saveRDS(out3.usual, file = "out/sim_out3_usual.rds")
 
 
