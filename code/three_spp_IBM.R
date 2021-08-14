@@ -328,7 +328,7 @@ while (time <= maxTime) {
   ba.ppoT[which(ba.ppoT$time==time), 2:3] <- tapply(pi*(exp(ppoT[,"logdbh"])/2)^2, extract(nssf.m, ppoT[,1:2]), sum)
   ba.sceT[which(ba.sceT$time==time), 2:3] <- tapply(pi*(exp(sceT[,"logdbh"])/2)^2, extract(nssf.m, sceT[,1:2]), sum)
   ba.ppiT[which(ba.ppiT$time==time), 2:3] <- tapply(pi*(exp(ppiT[,"logdbh"])/2)^2, extract(nssf.m, ppiT[,1:2]), sum)
-  ba.aosT[which(ba.aosT$time==time), 2:3] <- tapply(pi*(exp(aosT[,"logdbh"])/2)^2, extract(nssf.m, ppiT[,1:2]), sum)
+  ba.aosT[which(ba.aosT$time==time), 2:3] <- tapply(pi*(exp(aosT[,"logdbh"])/2)^2, extract(nssf.m, aosT[,1:2]), sum)
   # to calculate SSI need to know area of swamp versus non-swamp across landscape at that time point
   ba.ppoT[which(ba.ppoT$time==time), "landscape.swamp.prop"] <- sum(values(nssf.m), na.rm = T) / length(na.omit(values(nssf.m)))
   ba.sceT[which(ba.sceT$time==time), "landscape.swamp.prop"] <- sum(values(nssf.m), na.rm = T) / length(na.omit(values(nssf.m)))
