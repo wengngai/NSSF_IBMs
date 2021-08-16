@@ -42,19 +42,18 @@ for(i in 1:22){
 }
 
 
-# Plot out 10% of population
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\distributions 3spp Aug21.pdf", width=16, height=9)
 # Initial condition
 par(mfrow=c(1,2), mar=c(5,5,3,2))
 plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)], main="2021")
 # PPO
-points(usual$ppoT.init[sample(nrow(usual$ppoT.init), size=nrow(usual$ppoT.init)/10),], cex=usual$ppoT.init$logdbh/2, col=col.t[1], pch=16)
+points(usual$ppoT.init, cex=usual$ppoT.init$logdbh/2, col=col.t[1], pch=16)
 # SCE
-points(usual$sceT.init[sample(nrow(usual$sceT.init), size=nrow(usual$sceT.init)/10),], cex=usual$sceT.init$logdbh/2, col=col.t[2], pch=16)
+points(usual$sceT.init, cex=usual$sceT.init$logdbh/2, col=col.t[2], pch=16)
 # PPI
-points(usual$ppiT.init[sample(nrow(usual$ppiT.init), size=nrow(usual$ppiT.init)/10),], cex=usual$ppiT.init$logdbh/2, col=col.t[3], pch=16)
+points(usual$ppiT.init, cex=usual$ppiT.init$logdbh/2, col=col.t[3], pch=16)
 # All other species (static--just for a background interspecific competition pressure)
-#points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
+points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
 legend('topleft', col=col.t[c(1,2,3)], pch=16, bty="n", pt.cex=2,
        legend=c(
                "P. polystachya (non-swamp generalist)",
@@ -65,13 +64,13 @@ legend('topleft', col=col.t[c(1,2,3)], pch=16, bty="n", pt.cex=2,
 # Final condition
 plot(nssf.usual[[22]], legend=F, col=col.pal[c(6,5)], main="2042")
 # PPO
-points(usual$ppoT[sample(nrow(usual$ppoT), size=nrow(usual$ppoT)/10),], cex=usual$ppoT$logdbh/2, col=col.t[1], pch=16)
+points(usual$ppoT, cex=usual$ppoT$logdbh/2, col=col.t[1], pch=16)
 # SCE
-points(usual$sceT[sample(nrow(usual$sceT), size=nrow(usual$sceT)/10),], cex=usual$sceT$logdbh/2, col=col.t[2], pch=16)
+points(usual$sceT, cex=usual$sceT$logdbh/2, col=col.t[2], pch=16)
 # PPI
-points(usual$ppiT[sample(nrow(usual$ppiT), size=nrow(usual$ppiT)/10),], cex=usual$ppiT$logdbh/2, col=col.t[3], pch=16)
+points(usual$ppiT, cex=usual$ppiT$logdbh/2, col=col.t[3], pch=16)
 # All other species (static--just for a background interspecific competition pressure)
-#points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
+points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
 scalebar(400, xy=c(367800, 151550), type="bar", lonlat=F, below="metres", divs=2)
 dev.off()
 
@@ -79,16 +78,18 @@ dev.off()
 par(mfrow=c(1,2), mar=c(5.5,5.5,2,2))
 plot(log(usual$n.ppoT) ~ c(1:length(usual$n.ppoT)), lwd=5, col=col.pal[2], type="l",
      ylab="Adult population size (log-transformed)", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
-     ylim=log(c(min(c(usual$n.ppoT, usual$n.sceT, usual$n.ppiT)), 
-            max(c(usual$n.ppoT, usual$n.sceT, usual$n.ppiT))))
+     ylim=log(c(min(c(usual$n.ppoT, usual$n.sceT, usual$n.ppiT, usual$n.aosT))+1, 
+            max(c(usual$n.ppoT, usual$n.sceT, usual$n.ppiT, usual$n.aosT))))
      )
 lines(log(usual$n.sceT) ~ c(1:length(usual$n.sceT)), lwd=5, col=col.pal[1])
 lines(log(usual$n.ppiT) ~ c(1:length(usual$n.ppiT)), lwd=5, col=col.pal[3])
-legend('topleft', col=col.pal[c(2,1,3)], bty="n", lwd=3, lty=1, title="Species",
+lines(log(usual$n.aosT) ~ c(1:length(usual$n.aosT)), lwd=5, col="grey")
+legend('topleft', col=c(col.pal[c(2,1,3)], "grey"), bty="n", lwd=3, lty=1, title="Species",
        legend=c(
                "P. polystachya (non-swamp generalist)",
                "S. ceylanica (swamp generalist)",
-               "P. pinnata (swamp specialist)"
+               "P. pinnata (swamp specialist)",
+               "All other species"
        ))
 plot(log(usual$n.ppoS) ~ c(1:length(usual$n.ppoS)), lwd=5, col=col.pal[2], type="l",
      ylab="Seedling population size (log-transformed)", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
@@ -103,8 +104,8 @@ dev.off()
 par(mfrow=c(1,2), mar=c(5.5,5.5,2,2))
 plot(usual$z.ppoT ~ c(1:length(usual$z.ppoT)), lwd=5, col=col.pal[2], type="l",
      ylab="Mean adult DBH (log-transformed)", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
-     ylim=c(min(c(usual$z.ppoT, usual$z.sceT, usual$z.ppiT)), 
-            max(c(usual$z.ppoT, usual$z.sceT, usual$z.ppiT))))
+     ylim=c(min(c(usual$z.ppoT, usual$z.sceT, usual$z.ppiT), na.rm=T), 
+            max(c(usual$z.ppoT, usual$z.sceT, usual$z.ppiT), na.rm=T)))
 lines(usual$z.sceT ~ c(1:length(usual$z.sceT)), lwd=5, col=col.pal[1])
 lines(usual$z.ppiT ~ c(1:length(usual$z.ppiT)), lwd=5, col=col.pal[3])
 legend('topleft', col=col.pal[c(2,1,3)], bty="n", lwd=3, lty=1, title="Species",
@@ -145,7 +146,7 @@ legend(x=1, y=0.8, col=col.pal[c(2,1,3)], lwd=3, lty=1, title="Species", bg="whi
 dev.off()
 
 # sample the height/dbh distributions instead of plotting all
-n=50
+n=20
 
 # calculate average transition size of seedling (DBH=1cm)
 tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
