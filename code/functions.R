@@ -187,8 +187,8 @@ sS_h <- function(terrain, seedlings, sp, intraA, interA)
                         - surv.parm.unscale["interAHM.unscale.mu",]) /  surv.parm.unscale["interAHM.unscale.sigma",]
     
     # calculate p1 and p2 from these
-    p1 <- m.par["p1", sp] + (intraA.scaled * m.par["p1.intraA", sp])
-    r1 <- m.par["r1", sp] + (interAHM.scaled * m.par["r1.interAHM", sp])
+    p1 <- m.par["p1", sp]# + (intraA.scaled * m.par["p1.intraA", sp])
+    r1 <- m.par["r1", sp]# + (interAHM.scaled * m.par["r1.interAHM", sp])
     
     surv.prob <- m.par["K", sp] / ( 1 + exp(-r1 * (z - p1)) )
     

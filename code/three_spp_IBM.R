@@ -56,7 +56,7 @@ source("code/setup_map_three spp.R")
 #######################
 
 time <- 1
-maxTime <- 23
+maxTime <- 10
 
 # take a snapshot of initial conditions
 ppoT.init <- ppoT
@@ -90,6 +90,20 @@ ba.ppoT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landsca
 ba.sceT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
 ba.ppiT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
 ba.aosT <- data.frame(time=seq(time, maxTime, 1), nonswamp=NA, swamp=NA, landscape.swamp.prop=NA)
+
+# create vectors to record deaths, recruitment
+deaths.ppoT <- c()
+deaths.ppoS <- c()
+deaths.sceT <- c()
+deaths.sceS <- c()
+deaths.ppiT <- c()
+deaths.ppiS <- c()
+deaths.aosT <- c()
+
+recs.ppoS <- c()
+recs.sceS <- c()
+recs.ppiS <- c()
+recs.aosT <- c()
 
 # progress bar
 pb <- txtProgressBar(min = 1, max = maxTime, style = 3)
@@ -148,18 +162,27 @@ while (time <= maxTime) {
   
   # Seedling growth and survival
   # PPO ("Prunus.polystachya")
-  ppoS$logheight <- sS_h(nssf.m, ppoS, "Prunus.polystachya", intra.on.PPO[[4]], inter.on.PPO[[4]]) * 
+  #ppoS$logheight <- sS_h(nssf.m, ppoS, "Prunus.polystachya", intra.on.PPO[[4]], inter.on.PPO[[4]]) * 
+  #test using mean inter and intra values to see if these are causing the problem
+  ppoS$logheight <- sS_h(nssf.m, ppoS, "Prunus.polystachya", exp(surv.parm.unscale["intraA.unscale.mu",]), exp(surv.parm.unscale["interAHM.unscale.mu",])) * 
     GS_h1h(nssf.m, ppoS, "Prunus.polystachya", CAE.on.ppoS, HAE.on.ppoS)
+  deaths.ppoS <- c(deaths.ppoS, sum(ppoS$logheight < rec.parm["minsize", "Prunus.polystachya"]) )
   if(sum(ppoS$logheight < rec.parm["minsize", "Prunus.polystachya"], na.rm = TRUE) > 0){
     ppoS <- ppoS[-which(ppoS$logheight < rec.parm["minsize", "Prunus.polystachya"]),] }
   # SCE ("Strombosia.ceylanica")
-  sceS$logheight <- sS_h(nssf.m, sceS, "Strombosia.ceylanica", intra.on.SCE[[4]], inter.on.SCE[[4]]) * 
+  #sceS$logheight <- sS_h(nssf.m, sceS, "Strombosia.ceylanica", intra.on.SCE[[4]], inter.on.SCE[[4]]) *
+  #test using mean inter and intra values to see if these are causing the problem
+  sceS$logheight <- sS_h(nssf.m, sceS, "Strombosia.ceylanica", exp(surv.parm.unscale["intraA.unscale.mu",]), exp(surv.parm.unscale["interAHM.unscale.mu",])) * 
     GS_h1h(nssf.m, sceS, "Strombosia.ceylanica", CAE.on.sceS, HAE.on.sceS)
+  deaths.sceS <- c(deaths.sceS, sum(sceS$logheight < rec.parm["minsize", "Strombosia.ceylanica"]) )
   if(sum(sceS$logheight < rec.parm["minsize", "Strombosia.ceylanica"], na.rm = TRUE) > 0){
     sceS <- sceS[-which(sceS$logheight < rec.parm["minsize", "Strombosia.ceylanica"]),] }
   # PPI ("Pometia.pinnata")
-  ppiS$logheight <- sS_h(nssf.m, ppiS, "Pometia.pinnata", intra.on.PPI[[4]], inter.on.PPI[[4]]) * 
+  #ppiS$logheight <- sS_h(nssf.m, ppiS, "Pometia.pinnata", intra.on.PPI[[4]], inter.on.PPI[[4]]) * 
+  #test using mean inter and intra values to see if these are causing the problem
+  ppiS$logheight <- sS_h(nssf.m, ppiS, "Pometia.pinnata", exp(surv.parm.unscale["intraA.unscale.mu",]), exp(surv.parm.unscale["interAHM.unscale.mu",])) *
     GS_h1h(nssf.m, ppiS, "Pometia.pinnata", CAE.on.ppiS, HAE.on.ppiS)
+  deaths.ppiS <- c(deaths.ppiS, sum(ppiS$logheight < rec.parm["minsize", "Pometia.pinnata"]) )
   if(sum(ppiS$logheight < rec.parm["minsize", "Pometia.pinnata"], na.rm = TRUE) > 0){
     ppiS <- ppiS[-which(ppiS$logheight < rec.parm["minsize", "Pometia.pinnata"]),] }
   
@@ -167,14 +190,17 @@ while (time <= maxTime) {
   # PPO ("Prunus.polystachya")
   ppoT$logdbh <- sT_z(nssf.m, ppoT, "Prunus.polystachya", intra.on.PPO[[1]], intra.on.PPO[[3]], inter.on.PPO[[1]], inter.on.PPO[[3]]) * 
     GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intra.dist.on.PPO, inter.dist.on.PPO)
+  deaths.ppoT <- c(deaths.ppoT, sum(ppoT$logdbh==0, na.rm = TRUE))
   if(sum(ppoT$logdbh==0, na.rm = TRUE) > 0)  ppoT <- ppoT[-which(ppoT$logdbh==0),]
   # SCE ("Strombosia.ceylanica")
   sceT$logdbh <- sT_z(nssf.m, sceT, "Strombosia.ceylanica", intra.on.SCE[[1]], intra.on.SCE[[3]], inter.on.SCE[[1]], inter.on.SCE[[3]]) * 
     GT_z1z(nssf.m, sceT, "Strombosia.ceylanica", intra.dist.on.SCE, inter.dist.on.SCE)
+  deaths.sceT <- c(deaths.sceT, sum(sceT$logdbh==0, na.rm = TRUE))
   if(sum(sceT$logdbh==0, na.rm = TRUE) > 0)  sceT <- sceT[-which(sceT$logdbh==0),]
   # PPI ("Pometia.pinnata")
   ppiT$logdbh <- sT_z(nssf.m, ppiT, "Pometia.pinnata", intra.on.PPI[[1]], intra.on.PPI[[3]], inter.on.PPI[[1]], inter.on.PPI[[3]]) * 
     GT_z1z(nssf.m, ppiT, "Pometia.pinnata", intra.dist.on.PPI, inter.dist.on.PPI)
+  deaths.ppiT <- c(deaths.ppiT, sum(ppiT$logdbh==0, na.rm = TRUE))
   if(sum(ppiT$logdbh==0, na.rm = TRUE) > 0)  ppiT <- ppiT[-which(ppiT$logdbh==0),]
   
   # AOS growth, survival and recruitment
@@ -182,8 +208,10 @@ while (time <= maxTime) {
   # use a fixed, small value for intra
   aosT$logdbh <- sT_z(nssf.m, aosT, "population", 100, 100, inter.on.AOS[[1]], inter.on.AOS[[3]]) * 
     GT_z1z(nssf.m, aosT, "population", 100, inter.dist.on.AOS)
+  deaths.aosT <- c(deaths.aosT, sum(aosT$logdbh==0, na.rm = TRUE))
   if(sum(aosT$logdbh==0, na.rm = TRUE) > 0)  aosT <- aosT[-which(aosT$logdbh==0),]
   n.aos.rec <- round(crop.area * rnorm(n=1, mean=0.003544643, sd=0.0005), 0) / dilution
+  recs.aosT <- c(recs.aosT, n.aos.rec)
   aos.loc.rec <- spsample(crop.poly, n.aos.rec, type = 'random')
   aos.grid.rec <- extract(nssf.100, aos.loc.rec)
   aosT <- rbind(aosT, data.frame(coordinates(aos.loc.rec), logdbh = log(5), grid = aos.grid.rec))
@@ -234,8 +262,12 @@ while (time <= maxTime) {
                                        seedlings=rbind(ppoS, sceS, ppiS),
                                        grid.neighbours=grid.neighbours)
         # if there are still successfully recruiting seedlings, rbind them to existing seedlings
-        if(nrow(recruits.success) > 0) ppoS <- rbind(ppoS, recruits.success)
+        if(nrow(recruits.success) > 0) {
+          ppoS <- rbind(ppoS, recruits.success)
+          recs.ppoS <- c(recs.ppoS, nrow(recruits.success))
+        }
       }
+      if(nrow(recruits)==0 | nrow(recruits.success)==0) recs.ppoS <- c(recs.ppoS, 0)
     }
   }
   # SCE ("Strombosia.ceylanica")
@@ -253,8 +285,12 @@ while (time <= maxTime) {
                                        trees=rbind(ppoT, sceT, ppiT, aosT), 
                                        seedlings=rbind(ppoS, sceS, ppiS),
                                        grid.neighbours=grid.neighbours)
-        if(nrow(recruits.success) > 0) sceS <- rbind(sceS, recruits.success)
+        if(nrow(recruits.success) > 0) {
+          sceS <- rbind(sceS, recruits.success)
+          recs.sceS <- c(recs.sceS, nrow(recruits.success))
+        } 
       }
+      if(nrow(recruits)==0 | nrow(recruits.success)==0) recs.sceS <- c(recs.sceS, 0)
     }
   }
   # PPI ("Pometia.pinnata")
@@ -274,8 +310,12 @@ while (time <= maxTime) {
                                        seedlings=rbind(ppoS, sceS, ppiS),
                                        grid.neighbours=grid.neighbours)
         # if there are still successfully recruiting seedlings, rbind them to existing seedlings
-        if(nrow(recruits.success) > 0) ppiS <- rbind(ppiS, recruits.success)
+        if(nrow(recruits.success) > 0) {
+          ppiS <- rbind(ppiS, recruits.success)
+          recs.ppiS <- c(recs.ppiS, nrow(recruits.success))
+        }
       }
+      if(nrow(recruits)==0 | nrow(recruits.success)==0) recs.ppiS <- c(recs.ppiS, 0)
     }
   }
   
@@ -283,12 +323,6 @@ while (time <= maxTime) {
   if(sum(is.na(ppoS$grid)) > 0)  ppoS <- ppoS[-which(is.na(ppoS$grid)),]
   if(sum(is.na(sceS$grid)) > 0)  sceS <- sceS[-which(is.na(sceS$grid)),]
   if(sum(is.na(ppiS$grid)) > 0)  ppiS <- ppiS[-which(is.na(ppiS$grid)),]
-  
-  # Kill off 50% of all recruits that are located < 10cm from each other
-  # temporarily omitted
-  #ppoS <- kill.rec(ppoS, n.old.ppoS)
-  #sceS <- kill.rec(sceS, n.old.sceS)
-  #ppiS <- kill.rec(ppiS, n.old.ppiS)
   
   # Take stock of all individuals
   # PPO ("Prunus.polystachya")
@@ -359,6 +393,9 @@ out3.usual <-
        z.ppoT = z.ppoT, z.sceT = z.sceT, z.ppiT = z.ppiT,
        h.ppoS = h.ppoS, h.sceS = h.sceS, h.ppiS = h.ppiS,
        ba.ppoT = ba.ppoT, ba.sceT = ba.sceT, ba.ppiT = ba.ppiT,
+       deaths.ppoT = deaths.ppoT, deaths.sceT = deaths.sceT, deaths.ppiT = deaths.ppiT, deaths.aosT = deaths.aosT,
+       deaths.ppoS = deaths.ppoS, deaths.sceS = deaths.sceS, deaths.ppiS = deaths.ppiS, 
+       recs.ppoS = recs.ppoS, recs.sceS = recs.sceS, recs.ppiS = recs.ppiS, recs.aosT = recs.aosT,
        aosT = aosT, n.aosT = n.aosT, z.aosT = z.aosT, ba.aosT = ba.aosT)
 saveRDS(out3.usual, file = "out/sim_out3_usual.rds")
 

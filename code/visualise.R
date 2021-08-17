@@ -41,6 +41,9 @@ for(i in 1:22){
         nssf.high[[i]] <- crop(nssf.high[[i]], crop.extent)
 }
 
+#############
+# LOCATIONS #
+#############
 
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\distributions 3spp Aug21.pdf", width=16, height=9)
 # Initial condition
@@ -74,6 +77,10 @@ points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
 scalebar(400, xy=c(367800, 151550), type="bar", lonlat=F, below="metres", divs=2)
 dev.off()
 
+####################
+# POPULATION SIZES #
+####################
+
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\populations 3spp Aug21.pdf", width=16, height=9)
 par(mfrow=c(1,2), mar=c(5.5,5.5,2,2))
 plot(log(usual$n.ppoT) ~ c(1:length(usual$n.ppoT)), lwd=5, col=col.pal[2], type="l",
@@ -91,14 +98,56 @@ legend('topleft', col=c(col.pal[c(2,1,3)], "grey"), bty="n", lwd=3, lty=1, title
                "P. pinnata (swamp specialist)",
                "All other species"
        ))
-plot(log(usual$n.ppoS) ~ c(1:length(usual$n.ppoS)), lwd=5, col=col.pal[2], type="l",
+plot(log(usual$n.ppoS+1) ~ c(1:length(usual$n.ppoS)), lwd=5, col=col.pal[2], type="l",
      ylab="Seedling population size (log-transformed)", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
-     ylim=log(c(min(c(usual$n.ppoS, usual$n.sceS, usual$n.ppiS)), 
+     ylim=log(c(min(c(usual$n.ppoS, usual$n.sceS, usual$n.ppiS))+1, 
             max(c(usual$n.ppoS, usual$n.sceS, usual$n.ppiS))))
      )
-lines(log(usual$n.sceS) ~ c(1:length(usual$n.sceS)), lwd=5, col=col.pal[1])
-lines(log(usual$n.ppiS) ~ c(1:length(usual$n.ppiS)), lwd=5, col=col.pal[3])
+lines(log(usual$n.sceS+1) ~ c(1:length(usual$n.sceS)), lwd=5, col=col.pal[1])
+lines(log(usual$n.ppiS+1) ~ c(1:length(usual$n.ppiS)), lwd=5, col=col.pal[3])
 dev.off()
+
+#####################
+# DEMOGRAPHIC RATES #
+#####################
+
+ppoT.mort <- usual$deaths.ppoT / usual$n.ppoT[-length(usual$n.ppoT)]
+ppoS.mort <- usual$deaths.ppoS / usual$n.ppoS[-length(usual$n.ppoS)]
+sceT.mort <- usual$deaths.sceT / usual$n.sceT[-length(usual$n.sceT)]
+sceS.mort <- usual$deaths.sceS / usual$n.sceS[-length(usual$n.sceS)]
+ppiT.mort <- usual$deaths.ppiT / usual$n.ppiT[-length(usual$n.ppiT)]
+ppiS.mort <- usual$deaths.ppiS / usual$n.ppiS[-length(usual$n.ppiS)]
+aosT.mort <- usual$deaths.aosT / usual$n.aosT[-length(usual$n.aosT)]
+
+par(mfrow=c(1,2), mar=c(5.5,5.5,2,2))
+plot(ppoT.mort ~ c(1:length(ppoT.mort)), lwd=5, col=col.pal[2], type="l",
+     ylab="Annual mortality rate", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(0, max(c(ppoT.mort, ppoS.mort, sceT.mort, sceS.mort, ppiT.mort, ppiS.mort), na.rm=T)))
+lines(sceT.mort ~ c(1:length(sceT.mort)), lwd=5, col=col.pal[1])
+lines(ppiT.mort ~ c(1:length(ppiT.mort)), lwd=5, col=col.pal[3])
+lines(aosT.mort ~ c(1:length(aosT.mort)), lwd=5, col="grey")
+
+lines(ppoS.mort ~ c(1:length(ppoS.mort)), lwd=5, col=col.pal[2], lty=2)
+lines(sceS.mort ~ c(1:length(sceS.mort)), lwd=5, col=col.pal[1], lty=2)
+lines(ppiS.mort ~ c(1:length(ppiS.mort)), lwd=5, col=col.pal[3], lty=2)
+
+legend('topleft', col=col.pal[c(2,1,3)], bty="n", lwd=3, lty=1, title="Species",
+       legend=c(
+               "P. polystachya (non-swamp generalist)",
+               "S. ceylanica (swamp generalist)",
+               "P. pinnata (swamp specialist)"
+       ))
+
+plot(usual$recs.ppoS ~ c(1:length(usual$recs.ppoS)), lwd=5, col=col.pal[2], type="l",
+     ylab="Annual recruitment volume", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(0, 
+            max(c(usual$recs.ppoS, usual$recs.sceS, usual$recs.ppiS))))
+lines(usual$recs.sceS ~ c(1:length(usual$recs.sceS)), lwd=5, col=col.pal[1])
+lines(usual$recs.ppiS ~ c(1:length(usual$recs.ppiS)), lwd=5, col=col.pal[3])
+
+####################
+# INDIVIDUAL SIZES #
+####################
 
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\sizes 3spp Aug21.pdf", width=16, height=9)
 par(mfrow=c(1,2), mar=c(5.5,5.5,2,2))
@@ -122,6 +171,9 @@ lines(usual$h.sceS ~ c(1:length(usual$h.sceS)), lwd=5, col=col.pal[1])
 lines(usual$h.ppiS ~ c(1:length(usual$h.ppiS)), lwd=5, col=col.pal[3])
 dev.off()
 
+########################
+# HABITAT ASSOCIATIONS #
+########################
 
 # Calculate SSI of all four species
 ppo.ssi <- with(usual$ba.ppoT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
@@ -144,6 +196,10 @@ legend(x=1, y=0.8, col=col.pal[c(2,1,3)], lwd=3, lty=1, title="Species", bg="whi
                "P. pinnata (swamp specialist)"
        ))
 dev.off()
+
+######################
+# SIZE DISTRIBUTIONS #
+######################
 
 # sample the height/dbh distributions instead of plotting all
 n=20

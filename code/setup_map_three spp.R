@@ -76,7 +76,7 @@ prop.ns <- 1-prop.swamp
 # therefore true density probably about 2.2 stems/m2
 
 # introduce a dilution factor
-dilution <- 50
+dilution <- 40
 
 n.trees <- 0.1351282 * crop.area / dilution
 n.saplings <- 0.42 * crop.area / dilution
