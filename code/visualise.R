@@ -46,17 +46,22 @@ for(i in 1:22){
 #############
 
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\distributions 3spp Aug21.pdf", width=16, height=9)
+prop = 0.1
 # Initial condition
 par(mfrow=c(1,2), mar=c(5,5,3,2))
 plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)], main="2021")
 # PPO
-points(usual$ppoT.init, cex=usual$ppoT.init$logdbh/2, col=col.t[1], pch=16)
+i.ppoT <- sample(1:nrow(usual$ppoT), prop*nrow(usual$ppoT))
+points(usual$ppoT.init[i.ppoT,], cex=usual$ppoT.init$logdbh[i.ppoT]/2, col=col.t[1], pch=16)
 # SCE
-points(usual$sceT.init, cex=usual$sceT.init$logdbh/2, col=col.t[2], pch=16)
+i.sceT <- sample(1:nrow(usual$sceT), prop*nrow(usual$sceT))
+points(usual$sceT.init[i.sceT,], cex=usual$sceT.init$logdbh[i.sceT]/2, col=col.t[2], pch=16)
 # PPI
-points(usual$ppiT.init, cex=usual$ppiT.init$logdbh/2, col=col.t[3], pch=16)
-# All other species (static--just for a background interspecific competition pressure)
-points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
+i.ppiT <- sample(1:nrow(usual$ppiT), prop*nrow(usual$ppiT))
+points(usual$ppiT.init[i.ppiT,], cex=usual$ppiT.init$logdbh[i.ppiT]/2, col=col.t[3], pch=16)
+# All other species (static--just for a background iproperspecific competition pressure)
+i.aosT <- sample(1:nrow(usual$aosT), prop*nrow(usual$aosT))
+#points(aosT[i.aosT,], cex=aosT$logdbh[i.aosT]/2,  pch=1, col="grey70")
 legend('topleft', col=col.t[c(1,2,3)], pch=16, bty="n", pt.cex=2,
        legend=c(
                "P. polystachya (non-swamp generalist)",
@@ -67,13 +72,13 @@ legend('topleft', col=col.t[c(1,2,3)], pch=16, bty="n", pt.cex=2,
 # Final condition
 plot(nssf.usual[[22]], legend=F, col=col.pal[c(6,5)], main="2042")
 # PPO
-points(usual$ppoT, cex=usual$ppoT$logdbh/2, col=col.t[1], pch=16)
+points(usual$ppoT[i.ppoT,], cex=usual$ppoT$logdbh[i.ppoT]/2, col=col.t[1], pch=16)
 # SCE
-points(usual$sceT, cex=usual$sceT$logdbh/2, col=col.t[2], pch=16)
+points(usual$sceT[i.sceT,], cex=usual$sceT$logdbh[i.sceT]/2, col=col.t[2], pch=16)
 # PPI
-points(usual$ppiT, cex=usual$ppiT$logdbh/2, col=col.t[3], pch=16)
+points(usual$ppiT[i.ppiT,], cex=usual$ppiT$logdbh[i.ppiT]/2, col=col.t[3], pch=16)
 # All other species (static--just for a background interspecific competition pressure)
-points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey70")
+#points(aosT[i.aosT,], cex=aosT$logdbh[i.aosT]/2,  pch=1, col="grey70")
 scalebar(400, xy=c(367800, 151550), type="bar", lonlat=F, below="metres", divs=2)
 dev.off()
 
@@ -202,7 +207,7 @@ dev.off()
 ######################
 
 # sample the height/dbh distributions instead of plotting all
-n=20
+n=200
 
 # calculate average transition size of seedling (DBH=1cm)
 tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
@@ -212,7 +217,7 @@ tran.parm["transition.height",] <- (log(1) - tran.parm["tran.int",]) / tran.parm
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\size distributions 3spp Aug21.pdf", width=16, height=9)
 par(mfrow=c(1,2), mar=c(5,5,2,2))
 hist(sample(usual$ppoS$logheight, n), col=col.t[2], main="", xlab="Seedling height (log-transformed)",
-     xlim=c(0,6), breaks=seq(0,8,0.25))
+     xlim=c(2,6), breaks=seq(0,8,0.25))
 hist(sample(usual$sceS$logheight, n), col=col.t[1], add=T, breaks=seq(0,8,0.25))
 hist(sample(usual$ppiS$logheight, n), col=col.t[3], add=T, breaks=seq(0,8,0.25))
 abline(v=tran.parm["transition.height", c("Gironniera.nervosa", "Prunus.polystachya", "Strombosia.ceylanica", "Pometia.pinnata")],
@@ -221,7 +226,7 @@ abline(v=rec.parm["rcsz", c("Gironniera.nervosa", "Prunus.polystachya", "Strombo
        col=col.pal[c(4,2,1,3)], lwd=3)
 legend('topleft', bty="n", lwd=3, lty=c(1,2), legend=c("average recruitment size", "average transition size"))
 hist(sample(usual$ppiT$logdbh, n), col=col.t[3], main="", xlab="Adult DBH (log-transformed)", 
-     xlim=c(0,6), breaks=seq(0,8,0.25))
+     xlim=c(0,5), breaks=seq(0,8,0.25))
 hist(sample(usual$sceT$logdbh, n), col=col.t[1], add=T, breaks=seq(0,8,0.25))
 hist(sample(usual$ppoT$logdbh, n), col=col.t[2], add=T, breaks=seq(0,8,0.25))
 legend('topright', fill=col.t[c(2,1,3)], title="Species", bty="n",

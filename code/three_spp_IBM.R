@@ -56,7 +56,7 @@ source("code/setup_map_three spp.R")
 #######################
 
 time <- 1
-maxTime <- 10
+maxTime <- 23
 
 # take a snapshot of initial conditions
 ppoT.init <- ppoT
@@ -397,6 +397,6 @@ out3.usual <-
        deaths.ppoS = deaths.ppoS, deaths.sceS = deaths.sceS, deaths.ppiS = deaths.ppiS, 
        recs.ppoS = recs.ppoS, recs.sceS = recs.sceS, recs.ppiS = recs.ppiS, recs.aosT = recs.aosT,
        aosT = aosT, n.aosT = n.aosT, z.aosT = z.aosT, ba.aosT = ba.aosT)
-saveRDS(out3.usual, file = "out/sim_out3_usual.rds")
+saveRDS(out3.usual, file = "out/sim_out3_usual_Aug21_11years.rds")
 
 
