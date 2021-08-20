@@ -2,7 +2,7 @@
 # PLOT OUTPUTS  #
 #################
 
-usual <- readRDS(file = "out/sim_out3_usual.rds")
+usual <- readRDS(file = "out/sim_out3_usual_Aug21_11years.rds")
 summary(usual)
 
 # Define a colour palette
@@ -46,7 +46,7 @@ for(i in 1:22){
 #############
 
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\distributions 3spp Aug21.pdf", width=16, height=9)
-prop = 0.1
+prop = 0.25
 # Initial condition
 par(mfrow=c(1,2), mar=c(5,5,3,2))
 plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)], main="2021")

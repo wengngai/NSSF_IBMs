@@ -75,9 +75,6 @@ prop.ns <- 1-prop.swamp
 # seedlings are likely overestimated because seedling quadrats are not randomly placed (maybe 2x overestimated?)
 # therefore true density probably about 2.2 stems/m2
 
-# introduce a dilution factor
-dilution <- 1
-
 n.trees <- 0.1351282 * crop.area / dilution
 n.saplings <- 0.42 * crop.area / dilution
 n.seedlings <- 2.2 * crop.area / dilution

@@ -5,7 +5,7 @@ library(doParallel)
 library(rgdal)
 
 # Settings for parallerisation
-registerDoParallel(cores = 8)
+registerDoParallel(cores = 64)
 
 
 #################
@@ -47,6 +47,9 @@ source("code/functions.R")
 # set scenario (usual or extreme)
 scenario <- "usual"
 #scenario <- "extreme"
+
+# set dilution factor
+dilution <- 1
 
 source("code/setup_map_three spp.R")
 
@@ -246,6 +249,7 @@ while (time <= maxTime) {
   
   # Recruitment: now add new recruits to ppoS
   # PPO ("Prunus.polystachya")
+  year.recs <- c()
   if(length(prod.vec.ppo) > 0){
     for(i in 1:length(prod.vec.ppo)){
       distances <- twoDT.sample(prod.vec.ppo[i], "Prunus.polystachya", max_dist = 410)
@@ -264,13 +268,15 @@ while (time <= maxTime) {
         # if there are still successfully recruiting seedlings, rbind them to existing seedlings
         if(nrow(recruits.success) > 0) {
           ppoS <- rbind(ppoS, recruits.success)
-          recs.ppoS <- c(recs.ppoS, nrow(recruits.success))
+          recs.ppoS <- c(year.recs, nrow(recruits.success))
         }
       }
-      if(nrow(recruits)==0 | nrow(recruits.success)==0) recs.ppoS <- c(recs.ppoS, 0)
+      if(nrow(recruits)==0 | nrow(recruits.success)==0) year.recs <- c(year.recs, 0)
     }
   }
+  recs.ppoS <- c(recs.ppoS, sum(year.recs))
   # SCE ("Strombosia.ceylanica")
+  year.recs <- c()
   if(length(prod.vec.sce) > 0){
     for(i in 1:length(prod.vec.sce)){
       distances <- twoDT.sample(prod.vec.sce[i], "Strombosia.ceylanica", max_dist = 410)
@@ -287,13 +293,15 @@ while (time <= maxTime) {
                                        grid.neighbours=grid.neighbours)
         if(nrow(recruits.success) > 0) {
           sceS <- rbind(sceS, recruits.success)
-          recs.sceS <- c(recs.sceS, nrow(recruits.success))
+          year.recs <- c(year.recs, nrow(recruits.success))
         } 
       }
-      if(nrow(recruits)==0 | nrow(recruits.success)==0) recs.sceS <- c(recs.sceS, 0)
+      if(nrow(recruits)==0 | nrow(recruits.success)==0) year.recs <- c(year.recs, 0)
     }
   }
+  recs.sceS <- c(recs.sceS, sum(year.recs))
   # PPI ("Pometia.pinnata")
+  year.recs <- c()
   if(length(prod.vec.ppi) > 0){
     for(i in 1:length(prod.vec.ppi)){
       distances <- twoDT.sample(prod.vec.ppi[i], "Pometia.pinnata", max_dist = 410)
@@ -312,12 +320,13 @@ while (time <= maxTime) {
         # if there are still successfully recruiting seedlings, rbind them to existing seedlings
         if(nrow(recruits.success) > 0) {
           ppiS <- rbind(ppiS, recruits.success)
-          recs.ppiS <- c(recs.ppiS, nrow(recruits.success))
+          year.recs <- c(year.recs, nrow(recruits.success))
         }
       }
-      if(nrow(recruits)==0 | nrow(recruits.success)==0) recs.ppiS <- c(recs.ppiS, 0)
+      if(nrow(recruits)==0 | nrow(recruits.success)==0) year.recs <- c(year.recs, 0)
     }
   }
+  recs.ppiS <- c(recs.ppiS, sum(year.recs))
   
   # remove seedlings which recruit out of landscape boundary (temporary solution--need to torus-ize landscape eventually)
   if(sum(is.na(ppoS$grid)) > 0)  ppoS <- ppoS[-which(is.na(ppoS$grid)),]
@@ -397,6 +406,6 @@ out3.usual <-
        deaths.ppoS = deaths.ppoS, deaths.sceS = deaths.sceS, deaths.ppiS = deaths.ppiS, 
        recs.ppoS = recs.ppoS, recs.sceS = recs.sceS, recs.ppiS = recs.ppiS, recs.aosT = recs.aosT,
        aosT = aosT, n.aosT = n.aosT, z.aosT = z.aosT, ba.aosT = ba.aosT)
-saveRDS(out3.usual, file = "out/sim_out3_usual_Aug21_11years.rds")
+saveRDS(out3.usual, file = "out/sim_out3_usual.rds")
 
 
