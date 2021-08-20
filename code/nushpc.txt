@@ -35,4 +35,4 @@ source /etc/profile.d/rec_modules.sh
 module load miniconda
 source activate myr
 
-Rscript ./code/three_spp_IBM.R
+Rscript ./code/three_spp_IBM_nushpc.R
