@@ -45,8 +45,8 @@ source("code/functions.R")
 #################
 
 # set scenario (usual or extreme)
-scenario <- "usual"
-#scenario <- "extreme"
+# scenario <- "usual"
+scenario <- "extreme"
 
 # set dilution factor
 dilution <- 1
@@ -391,7 +391,7 @@ while (time <= maxTime) {
 close(pb)
 
 # output to be saved
-out3.usual <- 
+out3 <- 
   list(nssf.m = nssf.m, 
        ppoT.init = ppoT.init, sceT.init = sceT.init, ppiT.init = ppiT.init, 
        ppoS.init = ppoS.init, sceS.init = sceS.init, ppiS.init = ppiS.init,
@@ -406,6 +406,5 @@ out3.usual <-
        deaths.ppoS = deaths.ppoS, deaths.sceS = deaths.sceS, deaths.ppiS = deaths.ppiS, 
        recs.ppoS = recs.ppoS, recs.sceS = recs.sceS, recs.ppiS = recs.ppiS, recs.aosT = recs.aosT,
        aosT = aosT, n.aosT = n.aosT, z.aosT = z.aosT, ba.aosT = ba.aosT)
-saveRDS(out3.usual, file = "out/sim_out3_usual.rds")
-
-
+# saveRDS(out3, file = "out/sim_out3_usual.rds")
+saveRDS(out3, file = "out/sim_out3_extreme.rds")
