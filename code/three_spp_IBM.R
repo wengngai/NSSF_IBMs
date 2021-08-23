@@ -16,7 +16,7 @@ grow.T.parm <- t(read.csv("data/tree growth parameters Aug21.csv", header=T, row
 grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", header=T, row.names=1)
 grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1)
 surv.parm <- t(read.csv("data/surv params Aug21.csv", header=T, row.names=1))
-surv.parm.unscale <- read.csv("data/survival model unscale params Aug21.csv", header=T, row.names=1)
+surv.parm.unscale <- read.csv("dataf/survival model unscale params Aug21.csv", header=T, row.names=1)
 fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1)
 tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
 rec.parm <- t(read.csv("data/dispersal kernel parameters Apr21.csv", header=T, row.names=1))
@@ -268,7 +268,7 @@ while (time <= maxTime) {
         # if there are still successfully recruiting seedlings, rbind them to existing seedlings
         if(nrow(recruits.success) > 0) {
           ppoS <- rbind(ppoS, recruits.success)
-          recs.ppoS <- c(year.recs, nrow(recruits.success))
+          year.recs <- c(year.recs, nrow(recruits.success))
         }
       }
       if(nrow(recruits)==0 | nrow(recruits.success)==0) year.recs <- c(year.recs, 0)

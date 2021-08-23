@@ -2,7 +2,9 @@
 # PLOT OUTPUTS  #
 #################
 
-usual <- readRDS(file = "out/sim_out3_usual_Aug21_11years.rds")
+extreme <- readRDS(file = "out/sim_out3_extreme.rds")
+summary(extreme)
+usual <- readRDS(file = "out/sim_out3_usual_nushpc.rds")
 summary(usual)
 
 # Define a colour palette
@@ -45,11 +47,14 @@ for(i in 1:22){
 # LOCATIONS #
 #############
 
-#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\distributions 3spp Aug21.pdf", width=16, height=9)
-prop = 0.25
+#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\distributions 3spp Aug21.pdf", width=14, height=9)
+prop = 1
+
+par(mfrow=c(2,2), mar=c(2,2,3,2))
+## As usual scenario
 # Initial condition
-par(mfrow=c(1,2), mar=c(5,5,3,2))
-plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)], main="2021")
+plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)], yaxt="n", xaxt="n")
+mtext(side=3, line=1, text="a) As usual scenario, year 2021", adj=0, cex=1.5)
 # PPO
 i.ppoT <- sample(1:nrow(usual$ppoT), prop*nrow(usual$ppoT))
 points(usual$ppoT.init[i.ppoT,], cex=usual$ppoT.init$logdbh[i.ppoT]/2, col=col.t[1], pch=16)
@@ -58,41 +63,147 @@ i.sceT <- sample(1:nrow(usual$sceT), prop*nrow(usual$sceT))
 points(usual$sceT.init[i.sceT,], cex=usual$sceT.init$logdbh[i.sceT]/2, col=col.t[2], pch=16)
 # PPI
 i.ppiT <- sample(1:nrow(usual$ppiT), prop*nrow(usual$ppiT))
-points(usual$ppiT.init[i.ppiT,], cex=usual$ppiT.init$logdbh[i.ppiT]/2, col=col.t[3], pch=16)
+points(usual$ppiT.init[i.ppiT,], cex=usual$ppiT.init$logdbh[i.ppiT]/2, col=col.t[4], pch=16)
 # All other species (static--just for a background iproperspecific competition pressure)
 i.aosT <- sample(1:nrow(usual$aosT), prop*nrow(usual$aosT))
 #points(aosT[i.aosT,], cex=aosT$logdbh[i.aosT]/2,  pch=1, col="grey70")
-legend('topleft', col=col.t[c(1,2,3)], pch=16, bty="n", pt.cex=2,
+legend('topleft', col=col.t[c(1,2,4)], pch=16, pt.cex=3, y.intersp=1.5,
        legend=c(
-               "P. polystachya (non-swamp generalist)",
-               "S. ceylanica (swamp generalist)",
-               "P. pinnata (swamp specialist)"
-               ))
+               "P. polystachya\n(non-swamp generalist)",
+               "S. ceylanica\n(swamp generalist)",
+               "P. pinnata\n(swamp specialist)"
+       ), bg="white", title="Species")
 
 # Final condition
-plot(nssf.usual[[22]], legend=F, col=col.pal[c(6,5)], main="2042")
+plot(nssf.usual[[22]], legend=F, col=col.pal[c(6,5)], xaxt="n", yaxt="n")
+mtext(side=3, line=1, text="b) As usual scenario, year 2042", adj=0, cex=1.5)
 # PPO
 points(usual$ppoT[i.ppoT,], cex=usual$ppoT$logdbh[i.ppoT]/2, col=col.t[1], pch=16)
 # SCE
 points(usual$sceT[i.sceT,], cex=usual$sceT$logdbh[i.sceT]/2, col=col.t[2], pch=16)
 # PPI
-points(usual$ppiT[i.ppiT,], cex=usual$ppiT$logdbh[i.ppiT]/2, col=col.t[3], pch=16)
+points(usual$ppiT[i.ppiT,], cex=usual$ppiT$logdbh[i.ppiT]/2, col=col.t[4], pch=16)
 # All other species (static--just for a background interspecific competition pressure)
 #points(aosT[i.aosT,], cex=aosT$logdbh[i.aosT]/2,  pch=1, col="grey70")
-scalebar(400, xy=c(367800, 151550), type="bar", lonlat=F, below="metres", divs=2)
+
+## Extreme drying scenario
+# Initial condition
+plot(nssf.extreme[[1]], legend=F, col=col.pal[c(6,5)], xaxt="n", yaxt="n")
+mtext(side=3, line=1, text="c) Extreme drying scenario, year 2021", adj=0, cex=1.5)
+# PPO
+i.ppoT <- sample(1:nrow(extreme$ppoT), prop*nrow(extreme$ppoT))
+points(extreme$ppoT.init[i.ppoT,], cex=extreme$ppoT.init$logdbh[i.ppoT]/2, col=col.t[1], pch=16)
+# SCE
+i.sceT <- sample(1:nrow(extreme$sceT), prop*nrow(extreme$sceT))
+points(extreme$sceT.init[i.sceT,], cex=extreme$sceT.init$logdbh[i.sceT]/2, col=col.t[2], pch=16)
+# PPI
+i.ppiT <- sample(1:nrow(extreme$ppiT), prop*nrow(extreme$ppiT))
+points(extreme$ppiT.init[i.ppiT,], cex=extreme$ppiT.init$logdbh[i.ppiT]/2, col=col.t[4], pch=16)
+# All other species (static--just for a background iproperspecific competition pressure)
+i.aosT <- sample(1:nrow(extreme$aosT), prop*nrow(extreme$aosT))
+#points(aosT[i.aosT,], cex=aosT$logdbh[i.aosT]/2,  pch=1, col="grey70")
+
+
+# Final condition
+plot(nssf.extreme[[22]], legend=F, col=col.pal[c(6,5)], xaxt="n", yaxt="n")
+mtext(side=3, line=1, text="d) Extreme drying scenario, year 2042", adj=0, cex=1.5)
+# PPO
+points(extreme$ppoT[i.ppoT,], cex=extreme$ppoT$logdbh[i.ppoT]/2, col=col.t[1], pch=16)
+# SCE
+points(extreme$sceT[i.sceT,], cex=extreme$sceT$logdbh[i.sceT]/2, col=col.t[2], pch=16)
+# PPI
+points(extreme$ppiT[i.ppiT,], cex=extreme$ppiT$logdbh[i.ppiT]/2, col=col.t[4], pch=16)
+# All other species (static--just for a background interspecific competition pressure)
+#points(aosT[i.aosT,], cex=aosT$logdbh[i.aosT]/2,  pch=1, col="grey70")
+scalebar(100, xy=c(367525, 153025), type="bar", lonlat=F, below="metres", divs=2)
+
 dev.off()
+
 
 ####################
 # POPULATION SIZES #
 ####################
 
-#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\populations 3spp Aug21.pdf", width=16, height=9)
-par(mfrow=c(1,2), mar=c(5.5,5.5,2,2))
+### BY SPECIES
+#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\populations 3spp Aug21.pdf", width=14, height=9)
+
+## Adults
+par(mfrow=c(2,3), mar=c(2,3.5,3.5,2), oma=c(3.5,6,1,1))
+
+## PPO
+plot(usual$n.ppoT ~ c(1:length(usual$n.ppoT)), lwd=5, col=col.pal[1], type="l", las=1,
+     ylab="", xlab="", cex.lab=2, cex.axis=1.5,
+     ylim=c(min(c(usual$n.ppoT, extreme$n.ppoT)), 
+            max(c(usual$n.ppoT, extreme$n.ppoT)))
+     )
+lines(extreme$n.ppoT ~ c(1:length(usual$n.ppoT)), lwd=5, col=col.pal[1], lty=2)
+mtext(side=3, line=1, adj=0, text="a) Prunus polystachya (non-swamp generalist)", cex=1.2)
+legend('topleft', bty="n", lwd=2, lty=c(1,2), title="Scenario", cex=1.5,
+       legend=c("As usual", "Extreme drying"))
+
+## SCE
+plot(usual$n.sceT ~ c(1:length(usual$n.sceT)), lwd=5, col=col.pal[2], type="l", las=1,
+     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(min(c(usual$n.sceT, extreme$n.sceT)), 
+            max(c(usual$n.sceT, extreme$n.sceT)))
+)
+lines(extreme$n.sceT ~ c(1:length(usual$n.sceT)), lwd=5, col=col.pal[2], lty=2)
+mtext(side=3, line=1, adj=0, text="b) Strombosia ceylanica (swamp generalist)", cex=1.2)
+
+## PPI
+plot(usual$n.ppiT ~ c(1:length(usual$n.ppiT)), lwd=5, col=col.pal[4], type="l", las=1,
+     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(min(c(usual$n.ppiT, extreme$n.ppiT)), 
+            max(c(usual$n.ppiT, extreme$n.ppiT)))
+)
+lines(extreme$n.ppiT ~ c(1:length(usual$n.ppiT)), lwd=5, col=col.pal[4], lty=2)
+mtext(side=3, line=1, adj=0, text="c) Pometia pinnata (swamp specialist)", cex=1.2)
+mtext(side=2, line=3.5, outer=T, adj=0.9, text="Adult population size", cex=1.5)
+
+## Seedlings
+
+# PPO
+plot(usual$n.ppoS ~ c(1:length(usual$n.ppoS)), lwd=5, col=col.pal[1], type="l", las=1,
+     ylab="", xlab="", cex.lab=2, cex.axis=1.5,
+     ylim=c(min(c(usual$n.ppoS, extreme$n.ppoS)), 
+            max(c(usual$n.ppoS, extreme$n.ppoS)))
+)
+lines(extreme$n.ppoS ~ c(1:length(usual$n.ppoS)), lwd=5, col=col.pal[1], lty=2)
+mtext(side=3, line=1, adj=0, text="d) Prunus polystachya (non-swamp generalist)", cex=1.2)
+
+# SCE
+plot(usual$n.sceS ~ c(1:length(usual$n.sceS)), lwd=5, col=col.pal[2], type="l", las=1,
+     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(min(c(usual$n.sceS, extreme$n.sceS)), 
+            max(c(usual$n.sceS, extreme$n.sceS)))
+)
+lines(extreme$n.sceS ~ c(1:length(usual$n.sceS)), lwd=5, col=col.pal[2], lty=2)
+mtext(side=3, line=1, adj=0, text="e) Strombosia ceylanica (swamp generalist)", cex=1.2)
+
+# PPI
+plot(usual$n.ppiS ~ c(1:length(usual$n.ppiS)), lwd=5, col=col.pal[4], type="l", las=1,
+     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(min(c(usual$n.ppiS, extreme$n.ppiS)), 
+            max(c(usual$n.ppiS, extreme$n.ppiS)))
+)
+lines(extreme$n.ppiS ~ c(1:length(usual$n.ppiS)), lwd=5, col=col.pal[4], lty=2)
+mtext(side=3, line=1, adj=0, text="f) Pometia pinnata (swamp specialist)", cex=1.2)
+
+mtext(side=2, line=3.5, outer=T, adj=0.15, text="Seedling population size", cex=1.5)
+mtext(side=1, line=1.5, outer=T, adj=0.5, text="Time (years)", cex=1.5)
+
+dev.off()
+
+### BY SCENARIO
+#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\populations 3spp Aug21.pdf", width=12, height=9)
+par(mfrow=c(2,2), mar=c(5.5,5.5,2,2))
+
+## As usual scenario
 plot(log(usual$n.ppoT) ~ c(1:length(usual$n.ppoT)), lwd=5, col=col.pal[2], type="l",
      ylab="Adult population size (log-transformed)", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
      ylim=log(c(min(c(usual$n.ppoT, usual$n.sceT, usual$n.ppiT, usual$n.aosT))+1, 
-            max(c(usual$n.ppoT, usual$n.sceT, usual$n.ppiT, usual$n.aosT))))
-     )
+                max(c(usual$n.ppoT, usual$n.sceT, usual$n.ppiT, usual$n.aosT))))
+)
 lines(log(usual$n.sceT) ~ c(1:length(usual$n.sceT)), lwd=5, col=col.pal[1])
 lines(log(usual$n.ppiT) ~ c(1:length(usual$n.ppiT)), lwd=5, col=col.pal[3])
 lines(log(usual$n.aosT) ~ c(1:length(usual$n.aosT)), lwd=5, col="grey")
@@ -106,35 +217,69 @@ legend('topleft', col=c(col.pal[c(2,1,3)], "grey"), bty="n", lwd=3, lty=1, title
 plot(log(usual$n.ppoS+1) ~ c(1:length(usual$n.ppoS)), lwd=5, col=col.pal[2], type="l",
      ylab="Seedling population size (log-transformed)", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
      ylim=log(c(min(c(usual$n.ppoS, usual$n.sceS, usual$n.ppiS))+1, 
-            max(c(usual$n.ppoS, usual$n.sceS, usual$n.ppiS))))
-     )
+                max(c(usual$n.ppoS, usual$n.sceS, usual$n.ppiS))))
+)
 lines(log(usual$n.sceS+1) ~ c(1:length(usual$n.sceS)), lwd=5, col=col.pal[1])
 lines(log(usual$n.ppiS+1) ~ c(1:length(usual$n.ppiS)), lwd=5, col=col.pal[3])
+
+## Extreme scenario
+plot(log(extreme$n.ppoT) ~ c(1:length(extreme$n.ppoT)), lwd=5, col=col.pal[2], type="l",
+     ylab="Adult population size (log-transformed)", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
+     ylim=log(c(min(c(extreme$n.ppoT, extreme$n.sceT, extreme$n.ppiT, extreme$n.aosT))+1, 
+                max(c(extreme$n.ppoT, extreme$n.sceT, extreme$n.ppiT, extreme$n.aosT))))
+)
+lines(log(extreme$n.sceT) ~ c(1:length(extreme$n.sceT)), lwd=5, col=col.pal[1])
+lines(log(extreme$n.ppiT) ~ c(1:length(extreme$n.ppiT)), lwd=5, col=col.pal[3])
+lines(log(extreme$n.aosT) ~ c(1:length(extreme$n.aosT)), lwd=5, col="grey")
+legend('topleft', col=c(col.pal[c(2,1,3)], "grey"), bty="n", lwd=3, lty=1, title="Species",
+       legend=c(
+               "P. polystachya (non-swamp generalist)",
+               "S. ceylanica (swamp generalist)",
+               "P. pinnata (swamp specialist)",
+               "All other species"
+       ))
+plot(log(extreme$n.ppoS+1) ~ c(1:length(extreme$n.ppoS)), lwd=5, col=col.pal[2], type="l",
+     ylab="Seedling population size (log-transformed)", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
+     ylim=log(c(min(c(extreme$n.ppoS, extreme$n.sceS, extreme$n.ppiS))+1, 
+                max(c(extreme$n.ppoS, extreme$n.sceS, extreme$n.ppiS))))
+)
+lines(log(extreme$n.sceS+1) ~ c(1:length(extreme$n.sceS)), lwd=5, col=col.pal[1])
+lines(log(extreme$n.ppiS+1) ~ c(1:length(extreme$n.ppiS)), lwd=5, col=col.pal[3])
 dev.off()
+
 
 #####################
 # DEMOGRAPHIC RATES #
 #####################
 
-ppoT.mort <- usual$deaths.ppoT / usual$n.ppoT[-length(usual$n.ppoT)]
-ppoS.mort <- usual$deaths.ppoS / usual$n.ppoS[-length(usual$n.ppoS)]
-sceT.mort <- usual$deaths.sceT / usual$n.sceT[-length(usual$n.sceT)]
-sceS.mort <- usual$deaths.sceS / usual$n.sceS[-length(usual$n.sceS)]
-ppiT.mort <- usual$deaths.ppiT / usual$n.ppiT[-length(usual$n.ppiT)]
-ppiS.mort <- usual$deaths.ppiS / usual$n.ppiS[-length(usual$n.ppiS)]
-aosT.mort <- usual$deaths.aosT / usual$n.aosT[-length(usual$n.aosT)]
+ppoT.mort.usual <- usual$deaths.ppoT / usual$n.ppoT[-length(usual$n.ppoT)]
+ppoS.mort.usual <- usual$deaths.ppoS / usual$n.ppoS[-length(usual$n.ppoS)]
+sceT.mort.usual <- usual$deaths.sceT / usual$n.sceT[-length(usual$n.sceT)]
+sceS.mort.usual <- usual$deaths.sceS / usual$n.sceS[-length(usual$n.sceS)]
+ppiT.mort.usual <- usual$deaths.ppiT / usual$n.ppiT[-length(usual$n.ppiT)]
+ppiS.mort.usual <- usual$deaths.ppiS / usual$n.ppiS[-length(usual$n.ppiS)]
+aosT.mort.usual <- usual$deaths.aosT / usual$n.aosT[-length(usual$n.aosT)]
 
-par(mfrow=c(1,2), mar=c(5.5,5.5,2,2))
-plot(ppoT.mort ~ c(1:length(ppoT.mort)), lwd=5, col=col.pal[2], type="l",
+ppoT.mort.extreme <- extreme$deaths.ppoT / extreme$n.ppoT[-length(extreme$n.ppoT)]
+ppoS.mort.extreme <- extreme$deaths.ppoS / extreme$n.ppoS[-length(extreme$n.ppoS)]
+sceT.mort.extreme <- extreme$deaths.sceT / extreme$n.sceT[-length(extreme$n.sceT)]
+sceS.mort.extreme <- extreme$deaths.sceS / extreme$n.sceS[-length(extreme$n.sceS)]
+ppiT.mort.extreme <- extreme$deaths.ppiT / extreme$n.ppiT[-length(extreme$n.ppiT)]
+ppiS.mort.extreme <- extreme$deaths.ppiS / extreme$n.ppiS[-length(extreme$n.ppiS)]
+aosT.mort.extreme <- extreme$deaths.aosT / extreme$n.aosT[-length(extreme$n.aosT)]
+
+
+par(mfrow=c(2,2), mar=c(5.5,5.5,2,2))
+plot(ppoT.mort.usual ~ c(1:length(ppoT.mort.usual)), lwd=5, col=col.pal[1], type="l",
      ylab="Annual mortality rate", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
-     ylim=c(0, max(c(ppoT.mort, ppoS.mort, sceT.mort, sceS.mort, ppiT.mort, ppiS.mort), na.rm=T)))
-lines(sceT.mort ~ c(1:length(sceT.mort)), lwd=5, col=col.pal[1])
-lines(ppiT.mort ~ c(1:length(ppiT.mort)), lwd=5, col=col.pal[3])
-lines(aosT.mort ~ c(1:length(aosT.mort)), lwd=5, col="grey")
+     ylim=c(0, max(c(ppoT.mort.usual, ppoS.mort.usual, sceT.mort.usual, sceS.mort.usual, ppiT.mort.usual, ppiS.mort.usual), na.rm=T)))
+lines(sceT.mort.usual ~ c(1:length(sceT.mort.usual)), lwd=5, col=col.pal[2])
+lines(ppiT.mort.usual ~ c(1:length(ppiT.mort.usual)), lwd=5, col=col.pal[4])
+lines(aosT.mort.usual ~ c(1:length(aosT.mort.usual)), lwd=5, col="grey")
 
-lines(ppoS.mort ~ c(1:length(ppoS.mort)), lwd=5, col=col.pal[2], lty=2)
-lines(sceS.mort ~ c(1:length(sceS.mort)), lwd=5, col=col.pal[1], lty=2)
-lines(ppiS.mort ~ c(1:length(ppiS.mort)), lwd=5, col=col.pal[3], lty=2)
+lines(ppoS.mort.usual ~ c(1:length(ppoS.mort.usual)), lwd=5, col=col.pal[1], lty=2)
+lines(sceS.mort.usual ~ c(1:length(sceS.mort.usual)), lwd=5, col=col.pal[2], lty=2)
+lines(ppiS.mort.usual ~ c(1:length(ppiS.mort.usual)), lwd=5, col=col.pal[4], lty=2)
 
 legend('topleft', col=col.pal[c(2,1,3)], bty="n", lwd=3, lty=1, title="Species",
        legend=c(
@@ -143,12 +288,39 @@ legend('topleft', col=col.pal[c(2,1,3)], bty="n", lwd=3, lty=1, title="Species",
                "P. pinnata (swamp specialist)"
        ))
 
-plot(usual$recs.ppoS ~ c(1:length(usual$recs.ppoS)), lwd=5, col=col.pal[2], type="l",
+plot(usual$recs.ppoS ~ c(1:length(usual$recs.ppoS)), lwd=5, col=col.pal[1], type="l",
      ylab="Annual recruitment volume", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
      ylim=c(0, 
             max(c(usual$recs.ppoS, usual$recs.sceS, usual$recs.ppiS))))
-lines(usual$recs.sceS ~ c(1:length(usual$recs.sceS)), lwd=5, col=col.pal[1])
-lines(usual$recs.ppiS ~ c(1:length(usual$recs.ppiS)), lwd=5, col=col.pal[3])
+lines(usual$recs.sceS ~ c(1:length(usual$recs.sceS)), lwd=5, col=col.pal[2])
+lines(usual$recs.ppiS ~ c(1:length(usual$recs.ppiS)), lwd=5, col=col.pal[4])
+
+## Extreme drying scenario
+plot(ppoT.mort.extreme ~ c(1:length(ppoT.mort.extreme)), lwd=5, col=col.pal[1], type="l",
+     ylab="Annual mortality rate", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(0, max(c(ppoT.mort.extreme, ppoS.mort.extreme, sceT.mort.extreme, sceS.mort.extreme, ppiT.mort.extreme, ppiS.mort.extreme), na.rm=T)))
+lines(sceT.mort.extreme ~ c(1:length(sceT.mort.extreme)), lwd=5, col=col.pal[2])
+lines(ppiT.mort.extreme ~ c(1:length(ppiT.mort.extreme)), lwd=5, col=col.pal[4])
+lines(aosT.mort.extreme ~ c(1:length(aosT.mort.extreme)), lwd=5, col="grey")
+
+lines(ppoS.mort.extreme ~ c(1:length(ppoS.mort.extreme)), lwd=5, col=col.pal[1], lty=2)
+lines(sceS.mort.extreme ~ c(1:length(sceS.mort.extreme)), lwd=5, col=col.pal[2], lty=2)
+lines(ppiS.mort.extreme ~ c(1:length(ppiS.mort.extreme)), lwd=5, col=col.pal[4], lty=2)
+
+legend('topleft', col=col.pal[c(2,1,3)], bty="n", lwd=3, lty=1, title="Species",
+       legend=c(
+               "P. polystachya (non-swamp generalist)",
+               "S. ceylanica (swamp generalist)",
+               "P. pinnata (swamp specialist)"
+       ))
+
+plot(extreme$recs.ppoS ~ c(1:length(extreme$recs.ppoS)), lwd=5, col=col.pal[1], type="l",
+     ylab="Annual recruitment volume", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(0, 
+            max(c(extreme$recs.ppoS, extreme$recs.sceS, extreme$recs.ppiS))))
+lines(extreme$recs.sceS ~ c(1:length(extreme$recs.sceS)), lwd=5, col=col.pal[2])
+lines(extreme$recs.ppiS ~ c(1:length(extreme$recs.ppiS)), lwd=5, col=col.pal[4])
+dev.off()
 
 ####################
 # INDIVIDUAL SIZES #
@@ -181,20 +353,29 @@ dev.off()
 ########################
 
 # Calculate SSI of all four species
-ppo.ssi <- with(usual$ba.ppoT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
-sce.ssi <- with(usual$ba.sceT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
-ppi.ssi <- with(usual$ba.ppiT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
+ppo.ssi.usual <- with(usual$ba.ppoT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
+sce.ssi.usual <- with(usual$ba.sceT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
+ppi.ssi.usual <- with(usual$ba.ppiT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
+
+ppo.ssi.extreme <- with(extreme$ba.ppoT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
+sce.ssi.extreme <- with(extreme$ba.sceT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
+ppi.ssi.extreme <- with(extreme$ba.ppiT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
 
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\ssi 3spp Aug21.pdf", width=6, height=8)
 par(mfrow=c(1,1), mar=c(5,5,2,2))
-plot(ppo.ssi ~ c(1:length(ppo.ssi)), lwd=5, col=col.pal[2], type="l",
+plot(ppo.ssi.usual ~ c(1:length(ppo.ssi.usual)), lwd=5, col=col.pal[1], type="l",
      ylab="Swamp specialization index", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
      ylim=c(0,1))
 rect(0, 0.5, 25, 1.1, col = adjustcolor(col.t[5], alpha.f = 0.4), border=F)
 abline(h=0.5, lty=2, lwd=3)
-lines(sce.ssi ~ c(1:length(sce.ssi)), lwd=5, col=col.pal[1], type="l")
-lines(ppi.ssi ~ c(1:length(ppi.ssi)), lwd=5, col=col.pal[3], type="l")
-legend(x=1, y=0.8, col=col.pal[c(2,1,3)], lwd=3, lty=1, title="Species", bg="white",
+lines(sce.ssi.usual ~ c(1:length(sce.ssi.usual)), lwd=5, col=col.pal[2], type="l")
+lines(ppi.ssi.usual ~ c(1:length(ppi.ssi.usual)), lwd=5, col=col.pal[4], type="l")
+
+lines(ppo.ssi.extreme ~ c(1:length(ppo.ssi.extreme)), lwd=5, col=col.pal[1], type="l", lty=2)
+lines(sce.ssi.extreme ~ c(1:length(sce.ssi.extreme)), lwd=5, col=col.pal[2], type="l", lty=2)
+lines(ppi.ssi.extreme ~ c(1:length(ppi.ssi.extreme)), lwd=5, col=col.pal[4], type="l", lty=2)
+
+legend(x=1, y=0.85, col=col.pal[c(1,2,4)], lwd=5, lty=1, title="Species", bg="white",
        legend=c(
                "P. polystachya (non-swamp generalist)",
                "S. ceylanica (swamp generalist)",
