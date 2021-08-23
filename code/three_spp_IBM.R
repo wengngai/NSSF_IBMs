@@ -45,8 +45,8 @@ source("code/functions.R")
 #################
 
 # set scenario (usual or extreme)
-# scenario <- "usual"
-scenario <- "extreme"
+scenario <- "usual"
+# scenario <- "extreme"
 
 # set dilution factor
 dilution <- 1
@@ -59,7 +59,7 @@ source("code/setup_map_three spp.R")
 #######################
 
 time <- 1
-maxTime <- 23
+maxTime <- 100
 
 # take a snapshot of initial conditions
 ppoT.init <- ppoT
