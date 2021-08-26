@@ -120,11 +120,11 @@ b_z <- function(terrain, trees, sp)
     plot_type <- ifelse(extract(terrain, trees[,c("x","y")])==2, "wet", "dry")
     plot_type[is.na(plot_type)] <- "dry"
     
-    N <- m.par["rec.int",sp] + m.par["fruited.z",sp] * z 	# seed production of a size z plant
-    N[is.na(N)] <- 0
-    return(round(exp(N),0))						# convert log(recruitment) to actual recruitment no.
+    mu = m.par["fruited.int", sp] + m.par["fruited.z", sp] * z
+    N = rnbinom(length(z), size = m.par["fruited.theta", sp], mu = exp(mu))
+    return(N)
 }
-#b_z(nssf.m, ppoT, "Prunus.polystachya")
+#plot(log(b_z(nssf.usual[[1]], ppoT, "Prunus.polystachya")+1) ~ ppoT[,"logdbh"])
 #p_bz(nssf.m, ppoT, "Prunus.polystachya")*b_z(nssf.m, ppoT, "Prunus.polystachya")
 
 ## SEEDLING recruit size pdf

@@ -17,7 +17,7 @@ grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", hea
 grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1)
 surv.parm <- t(read.csv("data/surv params Aug21.csv", header=T, row.names=1))
 surv.parm.unscale <- read.csv("data/survival model unscale params Aug21.csv", header=T, row.names=1)
-fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1)
+fruit.parm <- read.csv("data/fruiting parameters Jul21.csv", header=T, row.names=1)
 tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
 rec.parm <- t(read.csv("data/dispersal kernel parameters Apr21.csv", header=T, row.names=1))
 HM.parm <- t(read.csv("data/HM values.csv", header=T, row.names=1))
