@@ -78,28 +78,34 @@ For each surviving seedling we model its subsequent log height $\log H_{ij,t+1}$
 \text{Hetsp}_{i,t} =~& ???
 \end{align}
 
-\section{Adult growth and survival}
-Next, we model the size-dependent growth $G_{ij,p,t}$ and survival ($S_{\text{adult},ij,p,t+1}$) of adult individuals, which include `saplings' and `trees'. Adult survival model is similar to that of seedlings, except that the function has a discontinuity at 1-cm DBH:
+\section{Adult growth}
+size-dependent growth $G_{ij,p,t}$
+Adult growth model follows Zeide (1993), Kohyama et al. (2020), Lai et al. (2021):
+\begin{align}
+D_{ij,p,t+1} &= D_{ij,p,t} + G_{ij,p,t}\\
+G_{ij,p,t} &\sim \text{Normal}(\mu_{G,ij,p,t}, \sigma_{G}) \\
+\mu_{G,ij,p,t} &= D_{ij,p,t}^{b} e^{a-c D_{ij,p,t}} \\
+a &= a_j + a_\text{intraA} \text{intraA}_{i,t} + a_\text{interA} \text{interA}_{i,t} + a_\text{H} \Delta H_{ij,p,t} \\
+b &= b_j \\
+c &= c_j + c_\text{intraA} \text{intraA}_{i,t} + c_\text{interA} \text{interA}_{i,t} + c_\text{H} \Delta H_{ij,p,t}
+\end{align}
+
+\section{Survival}
+Finally, we model survival individuals of all sizes, i.e., `seedlings' and `adults'. Seedling sizes (which have the units of log height in the model) are first transformed to theoretical log DBH units via extrapolation of a seedling-sapling allometric equation
+\begin{align}
+\end{align}
+
+Then, the following survival model from Needham et al. (2018), predicts the probability of survival of each individual based on its size (in log DBH units)
 \begin{align}
 \Pr(S_{\text{adult},ij,p,t+1} = 1) &\sim \text{Binomial}(1,~s_{\text{adult},ij,p,t+1}) \\
 s_{\text{adult},ij,p,t+1} &=
 \begin{cases}
-    \dfrac{K_j}{1 + e^{-(r_{10,j} + r_{11,j} \cdot \text{interA}_{i,t} \cdot \Delta H_{ip,t}) [D_{ij} - (p_{10,j} + p_{11,j} \cdot \text{intraA}_{i,t}) ]}}, & D_{ij} \leq 1 \\
-    \dfrac{K_j}{1 + e^{-r_{2,j}  [D_{ij} -(p_{20,j} + p_{21,j} \cdot \text{intraA}_{i,t} + p_{22,j} \cdot \text{interA}_{i,t})]}},               & D_{ij} > 1
+    \dfrac{K_j}{1 + e^{-(r_{10,j} + r_{11,j} \cdot \text{interA}_{i,t} \cdot \Delta H_{ip,t}) [D_{ij} - (p_{10,j} + p_{11,j} \cdot \text{intraA}_{i,t}) ]}}, & D_{ij}
 \end{cases} \\
 \text{intraA}_{i,t} &= ??? \\
 \text{interA}_{i,t} &= ???
 \end{align}
 
-Adult growth model follows Kohyama et al. (2020):
-\begin{align}
-D_{ij,p,t+1} &= D_{ij,p,t} + G_{ij,p,t}\\
-G_{ij,p,t} &\sim \text{Normal}(\mu_{G,ij,p,t}, \sigma_{G}) \\
-\mu_{G,ij,p,t} &= a D_{ij,p,t}^{b} e^{-c D_{ij,p,t}} \\
-a &= a_j \\
-b &= b_j + b_\text{intraA} \text{intraA}_{i,t} + b_\text{interA} \text{interA}_{i,t} \\
-c &= c_j + c_\text{intraA} \text{intraA}_{i,t} + c_\text{interA} \text{interA}_{i,t}
-\end{align}
 
 \textit{Note: some random intercepts potentially are missing from all the equations above; need to double check}
 
