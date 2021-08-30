@@ -79,29 +79,24 @@ For each surviving seedling we model its subsequent log height $\log H_{ij,t+1}$
 \end{align}
 
 \section{Adult growth}
-size-dependent growth $G_{ij,p,t}$
-Adult growth model follows Zeide (1993), Kohyama et al. (2020), Lai et al. (2021):
+The size-dependent annual diameter growth $G_{ij,p,t}$ of adults follows Zeide (1993) and Kohyama et al. (2020):
 \begin{align}
 D_{ij,p,t+1} &= D_{ij,p,t} + G_{ij,p,t}\\
-G_{ij,p,t} &\sim \text{Normal}(\mu_{G,ij,p,t}, \sigma_{G}) \\
+G_{ij,p,t} &\sim \text{Normal}(\mu_{G,ij,p,t},~\sigma_{G}) \\
 \mu_{G,ij,p,t} &= D_{ij,p,t}^{b} e^{a-c D_{ij,p,t}} \\
-a &= a_j + a_\text{intraA} \text{intraA}_{i,t} + a_\text{interA} \text{interA}_{i,t} + a_\text{H} \Delta H_{ij,p,t} \\
+a &= a_j + a_{\text{intraA},j} \text{intraA}_{i,t} + a_{\text{interA},j} \text{interA}_{i,t} + a_{\text{H},j} \Delta H_{p,t} \\
 b &= b_j \\
-c &= c_j + c_\text{intraA} \text{intraA}_{i,t} + c_\text{interA} \text{interA}_{i,t} + c_\text{H} \Delta H_{ij,p,t}
+c &= c_j + c_{\text{intraA},j} \text{intraA}_{i,t} + c_{\text{interA},j} \text{interA}_{i,t} + c_{\text{H},j} \Delta H_{p,t}
 \end{align}
 
 \section{Survival}
-Finally, we model survival individuals of all sizes, i.e., `seedlings' and `adults'. Seedling sizes (which have the units of log height in the model) are first transformed to theoretical log DBH units via extrapolation of a seedling-sapling allometric equation
-\begin{align}
-\end{align}
+Finally, we model survival individuals of all sizes, i.e., `seedlings' and `adults'. Seedling sizes (which have the units of log height in the model) are first converted to log DBH units via extrapolation of the seedling diameter--height allometric equation as above.
 
-Then, the following survival model from Needham et al. (2018), predicts the probability of survival of each individual based on its size (in log DBH units)
+Then, the following survival model from Needham et al. (2018), we predict the probability of survival of each individual based on its size (in log DBH units)
 \begin{align}
 \Pr(S_{\text{adult},ij,p,t+1} = 1) &\sim \text{Binomial}(1,~s_{\text{adult},ij,p,t+1}) \\
 s_{\text{adult},ij,p,t+1} &=
-\begin{cases}
-    \dfrac{K_j}{1 + e^{-(r_{10,j} + r_{11,j} \cdot \text{interA}_{i,t} \cdot \Delta H_{ip,t}) [D_{ij} - (p_{10,j} + p_{11,j} \cdot \text{intraA}_{i,t}) ]}}, & D_{ij}
-\end{cases} \\
+    \dfrac{K_j}{1 + e^{-(r_{10,j} + r_{11,j} \cdot \text{interA}_{i,t} \cdot \Delta H_{ip,t}) [D_{ij} - (p_{10,j} + p_{11,j} \cdot \text{intraA}_{i,t}) ]}} \\
 \text{intraA}_{i,t} &= ??? \\
 \text{interA}_{i,t} &= ???
 \end{align}
@@ -115,5 +110,7 @@ s_{\text{adult},ij,p,t+1} &=
 \\
 
 \noindent Needham, J., Merow, C., Chang-Yang, C.-H., Caswell, H., Mcmahon, S. M., \& Needham, J. (2018). Inferring forest fate from demographic data: from vital rates to population dynamic models. \textit{Proceedings of the Royal Society B: Biological Sciences}, 285(1874), 20172050. doi: 10.1098/rspb.2017.2050
+\\
 
+\noindent Zeide, B. (1993). Analysis of growth equations. \textit{Forest Science}, 39(3), 594–616. doi: 10.1111/j.1461-0248.2006.00883.x
 \end{document}
