@@ -96,39 +96,44 @@ GT_z1z <- function(terrain, trees, sp, intraS, interS)
 
 ## FLOWERING function, logistic regression
 
-p_bz <- function(terrain, trees, sp)
+p_bz <- function(terrain, trees, sp, intra, inter)
 {
-    m.par <- fruit.parm
     z <- trees[,"logdbh"]
+    
     plot_type <- ifelse(extract(terrain, trees[,c("x","y")])==2, "wet", "dry")
     plot_type[is.na(plot_type)] <- "dry"
+    HM <- HM.parm[paste0(plot_type,".hm.stem"), sp]
+    HW <- ifelse(plot_type=="wet", 1, 0) * HM
+
+    # scale intra and inter (note inter is NOT logged)
+    intra.scaled <- (log(intra + fruit.parm.unscale["fruit.intra.logoffset",]) -
+                          fruit.parm.unscale["fruit.intra.mu",]) / fruit.parm.unscale["fruit.intra.sd",]
+    inter.scaled <- (inter - fruit.parm.unscale["fruit.inter.mu",]) / fruit.parm.unscale["fruit.inter.sd",]
     
-    linear.p <- m.par[paste0("fruit.int.",plot_type), sp] + m.par["fruit.z", sp] * z      # linear predictor
+    linear.p <- fruiting.parm["Intercept", sp] + fruiting.parm["logdbh", sp] * z +
+        fruiting.parm["intra", sp] * intra.scaled + fruiting.parm["inter", sp] * inter.scaled + 
+        fruiting.parm["HM", sp] * HM + fruiting.parm["HW", sp] * HW
     
     # return binary outcome
     surv <- rbinom(n = length(linear.p), prob = 1/(1+exp(-linear.p)), size = 1)	# logistic transformation to probability
     surv[is.na(surv)] <- 0
     return(surv)
 }
-#p_bz(nssf.m, ppoT, "Prunus.polystachya")
-#p_bz(nssf.m, sceT, "Strombosia.ceylanica")
+#p_bz(nssf.usual[[1]], ppoT, "Prunus.polystachya", 1, 1)
+#p_bz(nssf.usual[[1]], sceT, "Strombosia.ceylanica", 1, 1)
 
 ## SEEDLING production function (this is seedling recruitment, not seed production)
 
 b_z <- function(terrain, trees, sp)
 {
-    # first few lines can be modified for later expansion
-    m.par <- fruit.parm
     z <- trees[,"logdbh"]
-    plot_type <- ifelse(extract(terrain, trees[,c("x","y")])==2, "wet", "dry")
-    plot_type[is.na(plot_type)] <- "dry"
     
-    mu = m.par["fruited.int", sp] + m.par["fruited.z", sp] * z
-    N = rnbinom(length(z), size = m.par["fruited.theta", sp], mu = exp(mu))
+    mu = fruited.parm["Intercept", sp] + fruited.parm["logdbh", sp] * z
+    N = rnbinom(length(z), size = fruited.parm["theta", sp], mu = exp(mu))
     return(N)
 }
 #plot(log(b_z(nssf.usual[[1]], ppoT, "Prunus.polystachya")+1) ~ ppoT[,"logdbh"])
-#p_bz(nssf.m, ppoT, "Prunus.polystachya")*b_z(nssf.m, ppoT, "Prunus.polystachya")
+#p_bz(nssf.usual[[1]], ppoT, "Prunus.polystachya", 1, 1)*b_z(nssf.usual[[1]], ppoT, "Prunus.polystachya")
 
 ## SEEDLING recruit size pdf
 
