@@ -40,9 +40,9 @@ For tree individual $i$ of species $j$ with diameter-at-breast-height, $D_{ij}$,
 The habitat mismatch, $\Delta H_{ij,p,t}$, of an individual is measured as [...]
 
 \section{Seedling recruitment}
-For each parent tree that fruited, we model its offspring count as a size-dependent power function with mean $r_{ij,t+1}$ and dispersion $\psi_j$:
+For each parent tree that fruited, we model its offspring count as a size-dependent power function with mean $r_{ij,t+1}$ and dispersion $\theta$:
 \begin{align}
-R_{ij,t+1} &\sim \text{NegBinom}\left(r_{ij,t+1},~\psi_j\right) \\
+R_{ij,t+1} &\sim \text{NegBinom}\left(r_{ij,t+1},~\theta\right) \\
 r_{ij,t+1} &=  \rho_{0,j} D_{ij,t}^{\rho_{D,j}} \label{eq:fruit} \\
 \log\left(r_{ij,t+1}\right) &=  \log \rho_{0,j} + \rho_{D,j} \log D_{ij,t} \,
 \end{align}
