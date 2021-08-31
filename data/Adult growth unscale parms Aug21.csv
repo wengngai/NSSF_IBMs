@@ -1,0 +1,6 @@
+"","grow.parm.unscale"
+"grow.intraS.unscale.logoffset",0.02
+"grow.intraS.unscale.mu",-0.138543190250701
+"grow.intraS.unscale.sigma",2.77854427958727
+"grow.interS.unscale.mu",4.54787131101586
+"grow.interS.unscale.sigma",0.41181564276453
