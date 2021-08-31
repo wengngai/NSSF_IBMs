@@ -5,16 +5,17 @@ library(doParallel)
 library(rgdal)
 
 # Settings for parallerisation
-registerDoParallel(cores = 64)
+registerDoParallel(cores = 8)
 
 
 #################
 # GROWTH PARAMS #
 #################
 
-grow.T.parm <- t(read.csv("data/tree growth parameters Aug21.csv", header=T, row.names=1))
-grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", header=T, row.names=1)
-grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1)
+grow.T.parm <- t(read.csv("data/Adult growth parms Aug21.csv", header=T, row.names=1))
+grow.T.parm.unscale <- read.csv("data/Adult growth unscale parms Aug21.csv", header=T, row.names=1)
+grow.S.parm <- t(read.csv("data/Seedling growth parms Aug21.csv", header=T, row.names=1))
+grow.S.parm.unscale <- read.csv("data/Seedling growth unscale parms Aug21.csv", header=T, row.names=1)
 surv.parm <- t(read.csv("data/surv params Aug21.csv", header=T, row.names=1))
 surv.parm.unscale <- read.csv("data/survival model unscale params Aug21.csv", header=T, row.names=1)
 fruit.parm <- read.csv("data/fruiting parameters Jul21.csv", header=T, row.names=1)
@@ -25,6 +26,7 @@ HM.parm <- t(read.csv("data/HM values.csv", header=T, row.names=1))
 # standardize some spp names
 colnames(surv.parm) <- gsub(" ", ".", colnames(surv.parm))
 colnames(grow.T.parm) <- gsub(" ", ".", colnames(grow.T.parm))
+colnames(grow.S.parm) <- gsub(" ", ".", colnames(grow.S.parm))
 colnames(HM.parm) <- gsub(" ", ".", colnames(HM.parm))
 
 # add a "min size" row to rec.parm

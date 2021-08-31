@@ -57,38 +57,41 @@ sT_z <- function(terrain, trees, sp, intraS, intraA, interS, interA)
 # this is the only function that uses dbh instead of logdbh
 # note: need to add interS effect eventually
 
-GT_z1z <- function(terrain, trees, sp, intraA, interS)
+# Create function to reverse the modulus transformation
+unmodulus <- function(y, lambda=0.6) ifelse(y < 0, -(-y)^(1/lambda), y^(1/lambda))
+
+GT_z1z <- function(terrain, trees, sp, intraS, interS)
 {
-    m.par <- grow.T.parm
     z <- trees[,"logdbh"]
     dbh <- exp(z)
     plot_type <- ifelse(extract(terrain, trees[,c("x","y")])==2, "wet", "dry")
     plot_type[is.na(plot_type)] <- "dry"
     
     # scale intraA and interS
-    intraA.scaled <- (log(intraA + grow.T.parm.unscale["grow.intraA.unscale.logoffset",]) -
-                          grow.T.parm.unscale["grow.intraA.unscale.mu",]) / grow.T.parm.unscale["grow.intraA.unscale.sigma",]
+    intraS.scaled <- (log(intraS + grow.T.parm.unscale["grow.intraS.unscale.logoffset",]) -
+                          grow.T.parm.unscale["grow.intraS.unscale.mu",]) / grow.T.parm.unscale["grow.intraS.unscale.sigma",]
     interS.scaled <- (log(interS) - grow.T.parm.unscale["grow.interS.unscale.mu",]) / 
         grow.T.parm.unscale["grow.interS.unscale.sigma",]
-    interS.scaled[which(interS.scaled < -2)] <- -2 # in case too little interspecific competition causes infinite growth
+    interS.scaled[which(interS.scaled < -3)] <- -3 # in case too little interspecific competition causes infinite growth
     
     # calculate param b and c values
-    b <- m.par["b", sp] + (intraA.scaled * m.par["b.intraA", sp]) + (interS.scaled * m.par["b.interS", sp])
-    c <- m.par["c", sp] + (intraA.scaled * m.par["c.intraA", sp]) + (interS.scaled * m.par["c.interS", sp])
+    a <- grow.T.parm[paste0("a.",plot_type), sp] - intraS.scaled * grow.T.parm["a.intraS", sp] - interS.scaled * grow.T.parm["a.interS", sp]
+    b <- grow.T.parm["b", sp]
+    c <- grow.T.parm[paste0("c.",plot_type), sp] + intraS.scaled * grow.T.parm["c.intraS", sp] + interS.scaled * grow.T.parm["c.interS", sp]
     
-    loggrowth <- (
-        m.par["a",sp] * 
-            (dbh ^ b) *
-            exp(-dbh * c)
-    ) + rnorm(n = length(z), mean = 0, sd = m.par["sigma",sp]) # add the noise in (sigma)
+    mAGR <- (
+            (dbh ^ exp(b)) *
+            exp(a - dbh * exp(c))
+    ) + rnorm(n = length(z), mean = 0, sd = grow.T.parm["sigma",sp]) # add the noise in (sigma)
     
-    dbh1 <- dbh + (exp(loggrowth) - 1)
-    dbh1[which(dbh1 < 1)] <- 1
+    AGR <- unmodulus(mAGR, lambda=0.6)
+    
+    dbh1 <- dbh + AGR
     z1 <- log(dbh1)
     names(z1) <- NULL
     return(z1)
 }
-#plot(GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intra.dist.calc(ppoT), inter.dist.calc(rbind(aosT,sceT), ppoT)) ~ ppoT[,"logdbh"], cex=3)
+#plot(GT_z1z(nssf.usual[[1]], ppoT, "Prunus.polystachya", intraS=1, interS=1) - ppoT[,"logdbh"] ~ ppoT[,"logdbh"], cex=3)
 #abline(0,1, lty=2)
 
 ## FLOWERING function, logistic regression
@@ -143,27 +146,32 @@ c_0h1 <- function(n, sp)
 
 GS_h1h <- function(terrain, seedlings, sp, CAE, HAE)
 {
-    # first few lines can be modified for later expansion
-    m.par <- grow.S.parm
+    plot_type <- ifelse(extract(terrain, seedlings[,c("x","y")])==2, "wet", "dry")
+    plot_type[is.na(plot_type)] <- "dry"
+    HM <- HM.parm[paste0(plot_type,".hm.stem"), sp]
+    
     h <- seedlings[,"logheight"]
-    CAE.scaled <- ( log(CAE+10) - m.par["grow.S.CAE.unscale.mu",sp] ) / m.par["grow.S.CAE.unscale.sigma",sp]
-    HAE.scaled <- ( log(HAE) - m.par["grow.S.HAE.unscale.mu",sp] ) / m.par["grow.S.HAE.unscale.sigma",sp]
-    HAE.scaled[which(HAE.scaled < -2)] <- -2 # replace HAE with a min value if too low
+    CAE.scaled <- ( log(CAE + grow.S.parm.unscale["CAE.logoffset",]) - 
+                        grow.S.parm.unscale["CAE.unscale.mu",] ) / grow.S.parm.unscale["CAE.unscale.sd",]
+    HAE.scaled <- ( log(HAE) - grow.S.parm.unscale["HAE.unscale.mu",] ) / grow.S.parm.unscale["HAE.unscale.sd",]
+    HAE.scaled[which(HAE.scaled < -3)] <- -3 # replace HAE with a min value if too low
     
-    mu <- m.par["grow.S.int",sp] + 					# intercept
-        m.par["grow.S.CAE", sp] * CAE.scaled +			# CAE
-        m.par["grow.S.HAE", sp] * HAE.scaled +			# HAE
-        m.par["grow.S.h", sp] * h +        				# height
-        m.par["grow.S.CAExh", sp] * h * CAE.scaled +			# CAE interaction
-        m.par["grow.S.HAExh", sp] * h * HAE.scaled			# HAE interaction
+    mu <- grow.S.parm["Intercept",sp] + 				# Intercept
+        grow.S.parm["CAE", sp] * CAE.scaled +			# CAE
+        grow.S.parm["HAE", sp] * HAE.scaled +			# HAE
+        grow.S.parm["HM", sp] * HM +        			# HM
+        grow.S.parm["h", sp] * h +        				# height
+        grow.S.parm["hxCAE", sp] * h * CAE.scaled +			# CAE interaction
+        grow.S.parm["hxHAE", sp] * h * HAE.scaled +			# HAE interaction
+        grow.S.parm["hxHM", sp] * h * HM			        # HM interaction
     
-    h1 <- mu + rnorm(n = length(mu), mean = 0, sd = m.par["grow.S.sigma",sp])
+    h1 <- mu + rnorm(n = length(mu), mean = 0, sd = grow.S.parm["sigma", sp])
     
     names(h1) <- NULL
     return(h1)
 }
-#plot(GS_h1h(nssf.m, ppoS, "Prunus.polystachya", 10, 10) ~ ppoS[,"logheight"])
-#points(GS_h1h(nssf.m, ppoS, "Prunus.polystachya", 1000) ~ ppoS[,"logheight"], col="red")
+#plot(GS_h1h(nssf.usual[[1]], ppoS, "Prunus.polystachya", 1, 1) ~ ppoS[,"logheight"])
+#points(GS_h1h(nssf.usual[[1]], ppoS, "Prunus.polystachya", 100, 100) ~ ppoS[,"logheight"], col="red")
 #abline(0,1,lty=2,lwd=2)
 
 ## SEEDLING Survival function, logistic regression
