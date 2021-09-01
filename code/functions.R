@@ -800,8 +800,9 @@ intra.dist.calc <- function(trees, r=sqrt(1600/pi), grid.neighbours) {
                     out <- t(dbh) %*% dists
                     return(out)
                 }
+    return(intraS)
     # intraA is simply intraS divided by dbh
-    return(intraS / exp(trees$logdbh))
+    #return(intraS / exp(trees$logdbh))
 }
 
 # new intra.dist.calc

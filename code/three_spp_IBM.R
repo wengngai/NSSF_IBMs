@@ -65,7 +65,7 @@ source("code/setup_map_three spp.R")
 #######################
 
 time <- 1
-maxTime <- 100
+maxTime <- 10
 
 # take a snapshot of initial conditions
 ppoT.init <- ppoT
@@ -123,20 +123,6 @@ while (time <= maxTime) {
   if(scenario=="usual")  nssf.m <- nssf.usual[[ifelse(time>22, 22, time)]]
   if(scenario=="extreme")  nssf.m <- nssf.extreme[[ifelse(time>22, 22, time)]]
   
-  # Recruitment: initiate fruiting, but don't add new recruits to seedling dfs yet (let them grow/die first)
-  # PPO ("Prunus.polystachya")
-  fruiting.index.ppo <- which(p_bz(nssf.m, ppoT, "Prunus.polystachya")==1)
-  prod.vec.ppo <- b_z(nssf.m, ppoT[fruiting.index.ppo,], "Prunus.polystachya")
-  parent.loc.ppo <- ppoT[fruiting.index.ppo, 1:2]
-  # SCE ("Strombosia.ceylanica")
-  fruiting.index.sce <- which(p_bz(nssf.m, sceT, "Strombosia.ceylanica")==1)
-  prod.vec.sce <- b_z(nssf.m, sceT[fruiting.index.sce,], "Strombosia.ceylanica")
-  parent.loc.sce <- sceT[fruiting.index.sce, 1:2]
-  # PPI ("Pometia pinnata")
-  fruiting.index.ppi <- which(p_bz(nssf.m, ppiT, "Pometia.pinnata")==1)
-  prod.vec.ppi <- b_z(nssf.m, ppiT[fruiting.index.ppi,], "Pometia.pinnata")
-  parent.loc.ppi <- ppiT[fruiting.index.ppi, 1:2]
-  
   # Extract competition measures
   # PPO ("Prunus.polystachya")
   inter.on.PPO <- inter.calc(rbind(sceT, ppiT, aosT), rbind(sceS, ppiS), ppoT, ppoS, 
@@ -165,9 +151,21 @@ while (time <= maxTime) {
   # AOS ("population")
   inter.on.AOS <- inter.calc(rbind(ppoT, sceT, ppiT), rbind(ppoS, sceS, ppiS), aosT, aosS, 
                              sp="All.other.spp", grid.neighbours = grid.neighbours)
-  #intra.on.AOS <- intra.calc(aosT, aosS, sp="population", grid.neighbours = grid.neighbours)
-  #intra.dist.on.AOS <- intra.dist.calc(aosT, grid.neighbours = grid.neighbours)
   inter.dist.on.AOS <- inter.dist.calc(rbind(ppoT, sceT, ppiT), aosT, grid.neighbours = grid.neighbours)
+  
+  # Recruitment: initiate fruiting, but don't add new recruits to seedling dfs yet (let them grow/die first)
+  # PPO ("Prunus.polystachya")
+  fruiting.index.ppo <- which(p_bz(nssf.m, ppoT, "Prunus.polystachya", intra.on.PPO[[1]], inter.on.PPO[[1]])==1)
+  prod.vec.ppo <- b_z(nssf.m, ppoT[fruiting.index.ppo,], "Prunus.polystachya")
+  parent.loc.ppo <- ppoT[fruiting.index.ppo, 1:2]
+  # SCE ("Strombosia.ceylanica")
+  fruiting.index.sce <- which(p_bz(nssf.m, sceT, "Strombosia.ceylanica", intra.on.SCE[[1]], inter.on.SCE[[1]])==1)
+  prod.vec.sce <- b_z(nssf.m, sceT[fruiting.index.sce,], "Strombosia.ceylanica")
+  parent.loc.sce <- sceT[fruiting.index.sce, 1:2]
+  # PPI ("Pometia pinnata")
+  fruiting.index.ppi <- which(p_bz(nssf.m, ppiT, "Pometia.pinnata", intra.on.PPI[[1]], inter.on.PPI[[1]])==1)
+  prod.vec.ppi <- b_z(nssf.m, ppiT[fruiting.index.ppi,], "Pometia.pinnata")
+  parent.loc.ppi <- ppiT[fruiting.index.ppi, 1:2]
   
   # Seedling growth and survival
   # PPO ("Prunus.polystachya")
