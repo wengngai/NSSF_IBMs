@@ -6,6 +6,7 @@ Models are constructed from vital rates estimated in an earlier study on habitat
 1. Prunus polystachya (Rosaceae) a non-swamp specialist
 2. Strombosia ceylanica (Olacaceae) a generalist
 3. Pometia pinnata (Sapindaceae) a swamp specialist
+
 (Gironniera nervosa (Cannabaceae) was originally considered but because it is dioecious, it was dropped.)
 
 ## Tree life stages
