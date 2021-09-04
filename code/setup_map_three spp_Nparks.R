@@ -235,26 +235,26 @@ aosS$grid <- extract(nssf.100, aosS[,c("x","y")])
 # # Define a colour palette
 # col.pal <- c("#E3C16F", "#946846", "#FAFF70", "#6D213C", "#65DEF1", "#F3F5F6", "#BAAB68", "#CBC5EA")
 # col.t <- adjustcolor(col.pal, alpha.f=0.6)
-
+#
 # pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\Fig 2-3.pdf", width=14, height=9)
- par(mfrow=c(1,2))
- plot(fullmap, legend=F, col=col.pal[c(6,5)])
- rect(367000, 153000, 367500, 153500)
- scalebar(500, xy=c(368000, 151650), type="bar", lonlat=F, below="metres", divs=2)
- mtext(side=3, adj=0, text="a) Full landscape", cex=1.5)
- 
- plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)])
- # All other species (static--just for a background interspecific competition pressure)
- points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey90")
- # PPO
- points(ppoT, cex=ppoT$logdbh/2, col=col.t[1], pch=16)
-# points(data.frame(ppoS), col=col.t[1], pch=4, cex=0.2)
- # SCE
- points(sceT, cex=sceT$logdbh/2, col=col.t[2], pch=16)
-# points(data.frame(sceS), col=col.t[2], pch=4, cex=0.2)
- # PPI
- points(ppiT, cex=ppiT$logdbh/2, col=col.t[4], pch=16)
-# points(data.frame(ppiS), col=col.t[4], pch=4, cex=0.2)
- scalebar(100, xy=c(367350, 152970), type="bar", lonlat=F, below="metres", divs=2)
- mtext(side=3, adj=0, text="b) Simulation extent", cex=1.5)
-dev.off()
+# par(mfrow=c(1,2))
+# plot(fullmap, legend=F, col=col.pal[c(6,5)])
+# rect(367000, 153000, 367500, 153500)
+# scalebar(500, xy=c(368000, 151650), type="bar", lonlat=F, below="metres", divs=2)
+# mtext(side=3, adj=0, text="a) Full landscape", cex=1.5)
+# 
+# plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)])
+# # All other species (static--just for a background interspecific competition pressure)
+# points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey90")
+# # PPO
+# points(ppoT, cex=ppoT$logdbh/2, col=col.t[1], pch=16)
+## points(data.frame(ppoS), col=col.t[1], pch=4, cex=0.2)
+# # SCE
+# points(sceT, cex=sceT$logdbh/2, col=col.t[2], pch=16)
+## points(data.frame(sceS), col=col.t[2], pch=4, cex=0.2)
+# # PPI
+# points(ppiT, cex=ppiT$logdbh/2, col=col.t[4], pch=16)
+## points(data.frame(ppiS), col=col.t[4], pch=4, cex=0.2)
+# scalebar(100, xy=c(367350, 152970), type="bar", lonlat=F, below="metres", divs=2)
+# mtext(side=3, adj=0, text="b) Simulation extent", cex=1.5)
+#dev.off()
