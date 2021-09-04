@@ -37,7 +37,8 @@ for(i in 1:22){
 
 # to crop landscape to an area in the centre of x by y m
 
-nssf.bbox <- bbox(nssf.usual[[1]])
+fullmap <- nssf.usual[[1]]
+nssf.bbox <- bbox(fullmap)
 
 if(is.null(crop.dim)) {
     crop.extent <- nssf.bbox
