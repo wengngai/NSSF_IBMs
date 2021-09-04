@@ -5,7 +5,7 @@ library(doParallel)
 library(rgdal)
 
 # Settings for parallerisation
-registerDoParallel(cores = 64)
+registerDoParallel(cores = 96)
 
 
 #################
@@ -37,7 +37,7 @@ HM.parm <- data.frame(HM.parm, population=c(0.5,0.5,0.5,0.5,0.5,0.5))
 ##################
 # LOAD FUNCTIONS #
 ##################
-source("code/functions.R")
+source("code/functions_Nparks.R")
 
 
 #################
@@ -51,7 +51,11 @@ scenario <- "usual"
 # set dilution factor
 dilution <- 1
 
-source("code/setup_map_three spp.R")
+# crop map to x by y m?
+#crop.dim <- NULL # don't crop
+crop.dim <- c(1000, 1000)
+
+source("code/setup_map_three spp_Nparks.R")
 
 
 #######################
@@ -59,7 +63,7 @@ source("code/setup_map_three spp.R")
 #######################
 
 time <- 1
-maxTime <- 100
+maxTime <- 2
 
 # take a snapshot of initial conditions
 ppoT.init <- ppoT
@@ -391,7 +395,7 @@ while (time <= maxTime) {
 close(pb)
 
 # output to be saved
-out3 <- 
+out3.usual <- 
   list(nssf.m = nssf.m, 
        ppoT.init = ppoT.init, sceT.init = sceT.init, ppiT.init = ppiT.init, 
        ppoS.init = ppoS.init, sceS.init = sceS.init, ppiS.init = ppiS.init,
@@ -406,5 +410,5 @@ out3 <-
        deaths.ppoS = deaths.ppoS, deaths.sceS = deaths.sceS, deaths.ppiS = deaths.ppiS, 
        recs.ppoS = recs.ppoS, recs.sceS = recs.sceS, recs.ppiS = recs.ppiS, recs.aosT = recs.aosT,
        aosT = aosT, n.aosT = n.aosT, z.aosT = z.aosT, ba.aosT = ba.aosT)
-# saveRDS(out3, file = "out/sim_out3_usual.rds")
-saveRDS(out3, file = "out/sim_out3_extreme.rds")
+saveRDS(out3.usual, file = "out/sim_out3_usual_Nparks_4Sep2021.rds")
+#saveRDS(out3, file = "out/sim_out3_extreme.rds")
