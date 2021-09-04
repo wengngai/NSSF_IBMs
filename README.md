@@ -3,10 +3,11 @@ This project aims to construct spatially explicit individual based models of tre
 Models are constructed from vital rates estimated in an earlier study on habitat mismatch (Citation here).
 
 ## Species
-1. Prunus polystachya (Rosaceae) a non-swamp generalist
-2. Strombosia ceylanica (Olacaceae) a swamp generalist
-3. Gironniera nervosa (Cannabaceae) a non-swamp specialist
-4. Pometia pinnata (Sapindaceae) a swamp specialist
+1. Prunus polystachya (Rosaceae) a non-swamp specialist
+2. Strombosia ceylanica (Olacaceae) a generalist
+3. Pometia pinnata (Sapindaceae) a swamp specialist
+
+(Gironniera nervosa (Cannabaceae) was originally considered but because it is dioecious, it was dropped.)
 
 ## Tree life stages
 Each tree passes through two life stages: a seedling stage, where the unit of size is height (cm; log-transformed), and an adult stage, where the unit of size is DBH (cm; log-transformed).
