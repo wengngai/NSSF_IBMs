@@ -35,10 +35,26 @@ for(i in 1:22){
 #plot(nssf.low[[22]], main="Low rainfall", legend=F)
 #plot(nssf.high[[22]], main="High rainfall", legend=F)
 
-# need to crop landscape to a central 500*500-m simulation range
-crop.extent <- extent(367000, 367500, 153000, 153500)
-crop.area <- 500*500
-fullmap <- nssf.usual[[1]]
+# to crop landscape to an area in the centre of x by y m
+
+nssf.bbox <- bbox(nssf.usual[[1]])
+
+if(is.null(crop.dim)) {
+    crop.extent <- nssf.bbox
+    crop.area <- prod(nssf.bbox[,2]-nssf.bbox[,1])
+} else {
+    crop.centre <- apply(nssf.bbox, 1, mean)
+    crop.extent <- extent(
+        crop.centre[1]-crop.dim[1]/2,
+        crop.centre[1]+crop.dim[1]/2,
+        crop.centre[2]-crop.dim[2]/2,
+        crop.centre[2]+crop.dim[2]/2
+    )
+    crop.area <- crop.dim[1]*crop.dim[2]
+}
+
+#plot(nssf.usual[[1]])
+#rect(crop.centre[1]-crop.dim[1]/2, crop.centre[2]-crop.dim[2]/2, crop.centre[1]+crop.dim[1]/2, crop.centre[2]+crop.dim[2]/2)
 
 for(i in 1:22){
     nssf.usual[[i]] <- crop(nssf.usual[[i]], crop.extent)
