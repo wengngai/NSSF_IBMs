@@ -37,7 +37,7 @@ HM.parm <- data.frame(HM.parm, population=c(0.5,0.5,0.5,0.5,0.5,0.5))
 ##################
 # LOAD FUNCTIONS #
 ##################
-source("code/functions_Nparks.R")
+source("code/functions.R")
 
 
 #################
