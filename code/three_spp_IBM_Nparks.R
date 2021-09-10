@@ -63,7 +63,7 @@ source("code/setup_map_three spp_Nparks.R")
 #######################
 
 time <- 1
-maxTime <- 2
+maxTime <- 23
 
 # take a snapshot of initial conditions
 ppoT.init <- ppoT
