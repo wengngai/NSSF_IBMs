@@ -3,7 +3,7 @@
 #PBS -P NSSF_IBMs
 #PBS -j oe
 #PBS -q parallel24
-#PBS -l select=1:ncpus=24:mpiprocs=24:mem=160GB
+#PBS -l select=4:ncpus=24:mpiprocs=24:mem=180GB
 
 ###--- Setting for serial ---
 ###PBS -q serial

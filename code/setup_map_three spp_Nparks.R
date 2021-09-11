@@ -35,10 +35,27 @@ for(i in 1:22){
 #plot(nssf.low[[22]], main="Low rainfall", legend=F)
 #plot(nssf.high[[22]], main="High rainfall", legend=F)
 
-# need to crop landscape to a central 500*500-m simulation range
-crop.extent <- extent(367000, 367500, 153000, 153500)
-crop.area <- 500*500
+# to crop landscape to an area in the centre of x by y m
+
 fullmap <- nssf.usual[[1]]
+nssf.bbox <- bbox(fullmap)
+
+if(is.null(crop.dim)) {
+    crop.extent <- nssf.bbox
+    crop.area <- prod(nssf.bbox[,2]-nssf.bbox[,1])
+} else {
+    crop.centre <- apply(nssf.bbox, 1, mean)
+    crop.extent <- extent(
+        crop.centre[1]-crop.dim[1]/2,
+        crop.centre[1]+crop.dim[1]/2,
+        crop.centre[2]-crop.dim[2]/2,
+        crop.centre[2]+crop.dim[2]/2
+    )
+    crop.area <- crop.dim[1]*crop.dim[2]
+}
+
+#plot(nssf.usual[[1]])
+#rect(crop.centre[1]-crop.dim[1]/2, crop.centre[2]-crop.dim[2]/2, crop.centre[1]+crop.dim[1]/2, crop.centre[2]+crop.dim[2]/2)
 
 for(i in 1:22){
     nssf.usual[[i]] <- crop(nssf.usual[[i]], crop.extent)
@@ -218,8 +235,8 @@ aosS$grid <- extract(nssf.100, aosS[,c("x","y")])
 # # Define a colour palette
 # col.pal <- c("#E3C16F", "#946846", "#FAFF70", "#6D213C", "#65DEF1", "#F3F5F6", "#BAAB68", "#CBC5EA")
 # col.t <- adjustcolor(col.pal, alpha.f=0.6)
-
-## pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\Fig 2-3.pdf", width=14, height=9)
+#
+# pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\Fig 2-3.pdf", width=14, height=9)
 # par(mfrow=c(1,2))
 # plot(fullmap, legend=F, col=col.pal[c(6,5)])
 # rect(367000, 153000, 367500, 153500)
@@ -231,13 +248,13 @@ aosS$grid <- extract(nssf.100, aosS[,c("x","y")])
 # points(aosT, cex=aosT$logdbh/2,  pch=1, col="grey90")
 # # PPO
 # points(ppoT, cex=ppoT$logdbh/2, col=col.t[1], pch=16)
-# # points(data.frame(ppoS), col=col.t[1], pch=4, cex=0.2)
+## points(data.frame(ppoS), col=col.t[1], pch=4, cex=0.2)
 # # SCE
 # points(sceT, cex=sceT$logdbh/2, col=col.t[2], pch=16)
-# # points(data.frame(sceS), col=col.t[2], pch=4, cex=0.2)
+## points(data.frame(sceS), col=col.t[2], pch=4, cex=0.2)
 # # PPI
 # points(ppiT, cex=ppiT$logdbh/2, col=col.t[4], pch=16)
-# # points(data.frame(ppiS), col=col.t[4], pch=4, cex=0.2)
+## points(data.frame(ppiS), col=col.t[4], pch=4, cex=0.2)
 # scalebar(100, xy=c(367350, 152970), type="bar", lonlat=F, below="metres", divs=2)
 # mtext(side=3, adj=0, text="b) Simulation extent", cex=1.5)
 #dev.off()

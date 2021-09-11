@@ -57,83 +57,75 @@ sT_z <- function(terrain, trees, sp, intraS, intraA, interS, interA)
 # this is the only function that uses dbh instead of logdbh
 # note: need to add interS effect eventually
 
-# Create function to reverse the modulus transformation
-unmodulus <- function(y, lambda=0.6) ifelse(y < 0, -(-y)^(1/lambda), y^(1/lambda))
-
-GT_z1z <- function(terrain, trees, sp, intraS, interS)
+GT_z1z <- function(terrain, trees, sp, intraA, interS)
 {
+    m.par <- grow.T.parm
     z <- trees[,"logdbh"]
     dbh <- exp(z)
     plot_type <- ifelse(extract(terrain, trees[,c("x","y")])==2, "wet", "dry")
     plot_type[is.na(plot_type)] <- "dry"
     
     # scale intraA and interS
-    intraS.scaled <- (log(intraS + grow.T.parm.unscale["grow.intraS.unscale.logoffset",]) -
-                          grow.T.parm.unscale["grow.intraS.unscale.mu",]) / grow.T.parm.unscale["grow.intraS.unscale.sigma",]
+    intraA.scaled <- (log(intraA + grow.T.parm.unscale["grow.intraA.unscale.logoffset",]) -
+                          grow.T.parm.unscale["grow.intraA.unscale.mu",]) / grow.T.parm.unscale["grow.intraA.unscale.sigma",]
     interS.scaled <- (log(interS) - grow.T.parm.unscale["grow.interS.unscale.mu",]) / 
         grow.T.parm.unscale["grow.interS.unscale.sigma",]
-    interS.scaled[which(interS.scaled < -3)] <- -3 # in case too little interspecific competition causes infinite growth
+    interS.scaled[which(interS.scaled < -2)] <- -2 # in case too little interspecific competition causes infinite growth
     
     # calculate param b and c values
-    a <- grow.T.parm[paste0("a.",plot_type), sp] - intraS.scaled * grow.T.parm["a.intraS", sp] - interS.scaled * grow.T.parm["a.interS", sp]
-    b <- grow.T.parm["b", sp]
-    c <- grow.T.parm[paste0("c.",plot_type), sp] + intraS.scaled * grow.T.parm["c.intraS", sp] + interS.scaled * grow.T.parm["c.interS", sp]
+    b <- m.par["b", sp] + (intraA.scaled * m.par["b.intraA", sp]) + (interS.scaled * m.par["b.interS", sp])
+    c <- m.par["c", sp] + (intraA.scaled * m.par["c.intraA", sp]) + (interS.scaled * m.par["c.interS", sp])
     
-    mAGR <- (
-            (dbh ^ exp(b)) *
-            exp(a - dbh * exp(c))
-    ) + rnorm(n = length(z), mean = 0, sd = grow.T.parm["sigma",sp]) # add the noise in (sigma)
+    loggrowth <- (
+        m.par["a",sp] * 
+            (dbh ^ b) *
+            exp(-dbh * c)
+    ) + rnorm(n = length(z), mean = 0, sd = m.par["sigma",sp]) # add the noise in (sigma)
     
-    AGR <- unmodulus(mAGR, lambda=0.6)
-    
-    dbh1 <- dbh + AGR
+    dbh1 <- dbh + (exp(loggrowth) - 1)
+    dbh1[which(dbh1 < 1)] <- 1
     z1 <- log(dbh1)
     names(z1) <- NULL
     return(z1)
 }
-#plot(GT_z1z(nssf.usual[[1]], ppoT, "Prunus.polystachya", intraS=1, interS=1) - ppoT[,"logdbh"] ~ ppoT[,"logdbh"], cex=3)
+#plot(GT_z1z(nssf.m, ppoT, "Prunus.polystachya", intra.dist.calc(ppoT), inter.dist.calc(rbind(aosT,sceT), ppoT)) ~ ppoT[,"logdbh"], cex=3)
 #abline(0,1, lty=2)
 
 ## FLOWERING function, logistic regression
 
-p_bz <- function(terrain, trees, sp, intra, inter)
+p_bz <- function(terrain, trees, sp)
 {
+    m.par <- fruit.parm
     z <- trees[,"logdbh"]
-    
     plot_type <- ifelse(extract(terrain, trees[,c("x","y")])==2, "wet", "dry")
     plot_type[is.na(plot_type)] <- "dry"
-    HM <- HM.parm[paste0(plot_type,".hm.stem"), sp]
-    HW <- ifelse(plot_type=="wet", 1, 0) * HM
-
-    # scale intra and inter (note inter is NOT logged)
-    intra.scaled <- (log(intra + fruit.parm.unscale["fruit.intra.logoffset",]) -
-                          fruit.parm.unscale["fruit.intra.mu",]) / fruit.parm.unscale["fruit.intra.sd",]
-    inter.scaled <- (inter - fruit.parm.unscale["fruit.inter.mu",]) / fruit.parm.unscale["fruit.inter.sd",]
     
-    linear.p <- fruiting.parm["Intercept", sp] + fruiting.parm["logdbh", sp] * z +
-        fruiting.parm["intra", sp] * intra.scaled + fruiting.parm["inter", sp] * inter.scaled + 
-        fruiting.parm["HM", sp] * HM + fruiting.parm["HW", sp] * HW
+    linear.p <- m.par[paste0("fruit.int.",plot_type), sp] + m.par["fruit.z", sp] * z      # linear predictor
     
     # return binary outcome
     surv <- rbinom(n = length(linear.p), prob = 1/(1+exp(-linear.p)), size = 1)	# logistic transformation to probability
     surv[is.na(surv)] <- 0
     return(surv)
 }
-#p_bz(nssf.usual[[1]], ppoT, "Prunus.polystachya", 1, 1)
-#p_bz(nssf.usual[[1]], sceT, "Strombosia.ceylanica", 1, 1)
+#p_bz(nssf.m, ppoT, "Prunus.polystachya")
+#p_bz(nssf.m, sceT, "Strombosia.ceylanica")
 
 ## SEEDLING production function (this is seedling recruitment, not seed production)
 
 b_z <- function(terrain, trees, sp)
 {
+    # first few lines can be modified for later expansion
+    m.par <- fruit.parm
     z <- trees[,"logdbh"]
+    plot_type <- ifelse(extract(terrain, trees[,c("x","y")])==2, "wet", "dry")
+    plot_type[is.na(plot_type)] <- "dry"
     
-    mu = fruited.parm["Intercept", sp] + fruited.parm["logdbh", sp] * z
-    N = rnbinom(length(z), size = fruited.parm["theta", sp], mu = exp(mu))
+    mu = m.par["fruited.int", sp] + m.par["fruited.z", sp] * z
+    N = rnbinom(length(z), size = m.par["fruited.theta", sp], mu = exp(mu))
     return(N)
 }
 #plot(log(b_z(nssf.usual[[1]], ppoT, "Prunus.polystachya")+1) ~ ppoT[,"logdbh"])
-#p_bz(nssf.usual[[1]], ppoT, "Prunus.polystachya", 1, 1)*b_z(nssf.usual[[1]], ppoT, "Prunus.polystachya")
+#p_bz(nssf.m, ppoT, "Prunus.polystachya")*b_z(nssf.m, ppoT, "Prunus.polystachya")
 
 ## SEEDLING recruit size pdf
 
@@ -151,32 +143,27 @@ c_0h1 <- function(n, sp)
 
 GS_h1h <- function(terrain, seedlings, sp, CAE, HAE)
 {
-    plot_type <- ifelse(extract(terrain, seedlings[,c("x","y")])==2, "wet", "dry")
-    plot_type[is.na(plot_type)] <- "dry"
-    HM <- HM.parm[paste0(plot_type,".hm.stem"), sp]
-    
+    # first few lines can be modified for later expansion
+    m.par <- grow.S.parm
     h <- seedlings[,"logheight"]
-    CAE.scaled <- ( log(CAE + grow.S.parm.unscale["CAE.logoffset",]) - 
-                        grow.S.parm.unscale["CAE.unscale.mu",] ) / grow.S.parm.unscale["CAE.unscale.sd",]
-    HAE.scaled <- ( log(HAE) - grow.S.parm.unscale["HAE.unscale.mu",] ) / grow.S.parm.unscale["HAE.unscale.sd",]
-    HAE.scaled[which(HAE.scaled < -3)] <- -3 # replace HAE with a min value if too low
+    CAE.scaled <- ( log(CAE+10) - m.par["grow.S.CAE.unscale.mu",sp] ) / m.par["grow.S.CAE.unscale.sigma",sp]
+    HAE.scaled <- ( log(HAE) - m.par["grow.S.HAE.unscale.mu",sp] ) / m.par["grow.S.HAE.unscale.sigma",sp]
+    HAE.scaled[which(HAE.scaled < -2)] <- -2 # replace HAE with a min value if too low
     
-    mu <- grow.S.parm["Intercept",sp] + 				# Intercept
-        grow.S.parm["CAE", sp] * CAE.scaled +			# CAE
-        grow.S.parm["HAE", sp] * HAE.scaled +			# HAE
-        grow.S.parm["HM", sp] * HM +        			# HM
-        grow.S.parm["h", sp] * h +        				# height
-        grow.S.parm["hxCAE", sp] * h * CAE.scaled +			# CAE interaction
-        grow.S.parm["hxHAE", sp] * h * HAE.scaled +			# HAE interaction
-        grow.S.parm["hxHM", sp] * h * HM			        # HM interaction
+    mu <- m.par["grow.S.int",sp] + 					# intercept
+        m.par["grow.S.CAE", sp] * CAE.scaled +			# CAE
+        m.par["grow.S.HAE", sp] * HAE.scaled +			# HAE
+        m.par["grow.S.h", sp] * h +        				# height
+        m.par["grow.S.CAExh", sp] * h * CAE.scaled +			# CAE interaction
+        m.par["grow.S.HAExh", sp] * h * HAE.scaled			# HAE interaction
     
-    h1 <- mu + rnorm(n = length(mu), mean = 0, sd = grow.S.parm["sigma", sp])
+    h1 <- mu + rnorm(n = length(mu), mean = 0, sd = m.par["grow.S.sigma",sp])
     
     names(h1) <- NULL
     return(h1)
 }
-#plot(GS_h1h(nssf.usual[[1]], ppoS, "Prunus.polystachya", 1, 1) ~ ppoS[,"logheight"])
-#points(GS_h1h(nssf.usual[[1]], ppoS, "Prunus.polystachya", 100, 100) ~ ppoS[,"logheight"], col="red")
+#plot(GS_h1h(nssf.m, ppoS, "Prunus.polystachya", 10, 10) ~ ppoS[,"logheight"])
+#points(GS_h1h(nssf.m, ppoS, "Prunus.polystachya", 1000) ~ ppoS[,"logheight"], col="red")
 #abline(0,1,lty=2,lwd=2)
 
 ## SEEDLING Survival function, logistic regression
@@ -800,9 +787,8 @@ intra.dist.calc <- function(trees, r=sqrt(1600/pi), grid.neighbours) {
                     out <- t(dbh) %*% dists
                     return(out)
                 }
-    return(intraS)
     # intraA is simply intraS divided by dbh
-    #return(intraS / exp(trees$logdbh))
+    return(intraS / exp(trees$logdbh))
 }
 
 # new intra.dist.calc

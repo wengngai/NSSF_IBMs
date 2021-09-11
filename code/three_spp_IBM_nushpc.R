@@ -5,19 +5,22 @@ library(doParallel)
 library(rgdal)
 
 # Settings for parallerisation
-registerDoParallel(cores = 24)
+registerDoParallel(cores = 96)
 
 
 #################
 # GROWTH PARAMS #
 #################
 
-grow.T.parm <- t(read.csv("data/tree growth parameters Aug21.csv", header=T, row.names=1))
-grow.T.parm.unscale <- read.csv("data/tree growth model unscale params.csv", header=T, row.names=1)
-grow.S.parm <- read.csv("data/seedling lmer growth params CAA Apr21.csv", header=T, row.names=1)
+grow.T.parm <- t(read.csv("data/Adult growth parms Aug21.csv", header=T, row.names=1))
+grow.T.parm.unscale <- read.csv("data/Adult growth unscale parms Aug21.csv", header=T, row.names=1)
+grow.S.parm <- t(read.csv("data/Seedling growth parms Aug21.csv", header=T, row.names=1))
+grow.S.parm.unscale <- read.csv("data/Seedling growth unscale parms Aug21.csv", header=T, row.names=1)
 surv.parm <- t(read.csv("data/surv params Aug21.csv", header=T, row.names=1))
 surv.parm.unscale <- read.csv("data/survival model unscale params Aug21.csv", header=T, row.names=1)
-fruit.parm <- read.csv("data/fruiting parameters Apr21.csv", header=T, row.names=1)
+fruiting.parm <- t(read.csv("data/Fruiting incidence parms Aug21.csv", header=T, row.names=1))
+fruited.parm <- t(read.csv("data/Fruiting volume parms Aug21.csv", header=T, row.names=1))
+fruit.parm.unscale <- read.csv("data/Fruiting unscale parms Aug21.csv", header=T, row.names=1)
 tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
 rec.parm <- t(read.csv("data/dispersal kernel parameters Apr21.csv", header=T, row.names=1))
 HM.parm <- t(read.csv("data/HM values.csv", header=T, row.names=1))
@@ -25,6 +28,9 @@ HM.parm <- t(read.csv("data/HM values.csv", header=T, row.names=1))
 # standardize some spp names
 colnames(surv.parm) <- gsub(" ", ".", colnames(surv.parm))
 colnames(grow.T.parm) <- gsub(" ", ".", colnames(grow.T.parm))
+colnames(grow.S.parm) <- gsub(" ", ".", colnames(grow.S.parm))
+colnames(fruited.parm) <- gsub(" ", ".", colnames(fruited.parm))
+colnames(fruiting.parm) <- gsub(" ", ".", colnames(fruiting.parm))
 colnames(HM.parm) <- gsub(" ", ".", colnames(HM.parm))
 
 # add a "min size" row to rec.parm
@@ -46,12 +52,16 @@ source("code/functions.R")
 
 # set scenario (usual or extreme)
 scenario <- "usual"
-#scenario <- "extreme"
+# scenario <- "extreme"
 
 # set dilution factor
 dilution <- 1
 
-source("code/setup_map_three spp.R")
+# crop map to x by y m?
+#crop.dim <- NULL # don't crop
+crop.dim <- c(1000, 1000)
+
+source("code/setup_map_three spp_Nparks.R")
 
 
 #######################
@@ -59,7 +69,7 @@ source("code/setup_map_three spp.R")
 #######################
 
 time <- 1
-maxTime <- 23
+maxTime <- 22
 
 # take a snapshot of initial conditions
 ppoT.init <- ppoT
@@ -117,20 +127,6 @@ while (time <= maxTime) {
   if(scenario=="usual")  nssf.m <- nssf.usual[[ifelse(time>22, 22, time)]]
   if(scenario=="extreme")  nssf.m <- nssf.extreme[[ifelse(time>22, 22, time)]]
   
-  # Recruitment: initiate fruiting, but don't add new recruits to seedling dfs yet (let them grow/die first)
-  # PPO ("Prunus.polystachya")
-  fruiting.index.ppo <- which(p_bz(nssf.m, ppoT, "Prunus.polystachya")==1)
-  prod.vec.ppo <- b_z(nssf.m, ppoT[fruiting.index.ppo,], "Prunus.polystachya")
-  parent.loc.ppo <- ppoT[fruiting.index.ppo, 1:2]
-  # SCE ("Strombosia.ceylanica")
-  fruiting.index.sce <- which(p_bz(nssf.m, sceT, "Strombosia.ceylanica")==1)
-  prod.vec.sce <- b_z(nssf.m, sceT[fruiting.index.sce,], "Strombosia.ceylanica")
-  parent.loc.sce <- sceT[fruiting.index.sce, 1:2]
-  # PPI ("Pometia pinnata")
-  fruiting.index.ppi <- which(p_bz(nssf.m, ppiT, "Pometia.pinnata")==1)
-  prod.vec.ppi <- b_z(nssf.m, ppiT[fruiting.index.ppi,], "Pometia.pinnata")
-  parent.loc.ppi <- ppiT[fruiting.index.ppi, 1:2]
-  
   # Extract competition measures
   # PPO ("Prunus.polystachya")
   inter.on.PPO <- inter.calc(rbind(sceT, ppiT, aosT), rbind(sceS, ppiS), ppoT, ppoS, 
@@ -159,9 +155,21 @@ while (time <= maxTime) {
   # AOS ("population")
   inter.on.AOS <- inter.calc(rbind(ppoT, sceT, ppiT), rbind(ppoS, sceS, ppiS), aosT, aosS, 
                              sp="All.other.spp", grid.neighbours = grid.neighbours)
-  #intra.on.AOS <- intra.calc(aosT, aosS, sp="population", grid.neighbours = grid.neighbours)
-  #intra.dist.on.AOS <- intra.dist.calc(aosT, grid.neighbours = grid.neighbours)
   inter.dist.on.AOS <- inter.dist.calc(rbind(ppoT, sceT, ppiT), aosT, grid.neighbours = grid.neighbours)
+  
+  # Recruitment: initiate fruiting, but don't add new recruits to seedling dfs yet (let them grow/die first)
+  # PPO ("Prunus.polystachya")
+  fruiting.index.ppo <- which(p_bz(nssf.m, ppoT, "Prunus.polystachya", intra.on.PPO[[1]], inter.on.PPO[[1]])==1)
+  prod.vec.ppo <- b_z(nssf.m, ppoT[fruiting.index.ppo,], "Prunus.polystachya")
+  parent.loc.ppo <- ppoT[fruiting.index.ppo, 1:2]
+  # SCE ("Strombosia.ceylanica")
+  fruiting.index.sce <- which(p_bz(nssf.m, sceT, "Strombosia.ceylanica", intra.on.SCE[[1]], inter.on.SCE[[1]])==1)
+  prod.vec.sce <- b_z(nssf.m, sceT[fruiting.index.sce,], "Strombosia.ceylanica")
+  parent.loc.sce <- sceT[fruiting.index.sce, 1:2]
+  # PPI ("Pometia pinnata")
+  fruiting.index.ppi <- which(p_bz(nssf.m, ppiT, "Pometia.pinnata", intra.on.PPI[[1]], inter.on.PPI[[1]])==1)
+  prod.vec.ppi <- b_z(nssf.m, ppiT[fruiting.index.ppi,], "Pometia.pinnata")
+  parent.loc.ppi <- ppiT[fruiting.index.ppi, 1:2]
   
   # Seedling growth and survival
   # PPO ("Prunus.polystachya")
@@ -268,7 +276,7 @@ while (time <= maxTime) {
         # if there are still successfully recruiting seedlings, rbind them to existing seedlings
         if(nrow(recruits.success) > 0) {
           ppoS <- rbind(ppoS, recruits.success)
-          recs.ppoS <- c(year.recs, nrow(recruits.success))
+          year.recs <- c(year.recs, nrow(recruits.success))
         }
       }
       if(nrow(recruits)==0 | nrow(recruits.success)==0) year.recs <- c(year.recs, 0)
@@ -406,6 +414,5 @@ out3.usual <-
        deaths.ppoS = deaths.ppoS, deaths.sceS = deaths.sceS, deaths.ppiS = deaths.ppiS, 
        recs.ppoS = recs.ppoS, recs.sceS = recs.sceS, recs.ppiS = recs.ppiS, recs.aosT = recs.aosT,
        aosT = aosT, n.aosT = n.aosT, z.aosT = z.aosT, ba.aosT = ba.aosT)
-saveRDS(out3.usual, file = "out/sim_out3_usual_nushpc.rds")
-
-
+saveRDS(out3.usual, file = "out/sim_out3_usual_nushpc_4Sep2021.rds")
+#saveRDS(out3, file = "out/sim_out3_extreme.rds")

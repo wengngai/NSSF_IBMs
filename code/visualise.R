@@ -326,26 +326,96 @@ dev.off()
 # INDIVIDUAL SIZES #
 ####################
 
-#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\sizes 3spp Aug21.pdf", width=16, height=9)
+### BY SPECIES
+#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\sizes 3spp Aug21.pdf", width=14, height=9)
+
+## Adults
+par(mfrow=c(2,3), mar=c(2,3.5,3.5,2), oma=c(3.5,6,1,1))
+
+## PPO
+plot(usual$z.ppoT ~ c(1:length(usual$z.ppoT)), lwd=5, col=col.pal[1], type="l", las=1,
+     ylab="", xlab="", cex.lab=2, cex.axis=1.5,
+     ylim=c(min(c(usual$z.ppoT, extreme$z.ppoT)), 
+            max(c(usual$z.ppoT, extreme$z.ppoT)))
+)
+lines(extreme$z.ppoT ~ c(1:length(usual$z.ppoT)), lwd=5, col=col.pal[1], lty=2)
+mtext(side=3, line=1, adj=0, text="a) Prunus polystachya (non-swamp generalist)", cex=1.2)
+legend('bottomleft', bty="n", lwd=2, lty=c(1,2), title="Scenario", cex=1.5,
+       legend=c("As usual", "Extreme drying"))
+
+## SCE
+plot(usual$z.sceT ~ c(1:length(usual$z.sceT)), lwd=5, col=col.pal[2], type="l", las=1,
+     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(min(c(usual$z.sceT, extreme$z.sceT)), 
+            max(c(usual$z.sceT, extreme$z.sceT)))
+)
+lines(extreme$z.sceT ~ c(1:length(usual$z.sceT)), lwd=5, col=col.pal[2], lty=2)
+mtext(side=3, line=1, adj=0, text="b) Strombosia ceylanica (swamp generalist)", cex=1.2)
+
+## PPI
+plot(usual$z.ppiT ~ c(1:length(usual$z.ppiT)), lwd=5, col=col.pal[4], type="l", las=1,
+     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(min(c(usual$z.ppiT, extreme$z.ppiT)), 
+            max(c(usual$z.ppiT, extreme$z.ppiT)))
+)
+lines(extreme$z.ppiT ~ c(1:length(usual$z.ppiT)), lwd=5, col=col.pal[4], lty=2)
+mtext(side=3, line=1, adj=0, text="c) Pometia pinnata (swamp specialist)", cex=1.2)
+mtext(side=2, line=1, outer=T, adj=0.8, text="Mean adult DBH\n(log-transformed)", cex=1.5)
+
+## Seedlings
+
+# PPO
+plot(usual$h.ppoS ~ c(1:length(usual$h.ppoS)), lwd=5, col=col.pal[1], type="l", las=1,
+     ylab="", xlab="", cex.lab=2, cex.axis=1.5,
+     ylim=c(min(c(usual$h.ppoS, extreme$h.ppoS)), 
+            max(c(usual$h.ppoS, extreme$h.ppoS)))
+)
+lines(extreme$h.ppoS ~ c(1:length(usual$h.ppoS)), lwd=5, col=col.pal[1], lty=2)
+mtext(side=3, line=1, adj=0, text="d) Prunus polystachya (non-swamp generalist)", cex=1.2)
+
+# SCE
+plot(usual$h.sceS ~ c(1:length(usual$h.sceS)), lwd=5, col=col.pal[2], type="l", las=1,
+     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(min(c(usual$h.sceS, extreme$h.sceS)), 
+            max(c(usual$h.sceS, extreme$h.sceS)))
+)
+lines(extreme$h.sceS ~ c(1:length(usual$h.sceS)), lwd=5, col=col.pal[2], lty=2)
+mtext(side=3, line=1, adj=0, text="e) Strombosia ceylanica (swamp generalist)", cex=1.2)
+
+# PPI
+plot(usual$h.ppiS ~ c(1:length(usual$h.ppiS)), lwd=5, col=col.pal[4], type="l", las=1,
+     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(min(c(usual$h.ppiS, extreme$h.ppiS)), 
+            max(c(usual$h.ppiS, extreme$h.ppiS)))
+)
+lines(extreme$h.ppiS ~ c(1:length(usual$h.ppiS)), lwd=5, col=col.pal[4], lty=2)
+mtext(side=3, line=1, adj=0, text="f) Pometia pinnata (swamp specialist)", cex=1.2)
+
+mtext(side=2, line=1, outer=T, adj=0.15, text="Mean seedling height\n(log-transformed)", cex=1.5)
+mtext(side=1, line=1.5, outer=T, adj=0.5, text="Time (years)", cex=1.5)
+
+dev.off()
+
+#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\sizes 3spp Aug21.pdf", width=14, height=9)
 par(mfrow=c(1,2), mar=c(5.5,5.5,2,2))
-plot(usual$z.ppoT ~ c(1:length(usual$z.ppoT)), lwd=5, col=col.pal[2], type="l",
+plot(usual$z.ppoT ~ c(1:length(usual$z.ppoT)), lwd=5, col=col.pal[1], type="l",
      ylab="Mean adult DBH (log-transformed)", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
      ylim=c(min(c(usual$z.ppoT, usual$z.sceT, usual$z.ppiT), na.rm=T), 
             max(c(usual$z.ppoT, usual$z.sceT, usual$z.ppiT), na.rm=T)))
-lines(usual$z.sceT ~ c(1:length(usual$z.sceT)), lwd=5, col=col.pal[1])
-lines(usual$z.ppiT ~ c(1:length(usual$z.ppiT)), lwd=5, col=col.pal[3])
-legend('topleft', col=col.pal[c(2,1,3)], bty="n", lwd=3, lty=1, title="Species",
+lines(usual$z.sceT ~ c(1:length(usual$z.sceT)), lwd=5, col=col.pal[2])
+lines(usual$z.ppiT ~ c(1:length(usual$z.ppiT)), lwd=5, col=col.pal[4])
+legend('bottomleft', col=col.pal[c(1,2,4)], bty="n", lwd=3, lty=1, title="Species",
        legend=c(
                "P. polystachya (non-swamp generalist)",
                "S. ceylanica (swamp generalist)",
                "P. pinnata (swamp specialist)"
        ))
-plot(usual$h.ppoS ~ c(1:length(usual$h.ppoS)), lwd=5, col=col.pal[2], type="l",
+plot(usual$h.ppoS ~ c(1:length(usual$h.ppoS)), lwd=5, col=col.pal[1], type="l",
      ylab="Mean seedling height (log-transformed)", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
      ylim=c(min(c(usual$h.ppoS, usual$h.sceS, usual$h.ppiS)), 
             max(c(usual$h.ppoS, usual$h.sceS, usual$h.ppiS))))
-lines(usual$h.sceS ~ c(1:length(usual$h.sceS)), lwd=5, col=col.pal[1])
-lines(usual$h.ppiS ~ c(1:length(usual$h.ppiS)), lwd=5, col=col.pal[3])
+lines(usual$h.sceS ~ c(1:length(usual$h.sceS)), lwd=5, col=col.pal[2])
+lines(usual$h.ppiS ~ c(1:length(usual$h.ppiS)), lwd=5, col=col.pal[4])
 dev.off()
 
 ########################

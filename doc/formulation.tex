@@ -4,87 +4,113 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage[left=2cm,right=2cm,top=2cm,bottom=2cm]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{automata, arrows.meta, positioning}
 
-\author{}
-\title{Some thoughts on the formulation of Nee Soon IBM}
+\author{Hao Ran}
+\title{Generative equations of the Nee Soon IBM}
 
 \begin{document}
 \maketitle
 
-Let's write down the Nee Soon individual-based model (IBM) mathematically since we will inevitably need to do so in the manuscript.
+Let's write down the Nee Soon individual-based model (IBM) mathematically since we will inevitably need to do so in the manuscript. I tried my best to transcribe the R codes and our verbal communication mathematically but something may be incorrect. Need to double check.
 
 \section{Transitional diagram}
 
-[To do later]
+A draft state diagram of the IBM. Initial seedling and adult numbers and diameters are determined [...] Edge labels are vital rates parameterised with regression and field data... Vital rates are influenced by stand competition, habitat mismatch, or both, as determined by model selection.
+
+\begin{center}
+\begin{tikzpicture} [node distance = 5cm, on grid, auto, state/.style={circle, draw, minimum size=2cm}]
+\node (s) [state, ] {Seedling};
+\node (a) [state, right = of s] {Adult};
+\path [-stealth, thick]
+    (s) edge [bend left] node [above] {Seedling growth} (a)
+    (a) edge [bend left] node [below, align=center] {Fruiting \\ Recruitment} (s)
+    (a) edge [loop right] node [align=center] {Adult survival\\ Adult growth} ()
+    (s) edge [loop left] node [align=center] {Seedling survival\\ Seedling growth} ();
+\end{tikzpicture}
+\end{center}
 
 \section{Fruiting incidence}
-For tree individual $i$ of species $j$ with diameter-at-breast-height, $D_{ij}$, in a spatial grid $p$ with habitat index, $H_p$, at time point $t$, we model its fruiting incidence [yes or no] in the subsequent time point as a Binomial--logit process with mean $p_{\text{fruit},ijp}$, which is a linear function of the species-specific potential fruiting incidence $\pi_{0,j}$, species-specific size dependence $\pi_{D,j}$, and overall effect of habitat mismatch, $\pi_H$:
+For tree individual $i$ of species $j$ with diameter-at-breast-height, $D_{ij}$, in a spatial grid $p$ with habitat index, $H_p$, at time point $t$, we model its fruiting incidence [yes or no] in the subsequent time point as a Bernoulli process with mean $p_{\text{fruit},ijp}$, which is a linear function of the species-specific potential fruiting incidence $\phi_{0,j}$, species-specific size dependence $\phi_{D,j}$, and overall effect of habitat mismatch, $\phi_H$:
 \begin{align}
 \Pr\left(\text{Fruiting}_{ij,p,t+1}=1\right) &\sim \text{Binomial}\left(1,~p_{\text{fruit},ij,p,t+1}\right) \\
-\text{logit}\left(p_{\text{fruit},ij,p,t+1}\right) &= \pi_{0,j} + \pi_{D,j} D_{ij,p,t} + \pi_H \Delta H_{ij,p,t} \,.
+\text{logit}\left(p_{\text{fruit},ij,p,t+1}\right) &= \phi_{0,j} + \phi_{D,j} D_{ij,p,t} + \phi_H \Delta H_{ij,p,t} \,.
 \end{align}
-The habitat mismatch, $\Delta H_{ij,p,t}$, of an individual is measured as [placeholder]
+The habitat mismatch, $\Delta H_{ij,p,t}$, of an individual is measured as [...]
 
-\section{Fruiting volume}
-For each individual that fruited, we model its fruiting volume [count] as size dependent:
+\section{Seedling recruitment}
+For each parent tree that fruited, we model its offspring count as a size-dependent power function with mean $r_{ij,t+1}$ and dispersion $\theta$:
 \begin{align}
-F_{ij,t+1} &\sim \text{Poisson}\left(f_{ij,t+1}\right) \\
-f_{ij,t+1} &=  \phi_{0,j} D_{ij,t}^{\phi_{D,j}} \label{eq:fruit} \\
-\log\left(f_{ij,t+1}\right) &=  \log \phi_{0,j} + \phi_{D,j} \log D_{ij,t} \,.
+R_{ij,t+1} &\sim \text{NegBinom}\left(r_{ij,t+1},~\theta\right) \\
+r_{ij,t+1} &=  \rho_{0,j} D_{ij,t}^{\rho_{D,j}} \label{eq:fruit} \\
+\log\left(r_{ij,t+1}\right) &=  \log \rho_{0,j} + \rho_{D,j} \log D_{ij,t} \,
 \end{align}
-I presume that you had a power relationship in mind. This is different from the current main document, which doesn't log-transform $D_{ij,t}$.
 
 \section{Seedling location}
-We allow the recruitment of each tree to follow a dispersal kernel\footnote{We may want to call this `recruitment / establishment kernel' instead, because dispersal can be misleading---some may think of dispersal kernel as that of fruits. `Dispersal kernel' was also used synonymously for the fruits' 'dispersal kernel survey data'.}, under the Janzen--Connell hypothesis. For each species, the probability of having at least one seedling recruiting in a grid at $d$ distance away from the parent tree, $\Pr(R_{ij,p,t+1} > 0)$, is currently the 2DT probability kernel\footnote{$S$ and $L$ also varied by transect during estimation, need to think about how transect effect fits in this equation, which is currently incomplete or misspecified.}:
+We allow newly-recruited seedlings to follow a species-specific `2DT' dispersal kernel (REF), which has the probability density function (PDF):
+\begin{equation}
+\frac{\Sigma_j}{\pi \Lambda_j \left(1 + \frac{d^2}{\Lambda_j}\right)^{\Sigma_j+1}} \,,
+\end{equation}
+where $d$ is the distance from a parent tree. Because this PDF does not have a closed form, we numerically sample $d$ from this PDF after normalising the PDF to sum to one for $d \in (0, 410)$ meters.
+
+\textit{Note: changed latin letters to Greek to reserve $S$ for survival}
+
+\section{Seedling growth and survival}
+For each seedling we model its size-dependent survival $S_{\text{seedling},ij,p,t+1}$ following Needham et al. (2018):
 \begin{align}
-\Pr(R_{ij,p,t+1} > 0) &\sim \text{Binomial}(1,~p_{\text{recruit},ij,p,t+1}) \\
-p_{\text{recruit},ij,p,t+1} &= \frac{S_j}{\pi L_j (1 + \frac{d_p^2}{L_j})^{S_j+1}} \,.
+\Pr(S_{\text{seedling},ij,t+1} = 1) &\sim \text{Binomial}(1,~s_{ij,t+1}) \\
+s_{ij,t+1} &= \dfrac{K_j}{1 + e^{-r_{1,j}  (D_{ij} - p_{1,j})}} \,, 
 \end{align}
-In the original document, Weng Ngai cautioned that:
-\begin{quote}
-...the outcome variable in this (recruitment) dispersal kernel was (within-transect) probability, not recruitment number/density. To translate this to IBMs, we needed a way to scale recruitment volume by parent tree size.
-\end{quote}
-I understand this as finding a way to convert recruitment probability to recruitment count, or more accurately, to estimate recruitment count and then distribute the recruits across space using the recruitment dispersal kernel. 
-
-In the current solution, we observed the total number of seedlings ($< 40$ cm height, presumably $\le 1$ year-old) per parent tree in a 100-m transect, and then estimate the recruitment count, $R_{ij,t+1}$, as size-dependent:
+where seedling diameter $D_{ij}$ is converted from height (because seedling growth is calculated as height increment, see below):
 \begin{align}
-R_{ij,t+1} &\sim \text{Poisson}(r_{ij,t+1}) \\
-r_{ij,t+1} &=  \rho_{0,j} D_{ij,t}^{\rho_{D,j}} \label{eq:recruit} \\
-\log (r_{ij,t+1}) &= \log \rho_{0,j} + \rho_{D,j} \log D_{ij,t} \,.
+\log D_{ij} &\sim \text{Normal}(\mu_{\log D,ij},~\sigma_{\log D}) \\
+\mu_{\log D,ij} &= d_{0,j} + d_{H,j} \log H_{ij}
 \end{align}
-However, this model is hard to fit because of sparse data. So
-\begin{quote}
-...a better solution here was to borrow the scaling factor from the fruiting volume model for the seedling location model, implicitly assuming that recruitment fraction is the same (for each species) between individuals of different sizes (a reasonable assumption)...
-\end{quote}
-to save us from having to estimate $\rho_{D,j}$. I think this solution may not be working as it was intended, but let's first go over this solution. It assumes that $\rho_{D,j} = \phi_{D,j}$, hence we obtain the equality between Equations \ref{eq:fruit} and \ref{eq:recruit}:
+\textit{Note: currently diameter is not generated with variance, but only deterministically using the linear predictor!}
+
+For each surviving seedling we model its subsequent log height $\log H_{ij,t+1}$ as a function of previous log height, conspecific competition, heterospecific competition, and their interactions:
 \begin{align}
-\frac{f_{ij,t+1}}{\phi_{0,j}} &= \frac{r_{ij,t+1}}{\rho_{0,j}} \nonumber \\
-\therefore \frac{r_{ij,t+1}}{f_{ij,t+1}} &= \frac{\rho_{0,j}}{\phi_{0,j}} \label{eq:rf_ratio} \,.
+\log H_{ij,t+1} \sim~& \text{Normal}(\mu_{\log H, ij,t+1},~\sigma_{\log H}) \\
+\mu_{\log H, ij,t+1} =~& h_{0,j} + h_{H,j} \log H_{ij,t+1} + h_{\text{intra},j}\text{Consp}_{i,t} + h_{\text{inter},j}\text{Hetsp}_{i,t} \\
+& + h_{\text{intra}H,j}\log H_{ij,t+1}\text{Consp}_{i,t} + h_{\text{inter}H,j}\log H_{ij,t+1}\text{Hetsp}_{i,t} \\
+\text{Consp}_{i,t} =~& ??? \\
+\text{Hetsp}_{i,t} =~& ???
 \end{align}
-Because we did not constrain $\rho_{0,j}$, there is no guarantee against $\rho_{0,j} > \phi_{0,j}$ and hence $r > f$, meaning that parent tree $i$ produces more recruits per fruit. While this is plausible for fruits with multiple seeds, this cannot be true for a drupe species (i.e., \textit{Prunus polystachya}?).
 
-We also need to make sure that $r$ and $f$ have the same area scale, i.e., both are per-100-m$^2$. In the main document, sometimes a 100-m-radius area is mentioned, which is not the same as a 100-m$^2$ transect.
-
-The main document also states that:
-\begin{quote}
-... $\rho_{0,j}$, which is an approximation of the (logged) germination + survival rate of the fruits of each species, can easily be calculated for each parent tree in the seedling location surveys, and then averaged across\footnote{Should it be `within'? Otherwise $\rho_{0,j}$ wouldn't have the $j$ subscript.} the species.
-\end{quote}
-With `(logged) germination + survival rate of the fruits', I think you may be thinking of $\frac{\rho_{0,j}}{\phi_{0,j}} = \eta_j$ instead of $\rho_{0,j}$. This is because by rearranging Equation \ref{eq:rf_ratio}, we obtain:
+\section{Adult growth}
+The size-dependent annual diameter growth $G_{ij,p,t}$ of adults follows Zeide (1993) and Kohyama et al. (2020):
 \begin{align}
-r_{ij,t+1} &= \frac{\rho_{0,j}}{\phi_{0,j}} f_{ij,t+1} \\
-&= \eta_j f_{ij,t+1} \label{eq:rf_convert} \,.
+D_{ij,p,t+1} &= D_{ij,p,t} + G_{ij,p,t}\\
+G_{ij,p,t} &\sim \text{Normal}(\mu_{G,ij,p,t},~\sigma_{G}) \\
+\mu_{G,ij,p,t} &= D_{ij,p,t}^{b} e^{a-c D_{ij,p,t}} \\
+a &= a_j + a_{\text{intraA},j} \text{intraA}_{i,t} + a_{\text{interA},j} \text{interA}_{i,t} + a_{\text{H},j} \Delta H_{p,t} \\
+b &= b_j \\
+c &= c_j + c_{\text{intraA},j} \text{intraA}_{i,t} + c_{\text{interA},j} \text{interA}_{i,t} + c_{\text{H},j} \Delta H_{p,t}
 \end{align}
-If Equation \ref{eq:rf_convert} is agreeable, then we can proceed to discuss its implication (on how we may want to rewrite some of the formulae). We may want to constrain $\eta_j = \frac{\rho_{0,j}}{\phi_{0,j}} \le 1$ as discussed above, but let's leave this to later. Here, $\eta_j$ is a combination of seed survival rate $s_{\text{seed},j}$, germination rate $g_{j}$, and seedling survival rate, $s_{\text{seedling},j}$. If we want to be explicit about the transition from fruit to seedling, we can express it like many demography matrix models:
-\begin{align*}
-\eta_j &= s_{\text{seed},j} \cdot g_{j} \cdot s_{\text{seedling},j} \\
-r_{ij,t+1} &= s_{\text{seed},j} \cdot g_{j} \cdot s_{\text{seedling},j} \cdot f_{ij,t+1} \,,
-\end{align*}
-but we do not have so many data so let's keep it simply with a phenomenological $\eta_j$, and call it the fruit-to-seedling transition rate.
 
-An implication of $\eta_j$ is that recruitment, $r$ is \textit{not} size dependent. Rather, it depends on fruit volume only, and is only related to parent size \textit{indirectly} through the fruits. Even if we could estimate $\rho_{D,j}$ in Equation \ref{eq:recruit}, it would be even more phenomenological and indirect compared to $\phi_{D,j}$. Instead of worrying about our inability to estimate $\rho_{D,j}$, I'd take this as a justification not needing to do so.
+\section{Survival}
+Finally, we model survival individuals of all sizes, i.e., `seedlings' and `adults'. Seedling sizes (which have the units of log height in the model) are first converted to log DBH units via extrapolation of the seedling diameter--height allometric equation as above.
 
-Now, can we just focus on Equation \ref{eq:rf_convert} and estimate $\eta_j$ using fruit and seedling data collected from the same location? Do we have such data? If so, it is a simple (random) slope-only model with forced intercept through origin.
+Then, the following survival model from Needham et al. (2018), we predict the probability of survival of each individual based on its size (in log DBH units)
+\begin{align}
+\Pr(S_{\text{adult},ij,p,t+1} = 1) &\sim \text{Binomial}(1,~s_{\text{adult},ij,p,t+1}) \\
+s_{\text{adult},ij,p,t+1} &=
+    \dfrac{K_j}{1 + e^{-(r_{10,j} + r_{11,j} \cdot \text{interA}_{i,t} \cdot \Delta H_{ip,t}) [D_{ij} - (p_{10,j} + p_{11,j} \cdot \text{intraA}_{i,t}) ]}} \\
+\text{intraA}_{i,t} &= ??? \\
+\text{interA}_{i,t} &= ???
+\end{align}
 
-[Still need to write out growth and survival models of other life stages, as well as making sure parameterisation matches simulation, but leaving that for later.]
 
+\textit{Note: some random intercepts potentially are missing from all the equations above; need to double check}
+
+\section{References}
+
+\noindent Kohyama, T. S., Potts, M. D., Kohyama, T. I., Niiyama, K., Yao, T. L., Davies, S. J., \& Sheil, D. (2020). Trade-off between standing biomass and productivity in species-rich tropical forest: Evidence, explanations and implications. \textit{Journal of Ecology}, 108(6), 2571–2583. doi: 10.1111/1365-2745.13485
+\\
+
+\noindent Needham, J., Merow, C., Chang-Yang, C.-H., Caswell, H., Mcmahon, S. M., \& Needham, J. (2018). Inferring forest fate from demographic data: from vital rates to population dynamic models. \textit{Proceedings of the Royal Society B: Biological Sciences}, 285(1874), 20172050. doi: 10.1098/rspb.2017.2050
+\\
+
+\noindent Zeide, B. (1993). Analysis of growth equations. \textit{Forest Science}, 39(3), 594–616. doi: 10.1111/j.1461-0248.2006.00883.x
 \end{document}
