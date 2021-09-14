@@ -4,7 +4,7 @@
 
 extreme <- readRDS(file = "out/sim_out3_extreme.rds")
 summary(extreme)
-usual <- readRDS(file = "out/sim_out3_usual_nushpc.rds")
+usual <- readRDS(file = "out/sim_out3_usual_100yrs.rds")
 summary(usual)
 
 # Define a colour palette
@@ -48,9 +48,9 @@ for(i in 1:22){
 #############
 
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\distributions 3spp Aug21.pdf", width=14, height=9)
-prop = 1
+prop = 0.5
 
-par(mfrow=c(2,2), mar=c(2,2,3,2))
+par(mfrow=c(1,2), mar=c(2,2,3,2))
 ## As usual scenario
 # Initial condition
 plot(nssf.usual[[1]], legend=F, col=col.pal[c(6,5)], yaxt="n", xaxt="n")
@@ -136,7 +136,7 @@ plot(usual$n.ppoT ~ c(1:length(usual$n.ppoT)), lwd=5, col=col.pal[1], type="l", 
      ylim=c(min(c(usual$n.ppoT, extreme$n.ppoT)), 
             max(c(usual$n.ppoT, extreme$n.ppoT)))
      )
-lines(extreme$n.ppoT ~ c(1:length(usual$n.ppoT)), lwd=5, col=col.pal[1], lty=2)
+lines(extreme$n.ppoT ~ c(1:length(extreme$n.ppoT)), lwd=5, col=col.pal[1], lty=2)
 mtext(side=3, line=1, adj=0, text="a) Prunus polystachya (non-swamp generalist)", cex=1.2)
 legend('topleft', bty="n", lwd=2, lty=c(1,2), title="Scenario", cex=1.5,
        legend=c("As usual", "Extreme drying"))
@@ -147,7 +147,7 @@ plot(usual$n.sceT ~ c(1:length(usual$n.sceT)), lwd=5, col=col.pal[2], type="l", 
      ylim=c(min(c(usual$n.sceT, extreme$n.sceT)), 
             max(c(usual$n.sceT, extreme$n.sceT)))
 )
-lines(extreme$n.sceT ~ c(1:length(usual$n.sceT)), lwd=5, col=col.pal[2], lty=2)
+lines(extreme$n.sceT ~ c(1:length(extreme$n.sceT)), lwd=5, col=col.pal[2], lty=2)
 mtext(side=3, line=1, adj=0, text="b) Strombosia ceylanica (swamp generalist)", cex=1.2)
 
 ## PPI
@@ -156,9 +156,18 @@ plot(usual$n.ppiT ~ c(1:length(usual$n.ppiT)), lwd=5, col=col.pal[4], type="l", 
      ylim=c(min(c(usual$n.ppiT, extreme$n.ppiT)), 
             max(c(usual$n.ppiT, extreme$n.ppiT)))
 )
-lines(extreme$n.ppiT ~ c(1:length(usual$n.ppiT)), lwd=5, col=col.pal[4], lty=2)
+lines(extreme$n.ppiT ~ c(1:length(extreme$n.ppiT)), lwd=5, col=col.pal[4], lty=2)
 mtext(side=3, line=1, adj=0, text="c) Pometia pinnata (swamp specialist)", cex=1.2)
 mtext(side=2, line=3.5, outer=T, adj=0.9, text="Adult population size", cex=1.5)
+
+## AOS
+#plot(usual$n.aosT ~ c(1:length(usual$n.aosT)), lwd=5, col="grey", type="l", las=1,
+#     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
+#     ylim=c(min(c(usual$n.aosT, extreme$n.aosT)), 
+#            max(c(usual$n.aosT, extreme$n.aosT)))
+#)
+#lines(extreme$n.aosT ~ c(1:length(extreme$n.aosT)), lwd=5, col="grey", lty=2)
+#mtext(side=3, line=1, adj=0, text="All other species", cex=1.2)
 
 ## Seedlings
 
@@ -168,7 +177,7 @@ plot(usual$n.ppoS ~ c(1:length(usual$n.ppoS)), lwd=5, col=col.pal[1], type="l", 
      ylim=c(min(c(usual$n.ppoS, extreme$n.ppoS)), 
             max(c(usual$n.ppoS, extreme$n.ppoS)))
 )
-lines(extreme$n.ppoS ~ c(1:length(usual$n.ppoS)), lwd=5, col=col.pal[1], lty=2)
+lines(extreme$n.ppoS ~ c(1:length(extreme$n.ppoS)), lwd=5, col=col.pal[1], lty=2)
 mtext(side=3, line=1, adj=0, text="d) Prunus polystachya (non-swamp generalist)", cex=1.2)
 
 # SCE
@@ -177,7 +186,7 @@ plot(usual$n.sceS ~ c(1:length(usual$n.sceS)), lwd=5, col=col.pal[2], type="l", 
      ylim=c(min(c(usual$n.sceS, extreme$n.sceS)), 
             max(c(usual$n.sceS, extreme$n.sceS)))
 )
-lines(extreme$n.sceS ~ c(1:length(usual$n.sceS)), lwd=5, col=col.pal[2], lty=2)
+lines(extreme$n.sceS ~ c(1:length(extreme$n.sceS)), lwd=5, col=col.pal[2], lty=2)
 mtext(side=3, line=1, adj=0, text="e) Strombosia ceylanica (swamp generalist)", cex=1.2)
 
 # PPI
@@ -186,7 +195,7 @@ plot(usual$n.ppiS ~ c(1:length(usual$n.ppiS)), lwd=5, col=col.pal[4], type="l", 
      ylim=c(min(c(usual$n.ppiS, extreme$n.ppiS)), 
             max(c(usual$n.ppiS, extreme$n.ppiS)))
 )
-lines(extreme$n.ppiS ~ c(1:length(usual$n.ppiS)), lwd=5, col=col.pal[4], lty=2)
+lines(extreme$n.ppiS ~ c(1:length(extreme$n.ppiS)), lwd=5, col=col.pal[4], lty=2)
 mtext(side=3, line=1, adj=0, text="f) Pometia pinnata (swamp specialist)", cex=1.2)
 
 mtext(side=2, line=3.5, outer=T, adj=0.15, text="Seedling population size", cex=1.5)
@@ -338,7 +347,7 @@ plot(usual$z.ppoT ~ c(1:length(usual$z.ppoT)), lwd=5, col=col.pal[1], type="l", 
      ylim=c(min(c(usual$z.ppoT, extreme$z.ppoT)), 
             max(c(usual$z.ppoT, extreme$z.ppoT)))
 )
-lines(extreme$z.ppoT ~ c(1:length(usual$z.ppoT)), lwd=5, col=col.pal[1], lty=2)
+lines(extreme$z.ppoT ~ c(1:length(extreme$z.ppoT)), lwd=5, col=col.pal[1], lty=2)
 mtext(side=3, line=1, adj=0, text="a) Prunus polystachya (non-swamp generalist)", cex=1.2)
 legend('bottomleft', bty="n", lwd=2, lty=c(1,2), title="Scenario", cex=1.5,
        legend=c("As usual", "Extreme drying"))
@@ -349,7 +358,7 @@ plot(usual$z.sceT ~ c(1:length(usual$z.sceT)), lwd=5, col=col.pal[2], type="l", 
      ylim=c(min(c(usual$z.sceT, extreme$z.sceT)), 
             max(c(usual$z.sceT, extreme$z.sceT)))
 )
-lines(extreme$z.sceT ~ c(1:length(usual$z.sceT)), lwd=5, col=col.pal[2], lty=2)
+lines(extreme$z.sceT ~ c(1:length(extreme$z.sceT)), lwd=5, col=col.pal[2], lty=2)
 mtext(side=3, line=1, adj=0, text="b) Strombosia ceylanica (swamp generalist)", cex=1.2)
 
 ## PPI
@@ -358,7 +367,7 @@ plot(usual$z.ppiT ~ c(1:length(usual$z.ppiT)), lwd=5, col=col.pal[4], type="l", 
      ylim=c(min(c(usual$z.ppiT, extreme$z.ppiT)), 
             max(c(usual$z.ppiT, extreme$z.ppiT)))
 )
-lines(extreme$z.ppiT ~ c(1:length(usual$z.ppiT)), lwd=5, col=col.pal[4], lty=2)
+lines(extreme$z.ppiT ~ c(1:length(extreme$z.ppiT)), lwd=5, col=col.pal[4], lty=2)
 mtext(side=3, line=1, adj=0, text="c) Pometia pinnata (swamp specialist)", cex=1.2)
 mtext(side=2, line=1, outer=T, adj=0.8, text="Mean adult DBH\n(log-transformed)", cex=1.5)
 
@@ -370,7 +379,7 @@ plot(usual$h.ppoS ~ c(1:length(usual$h.ppoS)), lwd=5, col=col.pal[1], type="l", 
      ylim=c(min(c(usual$h.ppoS, extreme$h.ppoS)), 
             max(c(usual$h.ppoS, extreme$h.ppoS)))
 )
-lines(extreme$h.ppoS ~ c(1:length(usual$h.ppoS)), lwd=5, col=col.pal[1], lty=2)
+lines(extreme$h.ppoS ~ c(1:length(extreme$h.ppoS)), lwd=5, col=col.pal[1], lty=2)
 mtext(side=3, line=1, adj=0, text="d) Prunus polystachya (non-swamp generalist)", cex=1.2)
 
 # SCE
@@ -379,7 +388,7 @@ plot(usual$h.sceS ~ c(1:length(usual$h.sceS)), lwd=5, col=col.pal[2], type="l", 
      ylim=c(min(c(usual$h.sceS, extreme$h.sceS)), 
             max(c(usual$h.sceS, extreme$h.sceS)))
 )
-lines(extreme$h.sceS ~ c(1:length(usual$h.sceS)), lwd=5, col=col.pal[2], lty=2)
+lines(extreme$h.sceS ~ c(1:length(extreme$h.sceS)), lwd=5, col=col.pal[2], lty=2)
 mtext(side=3, line=1, adj=0, text="e) Strombosia ceylanica (swamp generalist)", cex=1.2)
 
 # PPI
@@ -388,7 +397,7 @@ plot(usual$h.ppiS ~ c(1:length(usual$h.ppiS)), lwd=5, col=col.pal[4], type="l", 
      ylim=c(min(c(usual$h.ppiS, extreme$h.ppiS)), 
             max(c(usual$h.ppiS, extreme$h.ppiS)))
 )
-lines(extreme$h.ppiS ~ c(1:length(usual$h.ppiS)), lwd=5, col=col.pal[4], lty=2)
+lines(extreme$h.ppiS ~ c(1:length(extreme$h.ppiS)), lwd=5, col=col.pal[4], lty=2)
 mtext(side=3, line=1, adj=0, text="f) Pometia pinnata (swamp specialist)", cex=1.2)
 
 mtext(side=2, line=1, outer=T, adj=0.15, text="Mean seedling height\n(log-transformed)", cex=1.5)
@@ -458,34 +467,34 @@ dev.off()
 ######################
 
 # sample the height/dbh distributions instead of plotting all
-n=200
+n=100
 
-# calculate average transition size of seedling (DBH=1cm)
-tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
-rec.parm <- t(read.csv("data/dispersal kernel parameters Apr21.csv", header=T, row.names=1))
-tran.parm["transition.height",] <- (log(1) - tran.parm["tran.int",]) / tran.parm["tran.h",]
-
-#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\size distributions 3spp Aug21.pdf", width=16, height=9)
-par(mfrow=c(1,2), mar=c(5,5,2,2))
-hist(sample(usual$ppoS$logheight, n), col=col.t[2], main="", xlab="Seedling height (log-transformed)",
-     xlim=c(2,6), breaks=seq(0,8,0.25))
-hist(sample(usual$sceS$logheight, n), col=col.t[1], add=T, breaks=seq(0,8,0.25))
-hist(sample(usual$ppiS$logheight, n), col=col.t[3], add=T, breaks=seq(0,8,0.25))
-abline(v=tran.parm["transition.height", c("Gironniera.nervosa", "Prunus.polystachya", "Strombosia.ceylanica", "Pometia.pinnata")],
-       col=col.pal[c(4,2,1,3)], lwd=3, lty=2)
-abline(v=rec.parm["rcsz", c("Gironniera.nervosa", "Prunus.polystachya", "Strombosia.ceylanica", "Pometia.pinnata")],
-       col=col.pal[c(4,2,1,3)], lwd=3)
-legend('topleft', bty="n", lwd=3, lty=c(1,2), legend=c("average recruitment size", "average transition size"))
-hist(sample(usual$ppiT$logdbh, n), col=col.t[3], main="", xlab="Adult DBH (log-transformed)", 
-     xlim=c(0,5), breaks=seq(0,8,0.25))
-hist(sample(usual$sceT$logdbh, n), col=col.t[1], add=T, breaks=seq(0,8,0.25))
-hist(sample(usual$ppoT$logdbh, n), col=col.t[2], add=T, breaks=seq(0,8,0.25))
-legend('topright', fill=col.t[c(2,1,3)], title="Species", bty="n",
-       legend=c(
-               "P. polystachya (non-swamp generalist)",
-               "S. ceylanica (swamp generalist)",
-               "P. pinnata (swamp specialist)"
-       ))
+        # calculate average transition size of seedling (DBH=1cm)
+        tran.parm <- read.csv("data/transition params CAA Jun21.csv", header=T, row.names=1)
+        rec.parm <- t(read.csv("data/dispersal kernel parameters Apr21.csv", header=T, row.names=1))
+        tran.parm["transition.height",] <- (log(1) - tran.parm["tran.int",]) / tran.parm["tran.h",]
+        
+        #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\size distributions 3spp Aug21.pdf", width=16, height=9)
+        par(mfrow=c(1,2), mar=c(5,5,2,2))
+        hist(sample(usual$ppoS$logheight, n), col=col.t[2], main="", xlab="Seedling height (log-transformed)",
+             xlim=c(2,6), breaks=seq(0,8,0.25))
+        hist(sample(usual$sceS$logheight, n), col=col.t[1], add=T, breaks=seq(0,8,0.25))
+        hist(sample(usual$ppiS$logheight, n), col=col.t[3], add=T, breaks=seq(0,8,0.25))
+        abline(v=tran.parm["transition.height", c("Gironniera.nervosa", "Prunus.polystachya", "Strombosia.ceylanica", "Pometia.pinnata")],
+               col=col.pal[c(4,2,1,3)], lwd=3, lty=2)
+        abline(v=rec.parm["rcsz", c("Gironniera.nervosa", "Prunus.polystachya", "Strombosia.ceylanica", "Pometia.pinnata")],
+               col=col.pal[c(4,2,1,3)], lwd=3)
+        legend('topleft', bty="n", lwd=3, lty=c(1,2), legend=c("average recruitment size", "average transition size"))
+        hist(sample(usual$ppiT$logdbh, n), col=col.t[3], main="", xlab="Adult DBH (log-transformed)", 
+             xlim=c(0,5), breaks=seq(0,8,0.25))
+        hist(sample(usual$sceT$logdbh, n), col=col.t[1], add=T, breaks=seq(0,8,0.25))
+        hist(sample(usual$ppoT$logdbh, n), col=col.t[2], add=T, breaks=seq(0,8,0.25))
+        legend('topright', fill=col.t[c(2,1,3)], title="Species", bty="n",
+               legend=c(
+                       "P. polystachya (non-swamp generalist)",
+                       "S. ceylanica (swamp generalist)",
+                       "P. pinnata (swamp specialist)"
+               ))
 dev.off()
 
 
