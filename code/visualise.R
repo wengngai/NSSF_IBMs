@@ -47,8 +47,8 @@ for(i in 1:22){
 # LOCATIONS #
 #############
 
-#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\distributions 3spp Aug21.pdf", width=14, height=9)
-prop = 0.5
+#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\distributions 3spp 100 years Sep21.pdf", width=14, height=9)
+prop = 1
 
 par(mfrow=c(1,2), mar=c(2,2,3,2))
 ## As usual scenario
@@ -125,7 +125,7 @@ dev.off()
 ####################
 
 ### BY SPECIES
-#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\populations 3spp Aug21.pdf", width=14, height=9)
+#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\populations 3spp 100years Sep21.pdf", width=14, height=9)
 
 ## Adults
 par(mfrow=c(2,3), mar=c(2,3.5,3.5,2), oma=c(3.5,6,1,1))
