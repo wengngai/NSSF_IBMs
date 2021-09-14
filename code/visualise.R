@@ -435,30 +435,33 @@ dev.off()
 ppo.ssi.usual <- with(usual$ba.ppoT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
 sce.ssi.usual <- with(usual$ba.sceT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
 ppi.ssi.usual <- with(usual$ba.ppiT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
+aos.ssi.usual <- with(usual$ba.aosT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
 
 ppo.ssi.extreme <- with(extreme$ba.ppoT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
 sce.ssi.extreme <- with(extreme$ba.sceT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
 ppi.ssi.extreme <- with(extreme$ba.ppiT, swamp/landscape.swamp.prop / ((swamp/landscape.swamp.prop) + (nonswamp/(1-landscape.swamp.prop))))
 
-#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\ssi 3spp Aug21.pdf", width=6, height=8)
+#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\ssi 3spp 100 years Sep21.pdf", width=6, height=8)
 par(mfrow=c(1,1), mar=c(5,5,2,2))
 plot(ppo.ssi.usual ~ c(1:length(ppo.ssi.usual)), lwd=5, col=col.pal[1], type="l",
      ylab="Swamp specialization index", xlab="Time (years)", cex.lab=1.5, cex.axis=1.5,
      ylim=c(0,1))
-rect(0, 0.5, 25, 1.1, col = adjustcolor(col.t[5], alpha.f = 0.4), border=F)
+rect(0, 0.5, 100, 1.1, col = adjustcolor(col.t[5], alpha.f = 0.4), border=F)
 abline(h=0.5, lty=2, lwd=3)
 lines(sce.ssi.usual ~ c(1:length(sce.ssi.usual)), lwd=5, col=col.pal[2], type="l")
 lines(ppi.ssi.usual ~ c(1:length(ppi.ssi.usual)), lwd=5, col=col.pal[4], type="l")
+lines(aos.ssi.usual ~ c(1:length(aos.ssi.usual)), lwd=5, col="grey", type="l")
 
 lines(ppo.ssi.extreme ~ c(1:length(ppo.ssi.extreme)), lwd=5, col=col.pal[1], type="l", lty=2)
 lines(sce.ssi.extreme ~ c(1:length(sce.ssi.extreme)), lwd=5, col=col.pal[2], type="l", lty=2)
 lines(ppi.ssi.extreme ~ c(1:length(ppi.ssi.extreme)), lwd=5, col=col.pal[4], type="l", lty=2)
 
-legend(x=1, y=0.85, col=col.pal[c(1,2,4)], lwd=5, lty=1, title="Species", bg="white",
+legend(x=1, y=0.85, col=c(col.pal[c(1,2,4)],"grey"), lwd=5, lty=1, title="Species", bg="white",
        legend=c(
                "P. polystachya (non-swamp generalist)",
                "S. ceylanica (swamp generalist)",
-               "P. pinnata (swamp specialist)"
+               "P. pinnata (swamp specialist)",
+               "All other species"
        ))
 dev.off()
 
