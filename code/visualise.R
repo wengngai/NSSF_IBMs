@@ -128,7 +128,7 @@ dev.off()
 #pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\populations 3spp 100years Sep21.pdf", width=14, height=9)
 
 ## Adults
-par(mfrow=c(2,3), mar=c(2,3.5,3.5,2), oma=c(3.5,6,1,1))
+par(mfrow=c(2,4), mar=c(2,3.5,3.5,2), oma=c(3.5,6,1,1))
 
 ## PPO
 plot(usual$n.ppoT ~ c(1:length(usual$n.ppoT)), lwd=5, col=col.pal[1], type="l", las=1,
@@ -160,14 +160,16 @@ lines(extreme$n.ppiT ~ c(1:length(extreme$n.ppiT)), lwd=5, col=col.pal[4], lty=2
 mtext(side=3, line=1, adj=0, text="c) Pometia pinnata (swamp specialist)", cex=1.2)
 mtext(side=2, line=3.5, outer=T, adj=0.9, text="Adult population size", cex=1.5)
 
-## AOS
-#plot(usual$n.aosT ~ c(1:length(usual$n.aosT)), lwd=5, col="grey", type="l", las=1,
-#     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
-#     ylim=c(min(c(usual$n.aosT, extreme$n.aosT)), 
-#            max(c(usual$n.aosT, extreme$n.aosT)))
-#)
-#lines(extreme$n.aosT ~ c(1:length(extreme$n.aosT)), lwd=5, col="grey", lty=2)
-#mtext(side=3, line=1, adj=0, text="All other species", cex=1.2)
+## AOS & total
+n.total <- (usual$n.aosT + usual$n.ppoT + usual$n.sceT + usual$n.ppiT)
+plot(usual$n.aosT ~ c(1:length(usual$n.aosT)), lwd=5, col="grey", type="l", las=1,
+     ylab="", xlab="", cex.lab=1.5, cex.axis=1.5,
+     ylim=c(min(c(usual$n.aosT, extreme$n.aosT)), 
+            max(n.total))
+)
+lines(n.total ~ c(1:length(usual$n.aosT)), lwd=5, col="black", lty=2)
+lines(extreme$n.aosT ~ c(1:length(extreme$n.aosT)), lwd=5, col="grey", lty=2)
+mtext(side=3, line=1, adj=0, text="All other species", cex=1.2)
 
 ## Seedlings
 
@@ -256,6 +258,32 @@ lines(log(extreme$n.sceS+1) ~ c(1:length(extreme$n.sceS)), lwd=5, col=col.pal[1]
 lines(log(extreme$n.ppiS+1) ~ c(1:length(extreme$n.ppiS)), lwd=5, col=col.pal[3])
 dev.off()
 
+
+##############
+# BASAL AREA #
+##############
+
+#pdf(file = "D:\\Dropbox\\twn idiwn\\Post doc\\IBM temp\\BA 3spp Aug21.pdf", width=12, height=9)
+par(mar=c(5.5,5.5,2,2))
+ba.ppo <- log(usual$ba.ppoT[,2] + usual$ba.ppoT[,3])
+ba.sce <- log(usual$ba.sceT[,2] + usual$ba.sceT[,3])
+ba.ppi <- log(usual$ba.ppiT[,2] + usual$ba.ppiT[,3])
+ba.aos <- log(usual$ba.aosT[,2] + usual$ba.aosT[,3])
+ba.tot <- ba.ppo + ba.sce + ba.ppi + ba.aos
+
+plot(ba.aos ~ c(1:100), type="l", ylim=c(6, 16), lwd=5, col="grey",
+     ylab="Total basal area (log-transformed)", xlab="Time (years)")
+lines(ba.ppo ~ c(1:100), lwd=5, col=col.pal[1])
+lines(ba.sce ~ c(1:100), lwd=5, col=col.pal[2])
+lines(ba.ppi ~ c(1:100), lwd=5, col=col.pal[4])
+legend('bottomleft', col=c(col.pal[c(2,1,3)], "grey"), bty="n", lwd=3, lty=1, title="Species",
+       legend=c(
+               "P. polystachya (non-swamp generalist)",
+               "S. ceylanica (swamp generalist)",
+               "P. pinnata (swamp specialist)",
+               "All other species"
+       ))
+dev.off()
 
 #####################
 # DEMOGRAPHIC RATES #
